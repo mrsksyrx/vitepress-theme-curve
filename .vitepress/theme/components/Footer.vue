@@ -76,7 +76,7 @@
         >
         协议
         <a
-          href="https://github.com/murasakizs/vitepress-theme-curve"
+          href="https://github.com/mrsksyrx/vitepress-theme-curve"
           target="_blank"
           rel="noopener noreferrer"
           style="color: var(--main-color)"

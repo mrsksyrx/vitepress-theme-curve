@@ -452,6 +452,13 @@
       p {
         color: var(--main-warning-color);
       }
+      a,
+      strong {
+        color: var(--main-warning-color) !important;
+      }
+      a::before {
+        background-color: var(--main-warning-color) !important;
+      }
     }
     &.danger {
       background-color: var(--main-error-color-gray);

@@ -9,7 +9,7 @@ let scheduledThemeTimer = null;
 const isMobile =
   typeof navigator !== "undefined" && /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
 // 开发用版本号，每次改默认值时 +1，自动清除旧缓存
-const PERSIST_VERSION = 29;
+const PERSIST_VERSION = 32;
 // 开发模式开关（1 = 未开启，2 = 开启）
 const DEFAULT_DEV_MODE = 1;
 
@@ -192,8 +192,8 @@ export const mainStore = defineStore("main", {
       siteVersion: "V1.4",
       siteVersionDate: "2026.10.5",
       // 分支版本（自动递增）
-      branchVersion: 151,
-      branchBuildTime: "2026.10.05 13:10:34",
+      branchVersion: 179,
+      branchBuildTime: "2026.10.11 20:20:48",
     };
   },
   actions: {

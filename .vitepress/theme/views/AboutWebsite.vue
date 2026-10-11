@@ -98,7 +98,7 @@
         <p class="text" style="margin: 0.2rem 0">
           详见本站
           <a
-            href="https://github.com/murasakizs/vitepress-theme-curve"
+            href="https://github.com/mrsksyrx/vitepress-theme-curve"
             target="_blank"
             rel="noopener noreferrer"
             style="color: var(--main-color)"
@@ -135,7 +135,7 @@
             ><strong>AGPL v3</strong></a
           >
           协议<a
-            href="https://github.com/murasakizs/vitepress-theme-curve"
+            href="https://github.com/mrsksyrx/vitepress-theme-curve"
             target="_blank"
             rel="noopener noreferrer"
             ><strong>开源</strong></a

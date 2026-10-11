@@ -111,7 +111,7 @@ export const themeConfig = {
         items: [
           {
             text: "本站源码",
-            link: "https://github.com/murasakizs/vitepress-theme-curve",
+            link: "https://github.com/mrsksyrx/vitepress-theme-curve",
             newTab: true,
           },
           { text: "精神状态", link: "https://whendie.sgexilq.com", newTab: true },

@@ -1505,7 +1505,7 @@
               <span class="set-label">查看源码</span>
               <div class="set-options">
                 <a
-                  href="https://github.com/murasakizs/vitepress-theme-curve/tree/master"
+                  href="https://github.com/mrsksyrx/vitepress-theme-curve/tree/master"
                   target="_blank"
                   rel="noopener noreferrer"
                   class="options"
@@ -1531,7 +1531,7 @@
                   >QQ</a
                 >
                 <a
-                  href="https://github.com/murasakizs/vitepress-theme-curve/issues"
+                  href="https://github.com/mrsksyrx/vitepress-theme-curve/issues"
                   target="_blank"
                   rel="noopener noreferrer"
                   class="options"
