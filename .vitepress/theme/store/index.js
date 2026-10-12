@@ -9,7 +9,7 @@ let scheduledThemeTimer = null;
 const isMobile =
   typeof navigator !== "undefined" && /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
 // 开发用版本号，每次改默认值时 +1，自动清除旧缓存
-const PERSIST_VERSION = 36;
+const PERSIST_VERSION = 37;
 // 开发模式开关（1 = 未开启，2 = 开启）
 const DEFAULT_DEV_MODE = 1;
 
@@ -169,8 +169,8 @@ export const mainStore = defineStore("main", {
       pwaCacheLimit: 100,
       // 阅读进度条
       readingProgressEnabled: true,
-      // 正文逐行悬停侧边线
-      hoverLineEnabled: true,
+      // 正文逐行悬停侧边线（移动端默认关闭）
+      hoverLineEnabled: !isMobile,
       // 图片功能开关
       imageWebpEnabled: false,
       // 天气小组件开关
