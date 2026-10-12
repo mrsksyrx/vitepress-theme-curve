@@ -44,6 +44,7 @@ export const PERSIST_PATHS = [
   "pwaCacheEnabled",
   "pwaCacheLimit",
   "readingProgressEnabled",
+  "hoverLineEnabled",
   "imageWebpEnabled",
   "weatherProvider",
   "weatherLocationMode",
@@ -71,5 +72,6 @@ const NON_PORTABLE_KEYS = [
   "branchBuildTime",
 ];
 
+// [B36] aside.hello.text 为有意 HTML（themeConfig 构建期注入），勿加入持久化/导入白名单
 // 可迁移的用户配置 = 持久化键 - 非迁移键
 export const PORTABLE_CONFIG_KEYS = PERSIST_PATHS.filter((k) => !NON_PORTABLE_KEYS.includes(k));

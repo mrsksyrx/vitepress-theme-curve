@@ -47,7 +47,7 @@
               v-for="tag in asArray(item?.tags)"
               :key="tag"
               class="tags-name"
-              :href="`/pages/tags/${tag}`"
+              :href="`/pages/tags/${encodeURIComponent(tag)}`"
             >
               <i class="iconfont icon-hashtag" />
               {{ tag }}
@@ -108,19 +108,19 @@ const asArray = (val) => {
 
 // 计算布局类型
 const layoutType = computed(() =>
-  (themeConfig.value?.cover?.twoColumns
+  themeConfig.value?.cover?.twoColumns
     ? "twoColumns"
-    : (themeConfig.value?.cover?.showCover?.coverLayout ?? "left")),
+    : (themeConfig.value?.cover?.showCover?.coverLayout ?? "left"),
 );
 
 // 计算网格样式
 const gridStyle = computed(() =>
-  (layoutType.value === "twoColumns"
+  layoutType.value === "twoColumns"
     ? {
         "--grid-columns": 2,
         "--grid-gap": "1rem",
       }
-    : {}),
+    : {},
 );
 
 // 判断是否显示封面

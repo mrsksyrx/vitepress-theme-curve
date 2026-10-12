@@ -1,7 +1,7 @@
 <!-- 打赏按钮 -->
 
 <template>
-  <div v-if="rewardData.enable" class="reward">
+  <div v-if="rewardData?.enable" class="reward">
     <div class="reward-btn" @click="rewardShow = true">
       <i class="iconfont icon-reward" />
       <span class="text">赞赏博主</span>
@@ -18,14 +18,26 @@
       <div class="reward-card">
         <span class="thank">🙏 感谢您赐予我前进的力量</span>
         <div class="qr">
-          <a v-if="rewardData?.wechat" :href="rewardData.wechat" class="qr-img" target="_blank">
+          <a
+            v-if="rewardData?.wechat"
+            :href="rewardData.wechat"
+            class="qr-img"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
             <img v-if="rewardData?.wechat" :src="rewardData.wechat" alt="微信" />
             <span class="tip">
               <i class="iconfont icon-wechat-pay" />
               微信
             </span>
           </a>
-          <a v-if="rewardData?.alipay" :href="rewardData.alipay" class="qr-img" target="_blank">
+          <a
+            v-if="rewardData?.alipay"
+            :href="rewardData.alipay"
+            class="qr-img"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
             <img v-if="rewardData?.alipay" :src="rewardData.alipay" alt="支付宝" />
             <span class="tip">
               <i class="iconfont icon-alipay" />

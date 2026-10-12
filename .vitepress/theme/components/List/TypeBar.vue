@@ -4,7 +4,7 @@
     <div class="all-type">
       <a
         v-if="currentTypeName"
-        :href="`/pages/categories/${currentTypeName}`"
+        :href="`/pages/categories/${encodeURIComponent(currentTypeName)}`"
         class="type-item choose"
       >
         {{ currentTypeName }}
@@ -13,7 +13,7 @@
       <a
         v-for="(_, key, index) in categoriesData"
         :key="index"
-        :href="`/pages/categories/${key}`"
+        :href="`/pages/categories/${encodeURIComponent(key)}`"
         :class="['type-item', { hidden: currentTypeName === key }]"
       >
         {{ key }}
@@ -26,14 +26,18 @@
   </div>
   <div v-else-if="type === 'tags'" class="type-bar s-card hover">
     <div class="all-type">
-      <a v-if="currentTypeName" :href="`/pages/tags/${currentTypeName}`" class="type-item choose">
+      <a
+        v-if="currentTypeName"
+        :href="`/pages/tags/${encodeURIComponent(currentTypeName)}`"
+        class="type-item choose"
+      >
         {{ currentTypeName }}
         <span class="num">{{ tagsData?.[currentTypeName]?.count || 0 }}</span>
       </a>
       <a
         v-for="(item, key, index) in tagsData"
         :key="index"
-        :href="`/pages/tags/${key}`"
+        :href="`/pages/tags/${encodeURIComponent(key)}`"
         :class="['type-item', { hidden: currentTypeName === key }]"
       >
         {{ key }}

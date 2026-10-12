@@ -13,8 +13,7 @@ const ITERATIONS = 100000;
 export const encryptPostHtml = (html, password, postId) => {
   // salt 只依赖 postId：跨构建稳定且改正文不失效本地密钥；不掺密码/正文，
   // 否则已知明文时可用 salt 等式跳过 PBKDF2 廉价验密码
-  const salt = createHash("sha256").update("curve-enc-v1|").update(postId).digest()
-.subarray(0, 16);
+  const salt = createHash("sha256").update("curve-enc-v1|").update(postId).digest().subarray(0, 16);
   const iv = randomBytes(12);
   const key = pbkdf2Sync(password, salt, ITERATIONS, 32, "sha256");
   const cipher = createCipheriv("aes-256-gcm", key, iv);

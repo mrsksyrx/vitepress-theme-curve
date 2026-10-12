@@ -9,7 +9,7 @@
       <a
         v-for="(item, tag, index) in tagsData"
         :key="index"
-        :href="`/pages/tags/${tag}`"
+        :href="`/pages/tags/${encodeURIComponent(tag)}`"
         class="tags"
       >
         <span class="name">{{ tag }}</span>

@@ -1453,7 +1453,9 @@ html {
       }
     }
 
-    .loading {
+    // 只作用于 Loading.vue 的全屏遮罩（Teleport 到 body 的直接子元素），
+    // 避免误伤 LazyLoader 骨架屏 / ArticleGPT 加载态等其它 .loading
+    body > .loading {
       backdrop-filter: blur(20px);
     }
 

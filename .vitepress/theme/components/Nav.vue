@@ -188,19 +188,21 @@ const shuffleGo = async () => {
 const goLink = (link) => {
   if (!link) return;
   if (/^https?:\/\//i.test(link)) {
-    window.open(link, "_blank", "noopener");
+    window.open(link, "_blank", "noopener,noreferrer");
     return;
   }
   router.go(link);
 };
 
+// [B50] 死代码：rightMenuSwitch 定义后无任何调用（模板与脚本均未引用），
+// 右键开关实际由 Settings.vue 的 setRightMenu 接管。注释保留，勿物理删除。
 // 右键菜单开关
-const rightMenuSwitch = () => {
-  store.useRightMenu = !store.useRightMenu;
-  if (typeof $message !== "undefined") {
-    $message.info(`${store.useRightMenu ? "已开启" : "已关闭"}自定义右键菜单`);
-  }
-};
+// const rightMenuSwitch = () => {
+//   store.useRightMenu = !store.useRightMenu;
+//   if (typeof $message !== "undefined") {
+//     $message.info(`${store.useRightMenu ? "已开启" : "已关闭"}自定义右键菜单`);
+//   }
+// };
 </script>
 
 <style lang="scss" scoped>

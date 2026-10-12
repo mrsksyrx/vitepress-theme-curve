@@ -20,6 +20,7 @@
             :href="item.link"
             class="skills-item"
             target="_blank"
+            rel="noopener noreferrer"
           >
             <div class="skills-logo">
               <i :class="`iconfont icon-${item.icon}`"></i>
@@ -46,7 +47,10 @@
           </div>
           <div class="image-desc opacity">
             <span class="left">
-              统计信息来自 <a href="https://busuanzi.ibruce.info/" target="_blank">不蒜子</a>
+              统计信息来自
+              <a href="https://busuanzi.ibruce.info/" target="_blank" rel="noopener noreferrer"
+                >不蒜子</a
+              >
             </span>
           </div>
         </div>
@@ -94,8 +98,9 @@
         <p class="text" style="margin: 0.2rem 0">
           详见本站
           <a
-            href="https://github.com/murasakizs/vitepress-theme-curve"
+            href="https://github.com/mrsksyrx/vitepress-theme-curve"
             target="_blank"
+            rel="noopener noreferrer"
             style="color: var(--main-color)"
             ><strong>源码 </strong></a
           >
@@ -109,26 +114,40 @@
         <span class="title2" style="margin-bottom: 0.8rem">vitepress-theme-curve</span>
         <p class="text">
           本站基于开源项目
-          <a href="https://github.com/kazukokawagawa/vitepress-theme-curve" target="_blank"
+          <a
+            href="https://github.com/kazukokawagawa/vitepress-theme-curve"
+            target="_blank"
+            rel="noopener noreferrer"
             ><strong>vitepress-theme-curve</strong></a
           >
           构建，感谢原作者
-          <a href="https://chiyu.it/" target="_blank"><strong>池鱼</strong></a> 的开源贡献
+          <a href="https://chiyu.it/" target="_blank" rel="noopener noreferrer"
+            ><strong>池鱼</strong></a
+          >
+          的开源贡献
         </p>
         <p class="text">
           本站遵循
-          <a href="https://www.gnu.org/licenses/agpl-3.0.html" target="_blank"
+          <a
+            href="https://www.gnu.org/licenses/agpl-3.0.html"
+            target="_blank"
+            rel="noopener noreferrer"
             ><strong>AGPL v3</strong></a
           >
-          协议<a href="https://github.com/murasakizs/vitepress-theme-curve" target="_blank"
+          协议<a
+            href="https://github.com/mrsksyrx/vitepress-theme-curve"
+            target="_blank"
+            rel="noopener noreferrer"
             ><strong>开源</strong></a
           >
         </p>
         <p class="text" style="opacity: 0.4">
-          技术栈：<a href="https://vitepress.dev/" target="_blank">VitePress</a> ·
-          <a href="https://vuejs.org/" target="_blank">Vue 3</a> ·
-          <a href="https://pinia.vuejs.org/" target="_blank">Pinia</a> ·
-          <a href="https://sass-lang.com/" target="_blank">SCSS</a>
+          技术栈：<a href="https://vitepress.dev/" target="_blank" rel="noopener noreferrer"
+            >VitePress</a
+          >
+          · <a href="https://vuejs.org/" target="_blank" rel="noopener noreferrer">Vue 3</a> ·
+          <a href="https://pinia.vuejs.org/" target="_blank" rel="noopener noreferrer">Pinia</a> ·
+          <a href="https://sass-lang.com/" target="_blank" rel="noopener noreferrer">SCSS</a>
         </p>
         <p class="text" style="color: var(--main-accent); margin-top: 0.4rem">
           本站的诞生离不开上游作者的开源贡献。

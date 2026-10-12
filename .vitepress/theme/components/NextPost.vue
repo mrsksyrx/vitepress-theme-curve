@@ -37,6 +37,8 @@ const observer = ref(null);
 const isNextPost = ref(true);
 const nextPostShow = ref(false);
 const nextPostData = ref(null);
+// loadPostData 的 then 期间组件可能已卸载，置位以中止写状态 / 创建观察器
+let unmounted = false;
 
 // 获取文章
 const getNextPostData = () => {
@@ -86,12 +88,14 @@ watch(
 
 onMounted(() => {
   loadPostData().then(() => {
+    if (unmounted) return;
     getNextPostData();
     isShowNext();
   });
 });
 
 onBeforeUnmount(() => {
+  unmounted = true;
   if (observer.value) observer.value?.disconnect();
 });
 </script>

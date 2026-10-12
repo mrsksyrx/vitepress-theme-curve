@@ -27,7 +27,7 @@ const updatePointer = () => {
     const hour = now.getHours() % 12;
     const minute = now.getMinutes();
     const second = now.getSeconds();
-    hourRotate.value = calculateRotation(hour, 12);
+    hourRotate.value = calculateRotation(hour + minute / 60 + second / 3600, 12);
     minuteRotate.value = calculateRotation(minute, 60);
     secondRotate.value = calculateRotation(second, 60);
   };

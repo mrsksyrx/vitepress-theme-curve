@@ -58,6 +58,9 @@ const changeLoading = (option = {}) => {
   const store = mainStore();
   // 获取配置
   const { status = true, always = false } = option;
+  // 清除上一次未触发的定时器，避免旧定时器提前关闭新导航的加载状态
+  clearTimeout(loadingTimer);
+  loadingTimer = null;
   // 开始加载
   store.loadingStatus = status;
   // 是否不结束
@@ -87,8 +90,8 @@ const changeLoading = (option = {}) => {
       }
       // 替换链接
       // jumpRedirect(null, true);
-      // 清除定时器
-      clearTimeout(loadingTimer);
+      // 定时器已触发，clearTimeout 无效；入口处已有正确清理
+      // clearTimeout(loadingTimer);
     },
     Math.floor(Math.random() * (800 - 260 + 1)) + 260,
   );

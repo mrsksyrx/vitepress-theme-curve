@@ -52,8 +52,15 @@ watch(
   },
 );
 
+let alive = true;
+onUnmounted(() => {
+  alive = false;
+});
+
 onMounted(() => {
-  loadPostData().then(() => getRelatedData());
+  loadPostData().then(() => {
+    if (alive) getRelatedData();
+  });
 });
 </script>
 

@@ -23,6 +23,7 @@
             :key="index"
             :href="type?.type !== 'loss' ? link.url : null"
             target="_blank"
+            rel="noopener noreferrer"
           >
             <div class="cover">
               <LazyLoader :useFriendsLink="link.avatar || link.ico">

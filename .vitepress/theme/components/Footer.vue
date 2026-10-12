@@ -3,7 +3,12 @@
     <div class="footer-content">
       <div class="copyright">
         <span class="time">@ 2026 - {{ thisYear }} By </span>
-        <a :href="theme.siteMeta.author.link" class="author link" target="_blank">
+        <a
+          :href="theme.siteMeta.author.link"
+          class="author link"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
           {{ theme.siteMeta.author.name }}
         </a>
         <a
@@ -11,6 +16,7 @@
           class="icp link"
           href="https://icp.gov.moe/?keyword=20262118"
           target="_blank"
+          rel="noopener noreferrer"
         >
           <i class="iconfont icon-safe" />
           {{ theme.icp }}
@@ -27,7 +33,7 @@
           <span class="name">主题</span>
         </a>
         -->
-        <a class="rss link" href="/rss.xml" target="_blank">
+        <a class="rss link" href="/rss.xml" target="_blank" rel="noopener noreferrer">
           <i class="iconfont icon-rss" />
           <span class="name">订阅</span>
         </a>
@@ -35,13 +41,19 @@
           class="cc link"
           href="https://creativecommons.org/licenses/by-nc-sa/4.0/deed.zh-hans"
           target="_blank"
+          rel="noopener noreferrer"
         >
           <i class="iconfont icon-line" />
           <i class="iconfont icon-by-line" />
           <i class="iconfont icon-nc-line" />
           <i class="iconfont icon-nd-line" />
         </a>
-        <a class="notbyai link" href="https://notbyai.fyi/" target="_blank">
+        <a
+          class="notbyai link"
+          href="https://notbyai.fyi/"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
           <img
             class="light-badge"
             src="/notbyai/Written-By-Human-Not-By-AI-Badge-white.svg"
@@ -56,13 +68,17 @@
       </div>
       <div class="credit">
         本站的诞生离不开上游作者的开源贡献。在此感谢他（她）们。本站遵循
-        <a href="https://www.gnu.org/licenses/agpl-3.0.html" target="_blank"
+        <a
+          href="https://www.gnu.org/licenses/agpl-3.0.html"
+          target="_blank"
+          rel="noopener noreferrer"
           ><strong>AGPL v3</strong></a
         >
         协议
         <a
-          href="https://github.com/murasakizs/vitepress-theme-curve"
+          href="https://github.com/mrsksyrx/vitepress-theme-curve"
           target="_blank"
+          rel="noopener noreferrer"
           style="color: var(--main-color)"
           ><strong>开源</strong></a
         >

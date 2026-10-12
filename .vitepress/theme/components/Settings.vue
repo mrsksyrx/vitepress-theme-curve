@@ -915,6 +915,83 @@
             </div>
           </div>
         </Transition>
+        <div class="set-item">
+          <span class="set-label">美化选项</span>
+          <div class="set-options">
+            <span
+              :class="['options', { choose: beautifyExpanded }]"
+              @click="beautifyExpanded = !beautifyExpanded"
+            >
+              {{ beautifyExpanded ? "收起" : "展开" }}
+            </span>
+          </div>
+        </div>
+        <Transition name="fade-up">
+          <div v-if="beautifyExpanded" class="set-expand-box">
+            <div class="set-item">
+              <span class="set-label">美化右键菜单</span>
+              <div class="set-options">
+                <span :class="['options', { choose: !useRightMenu }]" @click="setRightMenu(false)">
+                  关闭
+                </span>
+                <span :class="['options', { choose: useRightMenu }]" @click="setRightMenu(true)">
+                  开启
+                </span>
+              </div>
+            </div>
+            <div class="set-item">
+              <span class="set-label">美化光标样式</span>
+              <div class="set-options">
+                <span
+                  :class="['options', { choose: !useCustomCursor }]"
+                  @click="setCustomCursor(false)"
+                >
+                  关闭
+                </span>
+                <span
+                  :class="['options', { choose: useCustomCursor }]"
+                  @click="setCustomCursor(true)"
+                >
+                  开启
+                </span>
+              </div>
+            </div>
+            <div class="set-item">
+              <span class="set-label">悬停阅读侧边线</span>
+              <div class="set-options">
+                <span
+                  :class="['options', { choose: !hoverLineEnabled }]"
+                  @click="setHoverLine(false)"
+                >
+                  关闭
+                </span>
+                <span
+                  :class="['options', { choose: hoverLineEnabled }]"
+                  @click="setHoverLine(true)"
+                >
+                  开启
+                </span>
+              </div>
+            </div>
+            <div class="set-item">
+              <span class="set-label">顶部阅读进度条</span>
+              <div class="set-options">
+                <span
+                  :class="['options', { choose: !readingProgressEnabled }]"
+                  @click="readingProgressEnabled = false"
+                >
+                  关闭
+                </span>
+                <span
+                  :class="['options', { choose: readingProgressEnabled }]"
+                  @click="readingProgressEnabled = true"
+                >
+                  开启
+                </span>
+              </div>
+            </div>
+          </div>
+        </Transition>
         <span class="title">杂项</span>
         <div class="set-item">
           <span class="set-label">额外信息显示位置</span>
@@ -930,48 +1007,6 @@
               @click="setInfoPosition('fixed')"
             >
               右下角
-            </span>
-          </div>
-        </div>
-        <div class="set-item">
-          <span class="set-label">自定义右键菜单</span>
-          <div class="set-options">
-            <span :class="['options', { choose: !useRightMenu }]" @click="setRightMenu(false)">
-              关闭
-            </span>
-            <span :class="['options', { choose: useRightMenu }]" @click="setRightMenu(true)">
-              开启
-            </span>
-          </div>
-        </div>
-        <div class="set-item">
-          <span class="set-label">自定义光标样式</span>
-          <div class="set-options">
-            <span
-              :class="['options', { choose: !useCustomCursor }]"
-              @click="setCustomCursor(false)"
-            >
-              关闭
-            </span>
-            <span :class="['options', { choose: useCustomCursor }]" @click="setCustomCursor(true)">
-              开启
-            </span>
-          </div>
-        </div>
-        <div class="set-item">
-          <span class="set-label">阅读进度条</span>
-          <div class="set-options">
-            <span
-              :class="['options', { choose: !readingProgressEnabled }]"
-              @click="readingProgressEnabled = false"
-            >
-              关闭
-            </span>
-            <span
-              :class="['options', { choose: readingProgressEnabled }]"
-              @click="readingProgressEnabled = true"
-            >
-              开启
             </span>
           </div>
         </div>
@@ -1505,8 +1540,9 @@
               <span class="set-label">查看源码</span>
               <div class="set-options">
                 <a
-                  href="https://github.com/murasakizs/vitepress-theme-curve/tree/master"
+                  href="https://github.com/mrsksyrx/vitepress-theme-curve/tree/master"
                   target="_blank"
+                  rel="noopener noreferrer"
                   class="options"
                   >Github</a
                 >
@@ -1515,11 +1551,24 @@
             <div class="set-item">
               <span class="set-label">反馈与建议</span>
               <div class="set-options">
-                <a href="mailto:sgexilq@qq.com" target="_blank" class="options">EMail</a>
-                <a href="https://myat-qq.20091010.xyz" target="_blank" class="options">QQ</a>
                 <a
-                  href="https://github.com/murasakizs/vitepress-theme-curve/issues"
+                  href="mailto:sgexilq@qq.com"
                   target="_blank"
+                  rel="noopener noreferrer"
+                  class="options"
+                  >EMail</a
+                >
+                <a
+                  href="https://myat-qq.20091010.xyz"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  class="options"
+                  >QQ</a
+                >
+                <a
+                  href="https://github.com/mrsksyrx/vitepress-theme-curve/issues"
+                  target="_blank"
+                  rel="noopener noreferrer"
                   class="options"
                   >Github</a
                 >
@@ -1676,6 +1725,7 @@ const {
   pwaCacheEnabled,
   pwaCacheLimit,
   readingProgressEnabled,
+  hoverLineEnabled,
   imageWebpEnabled,
   weatherProvider,
   weatherLocationMode,
@@ -1844,6 +1894,7 @@ const applyExpandAllGroups = () => {
   devFeaturesExpanded.value = true;
   aboutWebsiteExpanded.value = true;
   branchStrategyExpanded.value = true;
+  beautifyExpanded.value = true;
 };
 const applyCollapseAllGroups = () => {
   showMoreSettings.value = false;
@@ -1857,6 +1908,7 @@ const applyCollapseAllGroups = () => {
   devFeaturesExpanded.value = false;
   aboutWebsiteExpanded.value = false;
   branchStrategyExpanded.value = false;
+  beautifyExpanded.value = false;
 };
 const handleExpandAllGroups = () => {
   expandAllGroups.value = true;
@@ -1891,6 +1943,8 @@ const restoreDefaultDevFeatures = () => {
 };
 // 主题颜色设置展开状态
 const themeColorExpanded = ref(false);
+// 美化合并菜单展开状态
+const beautifyExpanded = ref(false);
 // 开发模式选项展开状态（已移至 store 持久化）
 // 关闭开发模式确认提示
 const closeDevModeConfirmVisible = ref(false);
@@ -2429,6 +2483,14 @@ const setCustomCursor = (enabled) => {
   store.toggleCustomCursor();
   if (typeof $message !== "undefined") {
     $message.success(`已${enabled ? "开启" : "关闭"}自定义光标样式`);
+  }
+};
+
+// 设置段落悬停侧边线
+const setHoverLine = (enabled) => {
+  hoverLineEnabled.value = enabled;
+  if (typeof $message !== "undefined") {
+    $message.success(`已${enabled ? "开启" : "关闭"}悬停侧边线`);
   }
 };
 

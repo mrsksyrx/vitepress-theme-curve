@@ -16,9 +16,9 @@
           :useParams="showCategories || showTags ? true : false"
           :routePath="
             showCategories
-              ? `/pages/categories/${showCategories}`
+              ? `/pages/categories/${encodeURIComponent(showCategories)}`
               : showTags
-                ? `/pages/tags/${showTags}`
+                ? `/pages/tags/${encodeURIComponent(showTags)}`
                 : ''
           "
         />
@@ -29,10 +29,15 @@
   </div>
 </template>
 
+<script>
+// [B42] 模块级：组件随路由重挂载，实例级变量会丢，需跨实例记住最近列表页路径
+</script>
+
 <script setup>
 import { mainStore } from "@/store";
 import { useDesktopAside } from "@/utils/useDesktopAside.mjs";
 import { usePostData } from "@/utils/usePostData.mjs";
+let lastListPath = null;
 
 const route = useRoute();
 const { theme } = useData();
@@ -64,8 +69,8 @@ const props = defineProps({
   },
 });
 
-// 每页文章数
-const postSize = theme.value.postSize;
+// 每页文章数（钳制下界与 page/[num].paths.mjs 一致：0 会让 totalPages 变 Infinity，NaN 会让分页失效）
+const postSize = Math.max(1, Number(theme.value.postSize) || 1);
 
 // 当前页数（分类 / 标签页使用 query 参数控制，需要手动保持响应式）
 const currentPage = ref(props.page || 1);
@@ -107,6 +112,12 @@ const getCurrentPage = () => {
     const params = new URLSearchParams(search);
     return clampPage(Number(params.get("page")));
   }
+  // [B21] 路径分页（/page/N）也从 URL 解析，统一以 URL 为唯一信源，
+  // 避免 props.page 未及时变化时列表与 Pagination 高亮分叉
+  if (typeof window !== "undefined") {
+    const match = window.location.pathname.match(/\/page\/(\d+)\/?$/);
+    if (match) return clampPage(Number(match[1]));
+  }
   return clampPage(props.page || 1);
 };
 
@@ -136,6 +147,11 @@ const postData = computed(() => {
 });
 
 onMounted(() => {
+  // [B42] 非「返回同一列表」时清掉残留 lastScrollY，避免跨页被拽到旧位置
+  if (store.lastScrollY && lastListPath && lastListPath !== route.path) {
+    store.lastScrollY = 0;
+  }
+  lastListPath = route.path;
   updateCurrentPage();
   loadPostData();
   window.addEventListener("popstate", updateCurrentPage);
@@ -151,6 +167,13 @@ onBeforeUnmount(() => {
 const restoreScrollY = (val) => {
   if (typeof window === "undefined" || val) return false;
   const scrollY = store.lastScrollY;
+  // [B42] 无记录时不做无谓 scrollTo（避免与 hash 补滚动竞态）
+  if (!scrollY) return false;
+  // [B42] 仅当回到保存滚动位置的同一列表页时才恢复
+  if (lastListPath && lastListPath !== route.path) {
+    store.lastScrollY = 0;
+    return false;
+  }
   nextTick().then(() => {
     // 平滑滚动
     window.scrollTo({

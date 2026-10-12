@@ -46,6 +46,9 @@ const compareVersions = (a, b) => {
 // 旧导出格式把 V/. 剥掉后 parseInt（"V1.10" → 110），仅用于旧文件的就近比较
 const legacyVersionNumber = (input) => parseInt(String(input).replace(/[Vv.]/g, ""), 10) || 10;
 
+// 自定义主题色仅接受 3-8 位十六进制，与 cursor.js 的 setCursorColor 白名单一致
+const isValidHexColor = (value) => typeof value === "string" && /^#?[0-9a-fA-F]{3,8}$/.test(value);
+
 const pickPortable = (config) => {
   const filtered = {};
   for (const key of PORTABLE_CONFIG_KEYS) {
@@ -158,6 +161,10 @@ export const useConfigIO = (siteVersion = "V1.0") => {
     try {
       const config = data.config || data;
       const filtered = pickPortable(config);
+      // 导入的 customPrimaryColor 会流入光标样式 innerHTML / CSS 变量，非法值直接丢弃
+      if ("customPrimaryColor" in filtered && !isValidHexColor(filtered.customPrimaryColor)) {
+        delete filtered.customPrimaryColor;
+      }
       localStorage.setItem("siteData", JSON.stringify(filtered));
       if (typeof $message !== "undefined") {
         $message.success("配置已导入，页面将刷新以应用设置", { duration: 3000 });

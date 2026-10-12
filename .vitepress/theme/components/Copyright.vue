@@ -2,8 +2,8 @@
   <div class="copyright s-card">
     <div class="title">
       <span class="post-name">{{ postData?.title || "未命名文章" }}</span>
-      <a :href="theme.siteMeta.site + route.path" class="post-link" target="_blank">
-        {{ theme.siteMeta.site + route.path }}
+      <a :href="siteRoot + route.path" class="post-link" target="_blank" rel="noopener noreferrer">
+        {{ siteRoot + route.path }}
       </a>
     </div>
     <div class="post-meta">
@@ -25,6 +25,7 @@
           class="name"
           href="https://creativecommons.org/licenses/by-nc-sa/4.0/deed.zh-hans"
           target="_blank"
+          rel="noopener noreferrer"
         >
           CC BY-NC-SA 4.0
         </a>
@@ -49,6 +50,7 @@ const props = defineProps({
   },
 });
 const route = useRoute();
+const siteRoot = computed(() => (theme.value?.siteMeta?.site || "").replace(/\/+$/, ""));
 </script>
 
 <style lang="scss" scoped>

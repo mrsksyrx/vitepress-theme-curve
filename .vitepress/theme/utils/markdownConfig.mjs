@@ -110,7 +110,7 @@ const markdownConfig = (md, themeConfig) => {
     // src / alt 来自作者书写的 markdown，必须转义后再拼进 HTML 属性：
     // 本仓库的 image 规则是自己拼字符串的（不是走默认 token 渲染器），
     // 不转义时 `![a" onerror="alert(1)](x.png)` 会撑开 alt 属性并注入事件。
-    const src = md.utils.escapeHtml(token.attrs[token.attrIndex("src")][1]);
+    const src = md.utils.escapeHtml(token.attrs?.[token.attrIndex("src")]?.[1] ?? "");
     const alt = md.utils.escapeHtml(token.content);
 
     // 生成 WebP 路径（将扩展名替换为 .webp）

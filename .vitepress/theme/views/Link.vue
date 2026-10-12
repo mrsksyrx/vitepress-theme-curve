@@ -56,7 +56,7 @@ const randomJump = () => {
         duration: 2000,
       },
       () => {
-        if (randomList?.url) window.open(randomList.url, "_blank");
+        if (randomList?.url) window.open(randomList.url, "_blank", "noopener,noreferrer");
       },
     );
   } catch (error) {

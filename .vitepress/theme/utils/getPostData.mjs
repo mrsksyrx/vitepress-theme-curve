@@ -145,7 +145,9 @@ export const getAllPosts = async () => {
             );
           }
           // 计算文章的过期天数（基于上面解析出的 dateValue，避免二次解析再得 NaN）
-          const expired = Math.floor((new Date().getTime() - dateValue) / (1000 * 60 * 60 * 24));
+          // 注意：此值在构建期算死并写入 postData.json，部署后不再增长。
+          // 实际展示走 Post.vue 的 daysPassedAt（客户端实时计算），此字段当前无消费点。
+          // const expired = Math.floor((new Date().getTime() - dateValue) / (1000 * 60 * 60 * 24));
           // tags / categories 在 frontmatter 里可能是数组，也可能是「裸写」字符串
           // （README「写文章」承诺两种写法都支持）。这里统一归一化成数组：
           //   - 字符串若原样透传，模板里的 v-for 会**逐字符**渲染出 404 链接；
@@ -153,16 +155,16 @@ export const getAllPosts = async () => {
           // 未设置时保持 undefined（而不是空数组），以免模板里 `v-if="item?.tags"`
           // 由「隐藏」变成「渲染空容器」。
           const toListOrUndefined = (value) =>
-            (value === undefined || value === null || value === ""
+            value === undefined || value === null || value === ""
               ? undefined
-              : normalizeList(value));
+              : normalizeList(value);
           // 返回文章对象
           return {
             id: item,
             title: title || "未命名文章",
             date: dateValue,
             lastModified: mtimeMs,
-            expired,
+            // expired, // 构建期冻结，无消费点，见上方说明
             tags: toListOrUndefined(tags),
             categories: toListOrUndefined(categories),
             description,

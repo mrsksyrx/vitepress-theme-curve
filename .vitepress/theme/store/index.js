@@ -1,12 +1,15 @@
 import { defineStore } from "pinia";
 import cursorInit from "@/utils/cursor.js";
 import { PERSIST_PATHS } from "@/utils/configKeys.mjs";
+import { lockBodyScroll, unlockBodyScroll } from "@/utils/commonTools.mjs";
 
 let appCursorInstance;
+// 定时切换明暗外观的 interval 句柄（不可序列化，不能放进 state，见下方注释）
+let scheduledThemeTimer = null;
 const isMobile =
   typeof navigator !== "undefined" && /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
 // 开发用版本号，每次改默认值时 +1，自动清除旧缓存
-const PERSIST_VERSION = 29;
+const PERSIST_VERSION = 36;
 // 开发模式开关（1 = 未开启，2 = 开启）
 const DEFAULT_DEV_MODE = 1;
 
@@ -14,7 +17,12 @@ const DEFAULT_DEV_MODE = 1;
 if (typeof localStorage !== "undefined") {
   const storedVersion = parseInt(localStorage.getItem("siteDataVersion") || "0", 10);
   if (storedVersion !== PERSIST_VERSION) {
-    const old = JSON.parse(localStorage.getItem("siteData") || "{}");
+    let old = {};
+    try {
+      old = JSON.parse(localStorage.getItem("siteData") || "{}") || {};
+    } catch {
+      old = {};
+    }
     const keep = {
       siteVersion: old.siteVersion,
       siteVersionDate: old.siteVersionDate,
@@ -115,6 +123,7 @@ export const mainStore = defineStore("main", {
       lastScrollY: 0,
       // 站点背景
       backgroundType: "patterns",
+      // 第三方图片接口（非本站源），无 SRI 校验，内容与可用性由第三方控制，风险自担
       backgroundUrl: "https://api.miaomc.cn/image/get",
       // 显示更多设置
       showMoreSettings: false,
@@ -160,6 +169,8 @@ export const mainStore = defineStore("main", {
       pwaCacheLimit: 100,
       // 阅读进度条
       readingProgressEnabled: true,
+      // 正文逐行悬停侧边线
+      hoverLineEnabled: true,
       // 图片功能开关
       imageWebpEnabled: false,
       // 天气小组件开关
@@ -178,13 +189,13 @@ export const mainStore = defineStore("main", {
       scheduledThemeEnabled: false,
       scheduledLightTime: "07:00",
       scheduledDarkTime: "19:00",
-      scheduledThemeTimer: null,
+      // scheduledThemeTimer: null, // 句柄不可序列化，已移至模块级变量
       // 站点版本信息（运行时覆盖，用于关于本站页面）
       siteVersion: "V1.4",
       siteVersionDate: "2026.10.5",
       // 分支版本（自动递增）
-      branchVersion: 151,
-      branchBuildTime: "2026.10.05 13:10:34",
+      branchVersion: 180,
+      branchBuildTime: "2026.10.12 10:57:09",
     };
   },
   actions: {
@@ -193,8 +204,9 @@ export const mainStore = defineStore("main", {
       if (typeof document === "undefined") return; // 确保在客户端
 
       this[value] = !this[value];
-      // 阻止滚动
-      document.body.style.overflowY = this[value] ? "hidden" : "";
+      // 阻止滚动（引用计数，多弹窗并发时不会互相踩踏）
+      if (this[value]) lockBodyScroll();
+      else unlockBodyScroll();
       // 背景层模糊（弹窗/导航保持清晰；close 模式下无背景层，开关无效）
       const backgroundEl = document.querySelector(".background");
       if (backgroundEl) {
@@ -414,13 +426,13 @@ export const mainStore = defineStore("main", {
       checkAndSwitch();
 
       // 每分钟检查一次
-      this.scheduledThemeTimer = setInterval(checkAndSwitch, 60000);
+      scheduledThemeTimer = setInterval(checkAndSwitch, 60000);
     },
 
     stopScheduledTheme() {
-      if (this.scheduledThemeTimer) {
-        clearInterval(this.scheduledThemeTimer);
-        this.scheduledThemeTimer = null;
+      if (scheduledThemeTimer) {
+        clearInterval(scheduledThemeTimer);
+        scheduledThemeTimer = null;
       }
     },
   },

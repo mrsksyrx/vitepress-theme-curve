@@ -8,6 +8,7 @@
     @modal-close="store.changeShowStatus('searchShow')"
   >
     <ais-instant-search
+      v-if="hasSearchConfig"
       :search-client="searchClient"
       :future="{
         preserveSharedStateOnUnmount: true,
@@ -45,7 +46,12 @@
           <div class="information">
             <span v-if="hasSearchValue" class="text"> 本次用时 {{ processingTimeMS }} 毫秒 </span>
           </div>
-          <a class="power" href="https://www.algolia.com/" target="_blank">
+          <a
+            class="power"
+            href="https://www.algolia.com/"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
             <i class="iconfont icon-algolia" />
             <span class="name">Algolia</span>
           </a>
@@ -63,9 +69,13 @@ const store = mainStore();
 const router = useRouter();
 
 const { theme } = useData();
-const { appId, apiKey } = theme.value.search;
+const { appId, apiKey } = theme.value.search ?? {};
 
-const searchClient = liteClient(appId, apiKey);
+const hasSearchConfig = Boolean(appId && apiKey);
+if (!hasSearchConfig) {
+  console.warn("[Search] theme.search 缺少 appId / apiKey，搜索功能不可用");
+}
+const searchClient = hasSearchConfig ? liteClient(appId, apiKey) : null;
 
 // 是否具有搜索词
 const hasSearchValue = ref(false);
@@ -75,6 +85,19 @@ const searchChange = ({ uiState, setUiState }) => {
   const searchData = Object.values(uiState);
   hasSearchValue.value = searchData.length > 0 && searchData[0].query?.length > 0;
   setUiState(uiState);
+};
+
+// 仅保留高亮标签 <em>，剥除其余所有标签与属性，避免 v-html 注入
+const sanitizeHighlight = (value) => {
+  if (typeof value !== "string") return "";
+  // 仅保留高亮标签 <em>，剥除其余所有标签与属性，避免 v-html 注入
+  // 用私有区占位符（非控制字符）暂存 <em>，避免 no-control-regex
+  return value
+    .replace(/<em[^>]*>/gi, "\uE000")
+    .replace(/<\/em\s*>/gi, "\uE001")
+    .replace(/<[^>]*>/g, "")
+    .replace(/\uE000/g, "<em>")
+    .replace(/\uE001/g, "</em>");
 };
 
 // 处理搜索结果
@@ -88,9 +111,9 @@ const formatSearchData = (data) => {
     // 获取数据
     const url = search?.url;
     const type = search.type === "lvl1" ? "post" : "content";
-    const title = search._highlightResult?.hierarchy?.lvl1?.value;
-    const anchor = search._highlightResult?.hierarchy?.[search.type]?.value;
-    const content = search._highlightResult?.content?.value;
+    const title = sanitizeHighlight(search._highlightResult?.hierarchy?.lvl1?.value);
+    const anchor = sanitizeHighlight(search._highlightResult?.hierarchy?.[search.type]?.value);
+    const content = sanitizeHighlight(search._highlightResult?.content?.value);
     // 生成搜索数据
     const searchData = { url, type, title, anchor, content };
     results.push(searchData);

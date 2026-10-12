@@ -1,41 +1,44 @@
 <template>
-  <!-- 配置了状态页 URL：点击跳转 -->
-  <a
-    v-if="statusPageUrl"
-    class="system-status"
-    :class="statusClass"
-    :href="statusPageUrl"
-    target="_blank"
-    rel="noopener noreferrer"
-    :title="`查看服务状态 - ${label}`"
-  >
-    <div class="status-dot-wrapper">
-      <span v-if="!loading" class="status-dot-ping" :class="pingClass" />
-      <span class="status-dot" :class="dotClass" />
+  <!-- 接口不可用（如 GitHub Pages 无 /api/status）时隐藏整个组件 -->
+  <template v-if="!hidden">
+    <!-- 配置了状态页 URL：点击跳转 -->
+    <a
+      v-if="statusPageUrl"
+      class="system-status"
+      :class="statusClass"
+      :href="statusPageUrl"
+      target="_blank"
+      rel="noopener noreferrer"
+      :title="`查看服务状态 - ${label}`"
+    >
+      <div class="status-dot-wrapper">
+        <span v-if="!loading" class="status-dot-ping" :class="pingClass" />
+        <span class="status-dot" :class="dotClass" />
+      </div>
+
+      <span class="status-label">
+        {{ loading ? "Checking..." : label }}
+      </span>
+    </a>
+
+    <!-- 未配置状态页 URL：点击刷新 -->
+    <div
+      v-else
+      class="system-status"
+      :class="statusClass"
+      title="点击刷新状态"
+      @click="handleRefresh"
+    >
+      <div class="status-dot-wrapper">
+        <span v-if="!loading" class="status-dot-ping" :class="pingClass" />
+        <span class="status-dot" :class="dotClass" />
+      </div>
+
+      <span class="status-label">
+        {{ loading ? "Checking..." : label }}
+      </span>
     </div>
-
-    <span class="status-label">
-      {{ loading ? "Checking..." : label }}
-    </span>
-  </a>
-
-  <!-- 未配置状态页 URL：点击刷新 -->
-  <div
-    v-else
-    class="system-status"
-    :class="statusClass"
-    title="点击刷新状态"
-    @click="handleRefresh"
-  >
-    <div class="status-dot-wrapper">
-      <span v-if="!loading" class="status-dot-ping" :class="pingClass" />
-      <span class="status-dot" :class="dotClass" />
-    </div>
-
-    <span class="status-label">
-      {{ loading ? "Checking..." : label }}
-    </span>
-  </div>
+  </template>
 </template>
 
 <script setup lang="ts">
@@ -64,6 +67,8 @@ const refreshKey = ref(Date.now());
 const data = ref<StatusResponse | null>(null);
 const pending = ref(true);
 const error = ref(false);
+// GitHub Pages 等静态托管没有 /api/status 接口（fetch 404）时隐藏组件
+const hidden = ref(false);
 
 const fetchData = async () => {
   pending.value = true;
@@ -81,11 +86,17 @@ const fetchData = async () => {
     }
 
     const res = await fetch(`/api/status?t=${refreshKey.value}`);
+    // 404：部署环境不提供该接口，隐藏组件而不是显示错误
+    if (res.status === 404) {
+      hidden.value = true;
+      return;
+    }
     if (!res.ok) throw new Error("Network response was not ok");
     data.value = await res.json();
   } catch (e) {
     console.error(e);
     error.value = true;
+    hidden.value = true;
   } finally {
     pending.value = false;
   }

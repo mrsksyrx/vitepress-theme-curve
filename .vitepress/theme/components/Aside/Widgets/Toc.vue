@@ -76,17 +76,18 @@ const activeTocItem = throttle(
     // 所有标题
     const headers = getAllTitle();
     if (!headers) return false;
-    // 容错高度
-    const bufferheight = 120;
-    // 遍历所有标题
-    for (let header of headers) {
+    // 与 scrollToHeader 的 -80 偏移对齐，保证高亮与落点一致
+    const threshold = 80;
+    // 记录最后一个 rect.top 越过阈值线的标题（文档序），即当前阅读位置
+    let matchedId = null;
+    for (const header of headers) {
       const rect = header.getBoundingClientRect();
-      // 检查标题是否在视口中
-      if (rect.top - bufferheight <= 0 && rect.bottom + bufferheight >= 0) {
-        // 高亮对应标题
-        activeHeader.value = header.id;
+      if (rect.top <= threshold) {
+        matchedId = header.id;
       }
     }
+    // 所有标题都还在阈值线下方时沿用旧值，不清空高亮
+    if (matchedId) activeHeader.value = matchedId;
   },
   100,
   { leading: true, trailing: false },

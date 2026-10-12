@@ -10,6 +10,9 @@ dist
 auto-imports.d.ts
 components.d.ts
 
+# 类型声明文件不参与 lint
+**/*.d.ts
+
 # 临时/脚手架文件与目录（非仓库源码，未纳入版本控制）
 _fix2
 _fix3

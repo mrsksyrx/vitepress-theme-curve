@@ -90,7 +90,7 @@ pnpm build
 - **仓库没有测试套件**：`package.json` 中没有 test 脚本，也没有任何单测框架；`timeTools`、`getPostData`、分页数学等纯函数建议后续补齐单元测试。
 - **密钥仍在版本控制中**：`.env` 至今仍被 Git 跟踪，其内容与 `HEAD` 完全一致，且 `.gitignore` **没有**忽略它（见下方[安全提示](#安全提示)）。
 - **`.eslintignore` 残留**：其中仍列有已删除的临时目录（`_fix2`、`_fix3`、`.dsh_baseline`、`_fix_t1`、`_t4_*`）等历史条目。
-- **跳转壳的重复内容**：`page.md`、`page/index.md`、`page/1.md`、`pages/index.md` 内容逐字节相同。`gray-matter` 以文件内容为键缓存解析结果，相同内容的文件会共享同一个 `frontmatter` 对象，历史上曾导致 canonical 标签跨页累积。构建配置现已在 `transformPageData` 中改为白名单重建（每条 canonical 都挂到本页自己的新数组上），但**共享 frontmatter 的根因仍在**，日后若在 `transformPageData` 里就地 `push` 新的 head 字段，同类问题会复现。
+- **跳转壳的重复内容**：`page.md`、`page/index.md`、`page/1.md`、`pages/index.md` 内容逐字节相同。`gray-matter` 以文件内容为键缓存解析结果，相同内容的文件会共享同一个 `head` 数组，历史上曾导致 canonical 标签跨页累积。构建配置现已在 `transformPageData` 中按页重建 `head`（替换引用、不就地 `push`，并保留 frontmatter 里用户自定义的 head 项，仅剔除 canonical 后补本页那条），但**共享 `head` 数组的根因仍在**，日后若在 `transformPageData` 里就地 `push` 新的 head 字段，同类问题会复现。
 - **构建期会写入工作区**：加载 `.vitepress/config.mjs` 时会重新生成 `public/data/postData.json`，因此运行 `dev`/`build` 后 `git status` 必然出现该文件的变动。该文件**未被跟踪且已被 `.gitignore` 忽略**，不会污染提交。
 - **`jumpRedirect` 默认关闭、本站已启用**：相关实现与 `/redirect.html` 已就位，主题默认 `jumpRedirect.enable: false`，但根目录 `themeConfig.mjs` 覆盖为 `true`。代码层缺陷（`text()` 丢嵌套元素、缺同源检查、非 http(s) 协议被包进中转页、Base64 非 UTF-8 对称）已修复。
 - **`public/` 会被原样拷进产物**：`public/` 是**源目录**，其中的文件在构建时被逐份拷贝到 `.vitepress/dist` 根下（`postData.json` 就是这么进去的），因此不要在里面放需要手工维护的产物——下一次构建会用同名的源文件覆盖它。

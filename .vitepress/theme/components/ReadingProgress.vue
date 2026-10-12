@@ -75,16 +75,24 @@ const updateReadingData = () => {
     totalReadingTime.value = (Date.now() - readingStartTime.value) / 1000;
   }
 
+  // [B29-原高频写入] 16ms 节流下每次滚动都 parse+stringify+setItem，
+  // 改为与滚动解耦：滚动回调只更新内存/进度条，写入走空闲调度。
   // 保存到 localStorage
-  saveReadingData();
+  // saveReadingData();
+  schedulePersist();
 };
 
 // 保存阅读数据到 localStorage
-const saveReadingData = () => {
-  const postId = route.path;
+// postId 可显式指定（路由切换时落盘上一篇）；默认取当前路由
+const saveReadingData = (postId = route.path) => {
   if (!postId) return;
 
-  const readingData = JSON.parse(localStorage.getItem("readingData") || "{}");
+  let readingData = {};
+  try {
+    readingData = JSON.parse(localStorage.getItem("readingData") || "{}") || {};
+  } catch {
+    readingData = {};
+  }
   readingData[postId] = {
     scrollPercent: Math.round(scrollPercent.value),
     readingTime: Math.floor(totalReadingTime.value),
@@ -104,12 +112,70 @@ const saveReadingData = () => {
   localStorage.setItem("readingData", JSON.stringify(readingData));
 };
 
+// [B29] 持久化与滚动解耦：静默节流 + 变化阈值 + 空闲写入
+// - 静默期 PERSIST_QUIET_MS 内不重复写（原实现每 16ms 都 parse+stringify+setItem）
+// - percent / 阅读时长变化未超阈值时直接跳过 setItem
+// - 真正的写入丢进 requestIdleCallback，不占用滚动帧
+const PERSIST_QUIET_MS = 800;
+const PERSIST_PERCENT_THRESHOLD = 1;
+const PERSIST_TIME_THRESHOLD = 5;
+
+let persistTimer = null;
+let idleHandle = null;
+let lastPersisted = { percent: -1, time: -1, at: 0 };
+
+const cancelScheduledPersist = () => {
+  if (persistTimer) {
+    clearTimeout(persistTimer);
+    persistTimer = null;
+  }
+  if (idleHandle !== null) {
+    if (typeof cancelIdleCallback === "function") {
+      cancelIdleCallback(idleHandle);
+    }
+    idleHandle = null;
+  }
+};
+
+const flushReadingData = (postId) => {
+  idleHandle = null;
+  const percent = Math.round(scrollPercent.value);
+  const time = Math.floor(totalReadingTime.value);
+  const percentChanged = Math.abs(percent - lastPersisted.percent) >= PERSIST_PERCENT_THRESHOLD;
+  const timeChanged = Math.abs(time - lastPersisted.time) >= PERSIST_TIME_THRESHOLD;
+  // 无论是否落盘都推进静默窗口，避免未达阈值时每个滚动帧都重排一次调度
+  lastPersisted.at = Date.now();
+  if (!percentChanged && !timeChanged) return;
+  saveReadingData(postId);
+  lastPersisted.percent = percent;
+  lastPersisted.time = time;
+};
+
+const schedulePersist = () => {
+  // 已在排队则不重复调度（节流而非防抖：持续滚动时也保证每 800ms 落盘一次）
+  if (persistTimer || idleHandle !== null) return;
+  const wait = Math.max(0, PERSIST_QUIET_MS - (Date.now() - lastPersisted.at));
+  persistTimer = setTimeout(() => {
+    persistTimer = null;
+    if (typeof requestIdleCallback === "function") {
+      idleHandle = requestIdleCallback(() => flushReadingData(), { timeout: 500 });
+    } else {
+      flushReadingData();
+    }
+  }, wait);
+};
+
 // 加载阅读数据
 const loadReadingData = () => {
   const postId = route.path;
   if (!postId) return null;
 
-  const readingData = JSON.parse(localStorage.getItem("readingData") || "{}");
+  let readingData = {};
+  try {
+    readingData = JSON.parse(localStorage.getItem("readingData") || "{}") || {};
+  } catch {
+    readingData = {};
+  }
   return readingData[postId] || null;
 };
 
@@ -140,13 +206,21 @@ const handleScroll = () => {
 // 监听路由变化
 watch(
   () => route.path,
-  () => {
+  (to, from) => {
+    // [B29] 切走前把上一篇的待写数据落盘（此刻 isPostPage 仍反映上一篇），
+    // 否则 reset 后的 0 值会被后续空闲写入错记到新路径上
+    cancelScheduledPersist();
+    if (isPostPage.value && from) {
+      saveReadingData(from);
+    }
     checkIsPostPage();
     if (isPostPage.value) {
       readingStartTime.value = Date.now();
       totalReadingTime.value = 0;
       scrollPercent.value = 0;
     }
+    // 新一篇从零开始计，清空阈值基线以便尽快落盘
+    lastPersisted = { percent: -1, time: -1, at: 0 };
   },
 );
 
@@ -163,6 +237,8 @@ onBeforeUnmount(() => {
   if (scrollTimer) {
     clearTimeout(scrollTimer);
   }
+  // [B29] 卸载前取消待写调度，保留最终写入（直写，不受阈值限制）
+  cancelScheduledPersist();
   // 保存最终阅读数据
   saveReadingData();
 });

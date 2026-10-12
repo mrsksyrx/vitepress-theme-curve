@@ -16,7 +16,8 @@
   "type": "module",
   "scripts": {
     "format": "prettier --write .",
-    "lint": "eslint . .vitepress --ext .js,.jsx,.cjs,.mjs,.vue --fix",
+    "lint": "eslint . .vitepress --ext .js,.jsx,.cjs,.mjs,.vue,.ts",
+    "lint:fix": "eslint . .vitepress --ext .js,.jsx,.cjs,.mjs,.vue,.ts --fix",
     "dev": "vitepress dev --host",
     "build": "vitepress build",
     "preview": "vitepress preview",
@@ -56,6 +57,7 @@
     "algoliasearch": "^5.55.1",
     "aplayer": "^1.10.1",
     "dayjs": "^1.11.21",
+    "dompurify": "^3.4.16",
     "instantsearch.js": "^4.104.0",
     "jsmediatags": "^3.9.7",
     "lodash-es": "^4.18.1",

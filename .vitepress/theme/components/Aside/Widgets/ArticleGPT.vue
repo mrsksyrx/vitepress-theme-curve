@@ -2,7 +2,16 @@
 <template>
   <div v-if="frontmatter.articleGPT" class="article-gpt s-card">
     <div class="title">
-      <span class="name" @click="router.go('#')">
+      <!-- router.go('#') 在 VitePress 中等价于 go('/')，会导致跳转到首页，故禁用；如需回顶请用 window.scrollTo({ top: 0, behavior: 'smooth' }) -->
+      <!-- @click 处理器用注释包裹禁用（不是删除属性） -->
+      <span
+        class="name"
+        @click="
+          () => {
+            /* router.go('#') */
+          }
+        "
+      >
         <i class="iconfont icon-robot"></i>
         文章摘要
         <i class="iconfont icon-up"></i>
@@ -30,11 +39,13 @@
 
 <script setup>
 const { frontmatter } = useData();
-const router = useRouter();
+// router 原用于 router.go('#')，已禁用（见上方注释），暂注释保留
+// const router = useRouter();
 
 // 摘要数据
 const loading = ref(true);
 const waitTimeOut = ref(null);
+let typeTimer = null;
 const abstractData = ref("");
 const showIndex = ref(0);
 const showType = ref(false);
@@ -48,7 +59,7 @@ const typeWriter = (text = null) => {
       abstractData.value += data.charAt(showIndex.value++);
       // 生成字符延迟
       const delay = Math.random() * (150 - 30) + 30;
-      setTimeout(() => {
+      typeTimer = setTimeout(() => {
         typeWriter(text);
       }, delay);
     } else {
@@ -95,6 +106,7 @@ onMounted(() => {
 
 onBeforeUnmount(() => {
   clearTimeout(waitTimeOut.value);
+  clearTimeout(typeTimer);
 });
 </script>
 

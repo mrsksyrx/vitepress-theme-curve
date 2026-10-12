@@ -10,8 +10,15 @@ import Components from "unplugin-vue-components/vite";
 import path from "path";
 import fs from "fs-extra";
 import { fileURLToPath } from "url";
+import { execSync } from "child_process";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
+
+// 构建时注入的 Git 短哈希，页脚点击标题可查看
+let gitCommit = "unknown";
+try {
+  gitCommit = execSync("git rev-parse --short HEAD").toString().trim();
+} catch {}
 
 // 获取全局数据
 const postData = await getAllPosts();
@@ -79,7 +86,7 @@ export default withPwa(
         "noscript",
         {},
         `<style>
-          .loading {
+          body > .loading {
             display: none !important;
           }
           .main-layout {
@@ -117,30 +124,28 @@ export default withPwa(
     // transformPageData
     transformPageData: async (pageData) => {
       // canonical URL
-      const canonicalUrl = `${themeConfig.siteMeta.site}/${pageData.relativePath}`
+      const siteRoot = themeConfig.siteMeta.site.replace(/\/+$/, "");
+      const canonicalUrl = `${siteRoot}/${pageData.relativePath}`
         .replace(/index\.md$/, "")
         .replace(/\.md$/, "");
-      // ⚠️ 这里不能简单 `head.push(...)`：
+      // ⚠️ 这里不能 `head.push(...)`：
       // gray-matter 以「文件内容字符串」为键缓存解析结果，内容完全相同的多个 .md
-      // 会**共享同一个 frontmatter 对象与 head 数组**（实测 `matter(same).data === matter(same).data`
-      // 为 true；内容不同的则返回不同对象），push 会跨页累积，使单个页面带上
-      // 多条指向**别的页面**的 canonical（实测 1→2→3→4 条）。
-      // 触发过：page.md / page/index.md / page/1.md / pages/index.md（当时 4 个文件逐字节全同）。
+      // 会**共享同一个 head 数组**（实测 `matter(same).data.head === matter(same).data.head`
+      // 为 true）。`frontmatterPlugin` 虽给每页新建了 frontmatter 外壳，但 `head`
+      // 属性仍指向同一共享数组——就地 `push` 会跨页累积（实测 1→2→3→4 条 canonical）。
+      // 触发过：page.md / page/index.md / page/1.md / pages/index.md（4 个文件逐字节全同）。
       //
-      // 修法：本页**只保留与"本页是否跳转壳"相关的原创 head 项**，其余一律丢弃后重建。
-      // - 为什么是「只保留白名单」而不是「过滤掉 canonical」：
-      //   共享数组里被前面页面 push 进去的，正是**别的页面**的 canonical，
-      //   过滤法能挡住这一种，但挡不住未来新增的其它就地 push 字段。
-      // - 为什么白名单只放 meta refresh：
-      //   本仓库的 head 来源只有两处 —— 跳转壳 .md 的 `head:`（只有 meta refresh）
-      //   与 config 顶部的 `head` 数组（全局注入，不经过 frontmatter）。
-      //   因此白名单是**真实全量**的，不会误删任何原本要输出的项。
-      //   （实证：修复后 4 个跳转页的 meta refresh 全部保留、每页 canonical 恰好 1 条。）
+      // 修法（两条约束，不丢用户项）：
+      // 1. **绝不就地修改 `pageData.frontmatter.head`**，只用新数组替换本页引用；
+      // 2. 重建时**保留 frontmatter 里用户自定义的全部 head 项**（og:image、自定义
+      //    meta/link/script 等），仅剔除 canonical 后补上本页自己的那一条——
+      //    canonical 必须唯一且指向本页，用户手写的或共享数组里残留的都不该留下。
       //
-      // 注意：这里不修改共享数组本身（改它会污染其它页面），只替换本页的引用。
+      // （曾用「白名单只留 meta refresh」的写法，会静默丢掉主题使用者写在
+      //   frontmatter.head 里的任何自定义项；共享数组问题其实只需上面两条约束。）
       const existingHead = Array.isArray(pageData.frontmatter.head)
         ? pageData.frontmatter.head.filter(
-            ([tag, attrs]) => tag === "meta" && attrs?.["http-equiv"] === "refresh",
+            ([tag, attrs]) => !(tag === "link" && attrs?.rel === "canonical"),
           )
         : [];
       pageData.frontmatter.head = [
@@ -167,6 +172,9 @@ export default withPwa(
     },
     // vite
     vite: {
+      define: {
+        __GIT_COMMIT__: JSON.stringify(gitCommit),
+      },
       plugins: [
         AutoImport({
           imports: ["vue", "vitepress"],
@@ -194,7 +202,8 @@ export default withPwa(
               req.on("end", () => {
                 try {
                   const data = JSON.parse(body);
-                  // 输入格式白名单：只校验请求里出现过的键，不合规直接 400
+                  // 输入格式白名单：只允许已注册 validator 的键，不合规直接 400。
+                  // 新增写入字段必须在此注册白名单 validator，禁止跳过校验直接拼接进文件。
                   const validators = {
                     siteVersion: (v) => /^V?\d+(\.\d+)*$/.test(v),
                     siteVersionDate: (v) =>
@@ -208,7 +217,13 @@ export default withPwa(
                   };
                   for (const key of Object.keys(data)) {
                     const validate = validators[key];
-                    if (validate && !validate(data[key])) {
+                    if (!validate) {
+                      res.statusCode = 400;
+                      res.setHeader("Content-Type", "application/json");
+                      res.end(JSON.stringify({ ok: false, error: `未知字段 ${key}` }));
+                      return;
+                    }
+                    if (!validate(data[key])) {
                       res.statusCode = 400;
                       res.setHeader("Content-Type", "application/json");
                       res.end(JSON.stringify({ ok: false, error: `字段 ${key} 格式不合法` }));
@@ -389,6 +404,8 @@ export default withPwa(
             },
           },
           // 文章页面 - 网络优先，离线回退缓存
+          // cleanUrls 模式下永不命中（URL 不带 .html 后缀），保留供 cleanUrls 关闭时使用
+          /*
           {
             urlPattern: ({ url, sameOrigin }) => sameOrigin && /\.html$/i.test(url.pathname),
             handler: "NetworkFirst",
@@ -401,6 +418,7 @@ export default withPwa(
               },
             },
           },
+          */
           // VitePress 生成的页面路由（cleanUrls 模式，排除根级带点文件）
           {
             urlPattern: ({ url, sameOrigin }) =>
@@ -461,10 +479,10 @@ export default withPwa(
               },
             },
           },
-          // JS 资源 - 缓存优先
+          // JS 资源 - 第三方无 hash JS 需要后台更新
           {
             urlPattern: /\.js$/i,
-            handler: "CacheFirst",
+            handler: "StaleWhileRevalidate",
             options: {
               cacheName: "js-cache",
               expiration: {

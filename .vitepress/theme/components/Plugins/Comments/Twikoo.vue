@@ -19,12 +19,15 @@ const { comment } = theme.value;
 // 评论数据
 const twikoo = ref(null);
 const commentRef = ref(null);
+// initTwikoo 的 await 期间组件可能已卸载，置位以中止 init（Twikoo 无 destroy API，只能避免泄漏）
+let unmounted = false;
 
 // 初始化 Twikoo
 const initTwikoo = async () => {
   try {
     await nextTick();
     const Twikoo = await initComments(theme.value);
+    if (unmounted) return;
     twikoo.value = Twikoo.init({
       el: commentRef.value || "#comment-dom",
       envId: comment.twikoo.envId,
@@ -45,6 +48,7 @@ const fillComments = (data) => {
   if (!commentDom) return false;
   // 获取输入框
   const commentInput = commentDom.querySelector("textarea");
+  if (!commentInput) return false;
   // 写入内容
   commentInput.value = data + "\n\n";
   commentInput.focus();
@@ -52,6 +56,10 @@ const fillComments = (data) => {
 
 onMounted(() => {
   initTwikoo();
+});
+
+onUnmounted(() => {
+  unmounted = true;
 });
 </script>
 

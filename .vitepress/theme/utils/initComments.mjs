@@ -27,6 +27,7 @@ const initComments = async (themeConfig) => {
         throw new Error("Twikoo 初始化失败");
       }
       default:
+        console.warn(`未知的评论服务类型：${commentType}，已跳过初始化`);
         return false;
     }
   } catch (error) {

@@ -12,6 +12,7 @@
         :href="item.url"
         class="list-item"
         target="_blank"
+        rel="noopener noreferrer"
       >
         <span class="item-title">{{ item.title }}</span>
       </a>

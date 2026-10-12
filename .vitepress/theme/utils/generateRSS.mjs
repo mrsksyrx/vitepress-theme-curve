@@ -1,5 +1,5 @@
 import { createContentLoader } from "vitepress";
-import { writeFileSync } from "fs";
+import { writeFileSync, statSync } from "fs";
 import { Feed } from "feed";
 import path from "path";
 
@@ -11,7 +11,8 @@ import path from "path";
 export const createRssFile = async (config, themeConfig) => {
   // 配置信息
   const siteMeta = themeConfig.siteMeta;
-  const hostLink = siteMeta.site;
+  // 归一化：去掉尾斜杠，避免 hostLink 尾斜杠 + url 前导 / 产生 `//` 分裂 guid
+  const hostLink = siteMeta.site.replace(/\/+$/, "");
   // Feed 实例
   const feed = new Feed({
     title: siteMeta.title,
@@ -56,13 +57,22 @@ export const createRssFile = async (config, themeConfig) => {
   for (const { url, frontmatter } of posts) {
     // 仅保留最近 10 篇文章
     if (feed.items.length >= 10) break;
-    // 文章信息
+    // 文章信息（title 兜底对齐 getPostData.mjs）
     let { title, description, date } = frontmatter;
-    // 处理日期：字符串转 Date；缺失/非法时回退到当前时间，
-    // 避免把 Invalid Date 写进 feed（feed 包会输出 "Invalid Date" 字面量）。
+    title = title || "未命名文章";
+    // 处理日期：字符串转 Date；缺失/非法时回退到源文件 mtime（对齐 getPostData），
+    // 避免 new Date() 导致每次构建 pubDate 漂移、构建不可复现。
     if (typeof date === "string") date = new Date(date);
     if (!(date instanceof Date) || Number.isNaN(date.getTime())) {
-      date = new Date();
+      try {
+        const srcPath = path.resolve(
+          process.cwd(),
+          url.replace(/^\//, "").replace(/\.html$/, "") + ".md",
+        );
+        date = new Date(statSync(srcPath).mtimeMs);
+      } catch {
+        date = new Date(0);
+      }
     }
     // 添加文章
     feed.addItem({

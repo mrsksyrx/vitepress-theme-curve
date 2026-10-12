@@ -82,7 +82,7 @@
             </div>
             <!-- 输入框 -->
             <div
-              v-if="clickedType === 'input' && typeof clickedTypeData.value === 'string'"
+              v-if="clickedType === 'input' && typeof clickedTypeData?.value === 'string'"
               class="btn"
               @click="rightMenuFunc('input-paste')"
             >
@@ -95,6 +95,7 @@
               :href="`${isLink(clickedTypeData)}`"
               class="btn right-menu-link"
               target="_blank"
+              rel="noopener noreferrer"
             >
               <i class="iconfont icon-link"></i>
               <span class="name">在新标签页打开</span>
@@ -115,6 +116,7 @@
               :href="`https://cn.bing.com/search?q=${encodeURIComponent(clickedTypeData)}`"
               class="btn right-menu-link"
               target="_blank"
+              rel="noopener noreferrer"
             >
               <i class="iconfont icon-bing"></i>
               <span class="name">使用必应搜索</span>
@@ -370,7 +372,8 @@ const rightMenuFunc = async (type) => {
         window.open(clickedTypeData.value?.href);
         break;
       case "copy-link":
-        const pageLink = theme.value?.siteMeta?.site + router.route.path;
+        const pageLink =
+          (theme.value?.siteMeta?.site || "").replace(/\/+$/, "") + router.route.path;
         if (!pageLink) {
           $message.error("复制失败：无法获取页面地址");
           return;
@@ -430,10 +433,17 @@ const playerControl = (type) => {
 // 选中内容是否为链接
 const isLink = (data) => {
   if (!data) return false;
-  const hasProtocol = /^(http|https):\/\//i.test(data);
-  const urlData = hasProtocol ? data : `http://${data}`;
+  const text = data.trim();
+  if (!text) return false;
+  // 不再无条件补协议：原文本本身须形如 URL（已有协议 / www. 前缀，或裸域名含点分 TLD）
+  const hasProtocolOrWww = /^(https?:\/\/|www\.)\S+$/i.test(text);
+  const isBareDomain = /^[a-z0-9-]+(\.[a-z0-9-]+)+(:\d+)?([/?#]\S*)?$/i.test(text);
+  if (!hasProtocolOrWww && !isBareDomain) return false;
+  const urlData = /^https?:\/\//i.test(text) ? text : `http://${text}`;
   try {
-    new URL(urlData);
+    const url = new URL(urlData);
+    // 拒绝纯数字主机名（如 123.456、192.168.1.1）
+    if (/^\d+(\.\d+)+$/.test(url.hostname)) return false;
     return urlData;
   } catch (error) {
     return false;

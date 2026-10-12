@@ -120,6 +120,7 @@ const currentLyrics = ref([]);
 const activeLyricIndex = ref(-1);
 const userScrolling = ref(false);
 let followResumeTimer = null;
+let disposed = false;
 
 // 随机轮播
 const rotatePhase = ref("");
@@ -189,6 +190,8 @@ const playSong = (idx) => {
 // 获取播放列表
 const getMusicListData = async () => {
   if (!enable) return false;
+  // url 缺失时 new URL(url) 会抛 TypeError，直接跳过
+  if (!url) return false;
 
   try {
     // 根据歌单来源决定使用哪个 ID
@@ -204,7 +207,7 @@ const getMusicListData = async () => {
     const fullList = musicList.map((song) => ({
       ...song,
       pic: song.cover,
-      url: new URL(song.url, apiOrigin).href,
+      url: song.url ? new URL(song.url, apiOrigin).href : undefined,
       lrc: song.lrc ? new URL(song.lrc, apiOrigin).href : undefined,
     }));
     allSongs.value = fullList;
@@ -249,13 +252,16 @@ const resolveAudioUrl = async (rawUrl) => {
 };
 
 // 用户交互后备：浏览器阻止自动播放时，等待用户首次交互后播放
+let autoPlayInteractionHandler = null;
 const tryAutoPlayOnInteraction = () => {
   if (!playerAutoPlay.value || hasPlayed.value) return;
   const handler = () => {
     safePlay();
     document.removeEventListener("click", handler);
     document.removeEventListener("keydown", handler);
+    autoPlayInteractionHandler = null;
   };
+  autoPlayInteractionHandler = handler;
   document.addEventListener("click", handler, { once: true });
   document.addEventListener("keydown", handler, { once: true });
 };
@@ -269,6 +275,8 @@ const initAPlayer = async (list) => {
     const APlayer = module.default;
     // 先解析首曲，避免 APlayer 挂载后 audio.src 仍为空
     if (playlistData[0]?.url) await resolveAudioUrl(playlistData[0].url);
+    // 卸载后 import/解析可能才完成，避免往空容器挂播放器
+    if (disposed || !playerDom.value) return false;
     player.value = new APlayer({
       container: playerDom.value,
       volume: playerVolume.value,
@@ -364,9 +372,14 @@ const getMusicData = () => {
   try {
     if (!playerDom.value) return false;
     const songInfo = playerDom.value.querySelector(".aplayer-info");
-    const songName = songInfo.querySelector(".aplayer-title").innerText;
-    const songArtist = songInfo.querySelector(".aplayer-author").innerText.replace(" - ", "");
     const audio = player.value?.list?.audios?.[player.value.list.index];
+    // songInfo 可能为 null（播放器 DOM 未就绪/已销毁），回退到 list.audios 元数据
+    const songName = songInfo?.querySelector(".aplayer-title")?.innerText || audio?.name || "";
+    const songArtist = (
+      songInfo?.querySelector(".aplayer-author")?.innerText ||
+      audio?.artist ||
+      ""
+    ).replace(" - ", "");
     const songCover = allSongs.value[currentIdx.value]?.cover || "";
     const songLrc = allSongs.value[currentIdx.value]?.lrc || "";
     playerData.value = {
@@ -505,6 +518,9 @@ watch(
     currentLyrics.value = [];
     activeLyricIndex.value = -1;
     player.value?.destroy();
+    // 清理：destroy 后置空 player 并停止轮播定时器，避免悬空引用与残留 interval
+    player.value = null;
+    stopRotate();
     getMusicListData();
   },
 );
@@ -556,6 +572,9 @@ watch(
     musicSourceTimer = setTimeout(() => {
       if (playerMusicSource.value === "custom" && !playerCustomIds.value) return;
       player.value?.destroy();
+      // 清理：destroy 后置空 player 并停止轮播定时器，避免悬空引用与残留 interval
+      player.value = null;
+      stopRotate();
       allSongs.value = [];
       hasPlayed.value = false;
       playState.value = false;
@@ -572,6 +591,9 @@ watch(
     clearTimeout(musicSourceTimer);
     musicSourceTimer = setTimeout(() => {
       player.value?.destroy();
+      // 清理：destroy 后置空 player 并停止轮播定时器，避免悬空引用与残留 interval
+      player.value = null;
+      stopRotate();
       allSongs.value = [];
       hasPlayed.value = false;
       playState.value = false;
@@ -601,9 +623,18 @@ onMounted(() => {
 });
 
 onBeforeUnmount(() => {
+  disposed = true;
   stopRotate();
   clearTimeout(followResumeTimer);
+  clearTimeout(musicSourceTimer);
+  if (autoPlayInteractionHandler) {
+    document.removeEventListener("click", autoPlayInteractionHandler);
+    document.removeEventListener("keydown", autoPlayInteractionHandler);
+    autoPlayInteractionHandler = null;
+  }
   player.value?.destroy();
+  // 清理：destroy 后置空 player（stopRotate 已在上方调用）
+  player.value = null;
 });
 </script>
 

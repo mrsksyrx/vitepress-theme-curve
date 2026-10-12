@@ -39,7 +39,7 @@
 </template>
 
 <script setup>
-import { loadScript } from "@/utils/commonTools";
+import { ensureBusuanziCounts } from "@/utils/commonTools";
 import { daysPassedAt, useClientNow } from "@/utils/useClientNow.mjs";
 
 const { theme } = useData();
@@ -48,11 +48,11 @@ const { theme } = useData();
 const { now } = useClientNow();
 const sinceDays = computed(() => daysPassedAt(theme.value.since, now.value));
 
+// [B27] 不再用 reload:true 重打点：已有缓存直接回填新节点，无缓存才首次加载
+const BUSUANZI_SRC = "https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js";
+
 onMounted(() => {
-  loadScript("https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js", {
-    async: true,
-    reload: true,
-  });
+  ensureBusuanziCounts(BUSUANZI_SRC);
 });
 </script>
 

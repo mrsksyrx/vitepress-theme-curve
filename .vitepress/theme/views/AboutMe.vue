@@ -56,7 +56,7 @@
           <div class="info-item">
             <span class="info-name">距生日</span>
             <span class="info-num" style="--color: var(--about-blue)">
-              <LiveDate mode="days-until" :date="birthDate" yearly /> 天
+              <LiveDate mode="days-until" :date="birthDate" yearly />
             </span>
           </div>
         </div>
@@ -128,7 +128,7 @@
           <p>猜你会雷：空间多转发&碎碎念/生心不一/Trans.MtF/adhd/微负(yyz)/女性主义(非极端)</p>
         </div>
         <p style="font-size: 12px; opacity: 0.5; margin-top: 12px; margin-bottom: 0">
-          最后更新于 2026.10.1
+          最后更新于 2026.10.9
         </p>
       </div>
 
@@ -136,14 +136,14 @@
       <div class="about-item" style="grid-column: 1 / 4; grid-row: 6">
         <span class="title2">𝕏 简介</span>
         <div class="intro-content">
-          <p>MtF｜小证2026.6｜家长党｜持证含糖（还在等待生育力保存）</p>
+          <p>MtF｜小证2026.6｜家长党｜持证含糖 2026.10.5</p>
           <p>DIY HRT 26.5.10-6.22｜诞生日2009.10.10</p>
-          <p>高一休学｜175cm/62kg｜重庆&苏州</p>
+          <p>高一休学｜175cm/63kg｜重庆&苏州</p>
           <p>想要变可爱｜友所有人｜同类贴贴｜缺爱</p>
           <p>INFP-T｜双｜二次元｜音游｜百合｜术力口</p>
         </div>
         <p style="font-size: 12px; opacity: 0.5; margin-top: 12px; margin-bottom: 0">
-          最后更新于 2026.9.30
+          最后更新于 2026.10.1
         </p>
       </div>
     </div>

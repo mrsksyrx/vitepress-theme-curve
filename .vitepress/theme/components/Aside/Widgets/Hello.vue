@@ -14,10 +14,20 @@
         <span class="desc">{{ theme.siteMeta.description }}</span>
       </div>
       <div class="link">
-        <a href="https://myat-github.20091010.xyz" target="_blank" class="social-link">
+        <a
+          href="https://myat-github.20091010.xyz"
+          target="_blank"
+          rel="noopener noreferrer"
+          class="social-link"
+        >
           <i class="iconfont icon-github"></i>
         </a>
-        <a href="mailto:sgexilq@qq.com" target="_blank" class="social-link">
+        <a
+          href="mailto:sgexilq@qq.com"
+          target="_blank"
+          rel="noopener noreferrer"
+          class="social-link"
+        >
           <i class="iconfont icon-email"></i>
         </a>
       </div>
@@ -68,8 +78,16 @@ const isHasUser = () => {
   // 检查本地存储
   const userData = localStorage.getItem("ArtalkUser");
   if (!userData) return false;
-  // 获取用户数据
-  const { nick } = JSON.parse(userData);
+  let nick;
+  try {
+    ({ nick } = JSON.parse(userData) || {});
+  } catch {
+    // [B30] 解析失败说明 ArtalkUser 已损坏，清理掉避免后续每次挂载都重复踩坑
+    localStorage.removeItem("ArtalkUser");
+    console.warn("[Hello] ArtalkUser 解析失败，已清除损坏数据");
+    return false;
+  }
+  if (!nick) return false;
   const hello = ["很高兴见到你", "好久不见", "欢迎回来"];
   // 随机问候语
   helloText.value = hello[Math.floor(Math.random() * hello.length)] + "，" + nick;

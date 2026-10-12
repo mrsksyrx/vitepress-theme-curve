@@ -7,7 +7,7 @@
           <a
             v-for="(item, index) in asArray(postMetaData.categories)"
             :key="index"
-            :href="`/pages/categories/${item}`"
+            :href="`/pages/categories/${encodeURIComponent(item)}`"
             class="cat-item"
           >
             <i class="iconfont icon-folder" />
@@ -18,7 +18,7 @@
           <a
             v-for="(item, index) in asArray(postMetaData.tags)"
             :key="index"
-            :href="`/pages/tags/${item}`"
+            :href="`/pages/tags/${encodeURIComponent(item)}`"
             class="tag-item"
           >
             <i class="iconfont icon-hashtag" />
@@ -109,7 +109,7 @@
             <a
               v-for="(item, index) in asArray(postMetaData.tags)"
               :key="index"
-              :href="`/pages/tags/${item}`"
+              :href="`/pages/tags/${encodeURIComponent(item)}`"
               class="tag-item"
             >
               <i class="iconfont icon-hashtag" />
@@ -153,6 +153,7 @@ import { toLocalDayTimestamp } from "@/utils/dateAnchor.mjs";
 // 同样必须从零依赖模块引入，理由同 dateAnchor.mjs
 import { normalizeList } from "@/utils/normalizeList.mjs";
 import PasswordProtect from "@/components/PasswordProtect.vue";
+import DOMPurify from "dompurify";
 const { page, theme, frontmatter } = useData();
 const { isDesktopAsideVisible } = useDesktopAside();
 const { postData, loadPostData } = usePostData();
@@ -199,9 +200,7 @@ const postMetaData = computed(() => {
     tags: normalizeList(frontmatter.value.tags),
     categories: normalizeList(frontmatter.value.categories),
     description: frontmatter.value.description,
-    regularPath: page.value.relativePath
-      ? `/${page.value.relativePath.replace(".md", ".html")}`
-      : "",
+    regularPath: page.value.relativePath ? `/${page.value.relativePath.replace(/\.md$/, "")}` : "",
     top: frontmatter.value.top,
     cover: frontmatter.value.cover,
   };
@@ -216,9 +215,26 @@ const isUnlocked = ref(false);
 // 加密文章解密后的正文 HTML
 const decryptedHtml = ref(null);
 
+// post→post SPA 路由复用同一实例，切换文章时清空解密态，
+// 否则上一篇已解锁的正文会串到下一篇，密码框也不再出现
+watch(
+  () => page.value.relativePath,
+  () => {
+    isUnlocked.value = false;
+    decryptedHtml.value = null;
+  },
+);
+
 // 处理解锁事件（加密文章传入解密 HTML，旧版明文密码无参数）
 const handleUnlocked = async (html) => {
-  if (html) decryptedHtml.value = html;
+  // 纵深防御：解密 HTML 仍走 v-html，先过一遍 DOMPurify
+  // （默认已放行 data-* / class / style，此处补齐任务清单复选框）
+  if (html) {
+    decryptedHtml.value = DOMPurify.sanitize(html, {
+      ADD_TAGS: ["input"],
+      ADD_ATTR: ["checked", "disabled"],
+    });
+  }
   isUnlocked.value = true;
   // 解密内容晚于首次挂载插入，代码高亮需要补一次
   await nextTick();
