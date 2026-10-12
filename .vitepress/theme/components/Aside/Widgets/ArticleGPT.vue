@@ -4,7 +4,14 @@
     <div class="title">
       <!-- router.go('#') 在 VitePress 中等价于 go('/')，会导致跳转到首页，故禁用；如需回顶请用 window.scrollTo({ top: 0, behavior: 'smooth' }) -->
       <!-- @click 处理器用注释包裹禁用（不是删除属性） -->
-      <span class="name" @click="() => { /* router.go('#') */ }">
+      <span
+        class="name"
+        @click="
+          () => {
+            /* router.go('#') */
+          }
+        "
+      >
         <i class="iconfont icon-robot"></i>
         文章摘要
         <i class="iconfont icon-up"></i>

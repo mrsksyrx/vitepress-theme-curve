@@ -44,6 +44,7 @@ export const PERSIST_PATHS = [
   "pwaCacheEnabled",
   "pwaCacheLimit",
   "readingProgressEnabled",
+  "hoverLineEnabled",
   "imageWebpEnabled",
   "weatherProvider",
   "weatherLocationMode",

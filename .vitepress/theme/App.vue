@@ -5,6 +5,8 @@
   <Loading />
   <!-- 阅读进度条 -->
   <ReadingProgress />
+  <!-- 正文逐行悬停侧边线 -->
+  <HoverLine />
   <!-- 导航栏 -->
   <Nav />
   <!-- 主内容 -->

@@ -65,7 +65,8 @@ const writeStore = (store) => {
 // 已保存的密钥匹配当前密文时直接解密（跳过 PBKDF2）
 const tryStoredKey = async () => {
   const entry = readStore()[props.postId];
-  if (!entry || typeof entry !== "object" || entry.salt !== props.enc.salt || !entry.key) return false;
+  if (!entry || typeof entry !== "object" || entry.salt !== props.enc.salt || !entry.key)
+    return false;
   try {
     emit("unlocked", await decryptWithKey(entry.key, props.enc));
     return true;

@@ -131,7 +131,7 @@ Bilibili：<a href="https://myat-bilibili.20091010.xyz" target="_blank" rel="noo
 
 邮箱：<a href="mailto:lsc@sgexilq.com" target="_blank" rel="noopener noreferrer" style="color: var(--main-color)"><strong>lsc@sgexilq.com</strong></a>
 /
-<a href="mailto:sgexilq@qq.com" target="_blank" rel="noopener noreferrer" style="color: var(--main-color)"><strong>sgexilq@qq.com</strong></a>   
+<a href="mailto:sgexilq@qq.com" target="_blank" rel="noopener noreferrer" style="color: var(--main-color)"><strong>sgexilq@qq.com</strong></a>  
 Twitter：<a href="https://myat-twitter.20091010.xyz" target="_blank" rel="noopener noreferrer" style="color: var(--main-color)"><strong>@mrsksyrx_xl</strong></a>  
 Telegram：<a href="https://myat-telegram.20091010.xyz" target="_blank" rel="noopener noreferrer" style="color: var(--main-color)"><strong>@mrsksyrx</strong></a>  
 Github：<a href="https://myat-github.20091010.xyz" target="_blank" rel="noopener noreferrer" style="color: var(--main-color)"><strong>@mrsksyrx</strong></a>  

@@ -92,7 +92,8 @@ class Cursor {
     }
 
     var el = document.getElementsByTagName("*");
-    for (let i = 0; i < el.length; i++) if (getStyle(el[i], "cursor") == "pointer") this.pt.push(el[i].outerHTML);
+    for (let i = 0; i < el.length; i++)
+      if (getStyle(el[i], "cursor") == "pointer") this.pt.push(el[i].outerHTML);
 
     if (!this.scr) {
       document.body.appendChild((this.scr = document.createElement("style")));

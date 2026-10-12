@@ -155,9 +155,9 @@ export const getAllPosts = async () => {
           // 未设置时保持 undefined（而不是空数组），以免模板里 `v-if="item?.tags"`
           // 由「隐藏」变成「渲染空容器」。
           const toListOrUndefined = (value) =>
-            (value === undefined || value === null || value === ""
+            value === undefined || value === null || value === ""
               ? undefined
-              : normalizeList(value));
+              : normalizeList(value);
           // 返回文章对象
           return {
             id: item,

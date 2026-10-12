@@ -9,7 +9,7 @@ let scheduledThemeTimer = null;
 const isMobile =
   typeof navigator !== "undefined" && /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
 // 开发用版本号，每次改默认值时 +1，自动清除旧缓存
-const PERSIST_VERSION = 32;
+const PERSIST_VERSION = 36;
 // 开发模式开关（1 = 未开启，2 = 开启）
 const DEFAULT_DEV_MODE = 1;
 
@@ -169,6 +169,8 @@ export const mainStore = defineStore("main", {
       pwaCacheLimit: 100,
       // 阅读进度条
       readingProgressEnabled: true,
+      // 正文逐行悬停侧边线
+      hoverLineEnabled: true,
       // 图片功能开关
       imageWebpEnabled: false,
       // 天气小组件开关
@@ -192,8 +194,8 @@ export const mainStore = defineStore("main", {
       siteVersion: "V1.4",
       siteVersionDate: "2026.10.5",
       // 分支版本（自动递增）
-      branchVersion: 179,
-      branchBuildTime: "2026.10.11 20:20:48",
+      branchVersion: 180,
+      branchBuildTime: "2026.10.12 10:57:09",
     };
   },
   actions: {
