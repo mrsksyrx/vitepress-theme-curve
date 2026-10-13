@@ -10,7 +10,7 @@ layout: post
 
 ::: tip Tips
 
-来自扩列卡二维码或NFC的访问会指向本页面（即 <a href="https://card.sgexilq.top" target="_blank" rel="noopener noreferrer" style="color: var(--main-color)"><strong>card.sgexilq.top</strong></a> ）  
+来自扩列卡二维码或NFC的访问会指向本页面（即 <a href="https://i.sgexilq.com" target="_blank" rel="noopener noreferrer" style="color: var(--main-color)"><strong>card.sgexilq.top</strong></a> ）  
 如果泥是通过卡片进入，可以使用 <a href="https://nfc.software/zh" target="_blank" rel="noopener noreferrer" style="color: var(--main-color)"><strong>NFC Tools</strong></a> 工具将其修改为泥想要的功能哦
 
 :::
