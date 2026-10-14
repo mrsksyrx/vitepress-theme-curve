@@ -105,6 +105,9 @@ export default withPwa(
     // 主题配置
     themeConfig: {
       ...themeConfig,
+      // 构建期文章索引注入：客户端首次渲染即可出列表，
+      // postData.json 请求慢/失败时首页不再空白（usePostData.mjs 会用它播种）。
+      postData,
       postCount: postData.length,
     },
     // markdown

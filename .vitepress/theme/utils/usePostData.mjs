@@ -58,7 +58,7 @@ const groupByYear = (posts) => {
 };
 
 export const usePostData = () => {
-  const { site } = useData();
+  const { site, theme } = useData();
 
   // 兜住"旧索引"：service worker / HTTP 缓存里可能还留着归一化之前的
   // postData.json（其中 tags/categories 是字符串）。字符串一旦落到模板的
@@ -75,7 +75,24 @@ export const usePostData = () => {
     };
   };
 
+  // 用 config.mjs 构建期注入的 themeConfig.postData 播种：首帧（含 SSR 静态
+  // HTML）即渲染文章列表，不依赖 postData.json 的首次请求。请求慢、失败或
+  // 被 SW 缓存污染时首页不再空白；fetch 仍保留作未注入场景的兜底。
+  const seedPostData = () => {
+    if (postData.value.length) return;
+    const initialData = theme.value?.postData;
+    if (!Array.isArray(initialData) || !initialData.length) return;
+    postData.value = initialData.map(normalizePost);
+    // 播种的即是构建期数据，标记已加载，跳过冗余 fetch；
+    // 空数组不在此置位，0 篇站点仍走 fetch 走原有"空数组也算加载成功"逻辑。
+    loaded = true;
+  };
+
+  // setup 阶段同步播种：组件渲染前数据就绪，SSR 产物直接带文章列表
+  seedPostData();
+
   const loadPostData = async () => {
+    seedPostData();
     if (loaded) return postData.value;
     if (loadPromise) return loadPromise;
     // 失败冷却期内不重试，防止多个组件 onMounted 连锁触发
