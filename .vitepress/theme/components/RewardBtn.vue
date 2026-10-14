@@ -45,7 +45,7 @@
             </span>
           </a>
         </div>
-        <div v-if="showJump" class="all-list s-card hover" @click="toRewardList">
+        <div v-if="showJump" class="all-list s-card">
           <span class="title">关于赞赏费用</span>
           <span class="tip">
             赞赏金额将全部用于开源项目维护，以及服务器、域名及各类作者生活的开销
@@ -57,11 +57,10 @@
 </template>
 
 <script setup>
-const router = useRouter();
 const { theme } = useData();
 const { rewardData } = theme.value;
 
-const props = defineProps({
+defineProps({
   showJump: {
     type: Boolean,
     default: true,
@@ -69,12 +68,6 @@ const props = defineProps({
 });
 // 赞赏显示
 const rewardShow = ref(false);
-
-//跳转至赞赏名单
-const toRewardList = () => {
-  rewardShow.value = false;
-  // router.go("/pages/thanks");
-};
 </script>
 
 <style lang="scss" scoped>
@@ -164,25 +157,20 @@ const toRewardList = () => {
     align-items: center;
     flex-direction: column;
     background-color: var(--main-card-second-background);
+    // 纯说明卡，覆盖全局 .s-card 的 pointer/hover 可点观感
+    cursor: default;
+    &:hover {
+      border-color: var(--main-card-border);
+    }
     .title {
       font-size: 18px;
       font-weight: bold;
       margin-bottom: 8px;
-      transition: color 0.3s;
     }
     .tip {
       text-align: center;
       font-size: 12px;
       opacity: 0.6;
-    }
-    &:hover {
-      .title {
-        color: var(--main-color);
-      }
-    }
-    &:active {
-      transform: scale(0.98);
-      transition-duration: var(--press-in);
     }
   }
 }

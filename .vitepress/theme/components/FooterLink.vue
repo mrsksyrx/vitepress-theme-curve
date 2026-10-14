@@ -76,7 +76,7 @@
           :key="index"
           :class="['badge-item', { expanded: expandedBadge === index }]"
           @mouseenter="expandedBadge = index"
-          @mouseleave="expandedBadge = null"
+          @mouseleave="clickedBadge === index || (expandedBadge = null)"
           @click="toggleBadge(index)"
         >
           <span class="badge-icon">{{ badge.icon }}</span>

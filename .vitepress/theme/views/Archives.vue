@@ -21,6 +21,7 @@
                 :key="tagsIndex"
                 :href="`/pages/tags/${encodeURIComponent(tags)}`"
                 class="type-item"
+                @click.stop
               >
                 <i class="iconfont icon-hashtag" />
                 <span class="name">{{ tags }}</span>

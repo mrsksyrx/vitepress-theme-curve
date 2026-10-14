@@ -15,7 +15,7 @@
 import { ensureCodeFontLoaded } from "@/utils/fontLoader.mjs";
 import { useDesktopAside } from "@/utils/useDesktopAside.mjs";
 
-const { frontmatter } = useData();
+const { frontmatter, page } = useData();
 const { isDesktopAsideVisible } = useDesktopAside();
 
 const showAside = computed(() => frontmatter.value.aside && isDesktopAsideVisible.value);
@@ -30,6 +30,14 @@ const loadCodeFontIfNeeded = async () => {
 onMounted(() => {
   loadCodeFontIfNeeded();
 });
+
+// SPA 复用实例时 onMounted 不再触发，切页面需重检代码字体
+watch(
+  () => page.value.relativePath,
+  () => {
+    loadCodeFontIfNeeded();
+  },
+);
 </script>
 
 <style lang="scss" scoped>

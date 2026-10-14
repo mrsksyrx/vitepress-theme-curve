@@ -412,7 +412,6 @@
   mjx-container {
     overflow: auto;
     padding-bottom: 8px;
-    font-family: auto;
   }
   // custom-block
   .custom-block {
@@ -422,7 +421,6 @@
     border-radius: 8px;
     background-color: var(--main-card-border);
     border-left: 6px solid var(--main-color-gray);
-    user-select: none;
     p {
       margin: 0;
       line-height: normal;

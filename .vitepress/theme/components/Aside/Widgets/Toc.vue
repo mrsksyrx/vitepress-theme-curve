@@ -98,8 +98,8 @@ const scrollToHeader = (id) => {
   try {
     const headerDom = document.getElementById(id);
     if (!headerDom || !postDom.value) return false;
-    const headerTop = headerDom.offsetTop;
-    const scrollHeight = headerTop + postDom.value.offsetTop - 80;
+    // getBoundingClientRect + scrollY 得到文档绝对坐标，不受 offsetParent 影响
+    const scrollHeight = headerDom.getBoundingClientRect().top + window.scrollY - 80;
     window.scroll({ top: scrollHeight, behavior: "smooth" });
   } catch (error) {
     console.error("目录滚动失败：", error);

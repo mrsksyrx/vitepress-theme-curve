@@ -1,6 +1,6 @@
 <script setup>
 import dayjs from "dayjs";
-import { useClientNow } from "@/utils/useClientNow.mjs";
+import { addYearsClamped, parseEventDate, useClientNow } from "@/utils/useClientNow.mjs";
 
 const { theme } = useData();
 
@@ -32,21 +32,25 @@ const timingItems = computed(() => {
 });
 
 const getDisplayDate = (item) => {
-  const target = dayjs(item.date);
-  if (!target.isValid() || !now.value) return null;
+  // 与 LiveDate 同一套解析，避免 dayjs("02-29")→3/1 之类的口径分裂
+  const target = parseEventDate(item.date, now.value || dayjs());
+  if (!target || !now.value) return null;
   if (!item.yearly) return target;
 
   const today = now.value.startOf("day");
   let nextDate = target.startOf("day");
   while (nextDate.isBefore(today)) {
-    nextDate = nextDate.add(1, "year");
+    nextDate = addYearsClamped(nextDate);
   }
   return nextDate;
 };
 
-const isFuture = (item) => {
+// 三态：未来 / 当天 / 过去。当天不能再走 isAfter(now)（零点 vs 当前时刻恒 false）
+const dayState = (item) => {
   const target = getDisplayDate(item);
-  return target && now.value ? target.isAfter(now.value) : false;
+  if (!target || !now.value) return "past";
+  const diff = target.startOf("day").diff(now.value.startOf("day"), "day");
+  return diff > 0 ? "future" : diff === 0 ? "today" : "past";
 };
 
 const getMode = (item) => (item.yearly ? "days-until" : "days-gap");
@@ -63,16 +67,22 @@ const getMode = (item) => (item.yearly ? "days-until" : "days-gap");
         <span class="item-icon">{{ item.icon }}</span>
         <span v-if="item.name" class="title-name">{{ item.name }}</span>
         <span v-if="item.event" class="event-name">{{ item.event }}</span>
-        <span class="state-text">{{ isFuture(item) ? "还有" : "已经" }}</span>
-        <span class="day-number">
-          <LiveDate
-            :mode="getMode(item)"
-            :date="item.date"
-            :yearly="item.yearly"
-            :include-start="item.includeStart"
-          />
+        <span class="state-text">
+          {{
+            dayState(item) === "future" ? "还有" : dayState(item) === "today" ? "就是今天" : "已经"
+          }}
         </span>
-        <span class="state-text">天</span>
+        <template v-if="dayState(item) !== 'today'">
+          <span class="day-number">
+            <LiveDate
+              :mode="getMode(item)"
+              :date="item.date"
+              :yearly="item.yearly"
+              :include-start="item.includeStart"
+            />
+          </span>
+          <span class="state-text">天</span>
+        </template>
       </p>
     </div>
   </div>

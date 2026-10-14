@@ -33,12 +33,12 @@ const props = defineProps({
 });
 const mainCommentRef = ref(null);
 
-// 滚动至评论
+// 滚动至评论（elementTop 为文档绝对坐标，须用 scrollTo 而非 scrollBy）
 const scrollToComments = () => {
   if (!mainCommentRef.value) return false;
   const elementRect = mainCommentRef.value.getBoundingClientRect();
   const elementTop = elementRect.top + window.scrollY;
-  window.scrollBy({ top: elementTop - 80, behavior: "smooth" });
+  window.scrollTo({ top: elementTop - 80, behavior: "smooth" });
 };
 
 defineExpose({ scrollToComments });

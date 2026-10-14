@@ -72,7 +72,7 @@
         >
           <span class="title2" style="white-space: nowrap">
             <span>本站上线了</span>&nbsp;&nbsp;<span style="color: var(--main-accent)">{{
-              daysOnline
+              daysOnline === null ? "--" : daysOnline
             }}</span
             >&nbsp;&nbsp;<span>天</span>
           </span>
@@ -160,20 +160,19 @@
 <script setup>
 import { loadScript } from "@/utils/commonTools";
 import { mainStore } from "@/store";
+import { daysPassedAt, useClientNow } from "@/utils/useClientNow.mjs";
+import { toLocalDayTimestamp } from "@/utils/dateAnchor.mjs";
 
 const { theme } = useData();
 const store = mainStore();
 
 // 站点版本信息（store 优先，fallback 到 themeConfig）
-const displaySiteVersion = computed(() => store.siteVersion || theme.siteVersion);
-const displaySiteVersionDate = computed(() => store.siteVersionDate || theme.siteVersionDate);
+const displaySiteVersion = computed(() => store.siteVersion || theme.value.siteVersion);
+const displaySiteVersionDate = computed(() => store.siteVersionDate || theme.value.siteVersionDate);
 
-// 站点上线天数
-const daysOnline = computed(() => {
-  const start = new Date("2026-08-19");
-  const now = new Date();
-  return Math.floor((now - start) / (1000 * 60 * 60 * 24));
-});
+// 站点上线天数：本地日历天口径，客户端时钟实时计算，避免 SSG 固化构建日天数
+const { now } = useClientNow();
+const daysOnline = computed(() => daysPassedAt(toLocalDayTimestamp("2026-08-19"), now.value));
 
 // 技能数据
 

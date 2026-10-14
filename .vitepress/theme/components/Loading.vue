@@ -4,7 +4,7 @@
       <div v-if="loadingStatus" class="loading" @click="loadingStatus = false">
         <img :src="theme.siteMeta.logo" class="logo" alt="loading-logo" />
         <div class="progress-bar">
-          <div class="progress-fill" :class="{ done: !loadingStatus }" />
+          <div class="progress-fill" />
         </div>
         <span :class="['tip', { show: showTip }]"> 一直显示？点击任意区域即可关闭 </span>
       </div>
@@ -103,7 +103,7 @@ onBeforeUnmount(() => {
     width: 85%;
   }
   100% {
-    width: 95%;
+    width: 100%;
   }
 }
 </style>

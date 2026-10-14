@@ -46,7 +46,7 @@ const props = defineProps({
   // 文章数据
   postData: {
     type: Object,
-    default: {},
+    default: () => ({}),
   },
 });
 const route = useRoute();

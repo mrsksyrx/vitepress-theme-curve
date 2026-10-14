@@ -363,6 +363,7 @@ onBeforeUnmount(() => {
   &.hidden {
     opacity: 0;
     transform: translateY(100px);
+    pointer-events: none;
   }
 }
 .import-check-overlay {

@@ -222,6 +222,8 @@ watch(
   () => {
     isUnlocked.value = false;
     decryptedHtml.value = null;
+    // SPA 复用实例时 onMounted 不再触发，切文章需重检代码字体
+    loadCodeFontIfNeeded();
   },
 );
 

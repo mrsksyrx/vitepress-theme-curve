@@ -12,7 +12,11 @@
         'post-item',
         's-card',
         'hover',
-        { simple, cover: showCover(item), [`cover-${layoutType}`]: showCover(item) },
+        {
+          simple,
+          cover: showCover(item) && !!getCover(item),
+          [`cover-${layoutType}`]: showCover(item) && !!getCover(item),
+        },
       ]"
       :style="{ animationDelay: `${0.4 + index / 10}s` }"
     >
@@ -22,7 +26,7 @@
         :aria-label="`打开文章：${item.title}`"
         @click="toPost($event, item.regularPath)"
       ></a>
-      <div v-if="!simple && showCover(item)" class="post-cover">
+      <div v-if="!simple && showCover(item) && getCover(item)" class="post-cover">
         <img :src="getCover(item)" :alt="item.title" />
       </div>
       <div class="post-content">
@@ -126,16 +130,25 @@ const gridStyle = computed(() =>
 // 判断是否显示封面
 const showCover = () => themeConfig.value?.cover?.showCover?.enable;
 
-// 获取封面图片 按优先级获取：cover > defaultCover > false
-const getCover = ({ cover: itemCover }) => {
+// 按文章固化默认封面随机结果，避免 useClientNow 每秒重渲染导致封面跳变
+const coverCache = new Map();
+
+// 获取封面图片 按优先级获取：cover > defaultCover > null
+const getCover = (item) => {
+  const { cover: itemCover, regularPath, title } = item ?? {};
   const { cover } = themeConfig.value ?? {};
 
-  if (!cover?.showCover?.enable) return false;
+  if (!cover?.showCover?.enable) return null;
   if (itemCover) return itemCover;
 
-  return Array.isArray(cover.showCover.defaultCover)
-    ? cover.showCover.defaultCover[Math.floor(Math.random() * cover.showCover.defaultCover.length)]
-    : false;
+  const defaults = cover.showCover.defaultCover;
+  if (!Array.isArray(defaults) || defaults.length === 0) return null;
+
+  const cacheKey = regularPath ?? title ?? "";
+  if (!coverCache.has(cacheKey)) {
+    coverCache.set(cacheKey, defaults[Math.floor(Math.random() * defaults.length)]);
+  }
+  return coverCache.get(cacheKey);
 };
 
 // 前往文章

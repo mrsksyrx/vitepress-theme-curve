@@ -2,7 +2,7 @@
   <footer id="main-footer" class="main-footer">
     <div class="footer-content">
       <div class="copyright">
-        <span class="time">@ 2026 - {{ thisYear }} By </span>
+        <span class="time">@ {{ startYear }} - {{ thisYear }} By </span>
         <a
           :href="theme.siteMeta.author.link"
           class="author link"
@@ -14,7 +14,7 @@
         <a
           v-if="theme.icp"
           class="icp link"
-          href="https://icp.gov.moe/?keyword=20262118"
+          :href="icpLink"
           target="_blank"
           rel="noopener noreferrer"
         >
@@ -100,8 +100,18 @@ const { footerIsShow } = storeToRefs(store);
 // 视窗监听器
 const observer = ref(null);
 
-// Keep the SSR output stable; update it only after the client has hydrated.
-const thisYear = ref(2025);
+// 版权起止年：起点读 theme.since，终点为当前年（SSR 取构建年，避免倒置区间）
+const startYear = computed(() => {
+  const y = String(theme.value.since ?? "").match(/(\d{4})/)?.[1];
+  return y ?? String(new Date().getFullYear());
+});
+const thisYear = ref(new Date().getFullYear());
+
+// 备案链接 keyword 从 theme.icp 提取，避免与显示文本漂移
+const icpLink = computed(() => {
+  const keyword = String(theme.value.icp ?? "").match(/\d+/)?.[0];
+  return keyword ? `https://icp.gov.moe/?keyword=${keyword}` : "https://icp.gov.moe/";
+});
 
 // 监听页脚视窗
 const isShowFooter = () => {
