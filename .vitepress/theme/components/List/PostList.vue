@@ -64,7 +64,7 @@
             <span v-if="item?.readTime" class="post-stat read-time">
               阅读需约 {{ item.readTime }} 分钟
             </span>
-            <span class="post-time">{{ formatTimestampAt(item?.date, now) }}</span>
+            <span class="post-time">{{ formatTimestampAt(item?.dateYMD || item?.date, now) }}</span>
           </div>
         </div>
       </div>
@@ -75,6 +75,7 @@
 <script setup>
 import { mainStore } from "@/store";
 import { formatTimestampAt, useClientNow } from "@/utils/useClientNow.mjs";
+import { normalizeList } from "@/utils/normalizeList.mjs";
 
 const store = mainStore();
 const router = useRouter();
@@ -97,18 +98,8 @@ const props = defineProps({
 
 const { theme: themeConfig } = useData();
 
-// 标签/分类归一化：字符串转数组
-const asArray = (val) => {
-  if (!val) return [];
-  if (Array.isArray(val)) return val;
-  if (typeof val === "string") {
-    return val
-      .split(",")
-      .map((s) => s.trim())
-      .filter(Boolean);
-  }
-  return [];
-};
+// 标签/分类归一化：统一走 normalizeList（唯一实现），避免与构建期口径分叉
+const asArray = normalizeList;
 
 // 计算布局类型
 const layoutType = computed(() =>

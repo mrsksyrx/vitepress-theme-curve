@@ -1,4 +1,8 @@
 import dayjs from "dayjs";
+import "dayjs/locale/zh-cn";
+
+// 中文周一起算（dayjs 默认 en 从周日起算，「本周」对中文受众每天都偏 1 天）
+dayjs.locale("zh-cn");
 
 /**
  * 获取时间剩余的函数

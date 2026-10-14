@@ -2,6 +2,7 @@ import { createContentLoader } from "vitepress";
 import { writeFileSync, statSync } from "fs";
 import { Feed } from "feed";
 import path from "path";
+import { toUTCMidnightTimestamp } from "./dateAnchor.mjs";
 
 /**
  * 生成 RSS
@@ -45,12 +46,11 @@ export const createRssFile = async (config, themeConfig) => {
       ],
     },
   }).load();
-  // 日期降序排序
-  // frontmatter 的 date 可能缺失或非法，`new Date(undefined)` 会得到 NaN，
-  // 而 NaN 参与比较会让 Array#sort 的结果不可预测（可能把有日期的文章挤下去）。
-  // 这里显式把无法解析的日期排到最后，并用 -Infinity 兜底，保证排序稳定。
+  // 日期降序排序（与 getPostData 同口径：UTC 零点，不随构建机时区漂移）
+  // frontmatter 的 date 可能缺失或非法，NaN 参与比较会让 sort 结果不可预测。
+  // 显式把无法解析的日期排到最后，并用 -Infinity 兜底，保证排序稳定。
   const dateValue = (frontmatter) => {
-    const parsed = new Date(frontmatter?.date ?? NaN).getTime();
+    const parsed = toUTCMidnightTimestamp(frontmatter?.date ?? NaN);
     return Number.isNaN(parsed) ? -Infinity : parsed;
   };
   posts = posts.sort((a, b) => dateValue(b.frontmatter) - dateValue(a.frontmatter));
@@ -60,9 +60,12 @@ export const createRssFile = async (config, themeConfig) => {
     // 文章信息（title 兜底对齐 getPostData.mjs）
     let { title, description, date } = frontmatter;
     title = title || "未命名文章";
-    // 处理日期：字符串转 Date；缺失/非法时回退到源文件 mtime（对齐 getPostData），
-    // 避免 new Date() 导致每次构建 pubDate 漂移、构建不可复现。
-    if (typeof date === "string") date = new Date(date);
+    // 处理日期：用 toUTCMidnightTimestamp 统一口径（与 getPostData 一致）；
+    // 缺失/非法时回退到源文件 mtime，避免每次构建 pubDate 漂移。
+    if (date !== undefined && date !== null) {
+      const ts = toUTCMidnightTimestamp(date);
+      if (!Number.isNaN(ts)) date = new Date(ts);
+    }
     if (!(date instanceof Date) || Number.isNaN(date.getTime())) {
       try {
         const srcPath = path.resolve(

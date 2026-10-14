@@ -65,7 +65,7 @@
 
 <script setup>
 import { storeToRefs } from "pinia";
-import { mainStore, initializeCursor } from "@/store";
+import { mainStore, initializeCursor, DEFAULT_FONT_SIZE } from "@/store";
 import { calculateScroll, specialDayGray } from "@/utils/helper";
 import { ensureGlobalFontsLoaded } from "@/utils/fontLoader.mjs";
 
@@ -149,8 +149,9 @@ const startImportCheck = () => {
 // 判断是否为文章页面：路径在 posts/ 下，或 frontmatter 显式声明 layout: post
 // （pages/ 下的独立文章用后者走文章样式，又不进 RSS / 文章列表）
 const isPostPage = computed(() => {
-  const routePath = decodeURIComponent(route.path);
-  return routePath.includes("/posts/") || frontmatter.value.layout === "post";
+  // 不要 decodeURIComponent：文件名含裸 %（如 100%_done）时会抛 URIError 白屏。
+  // pathname 里 "/posts/" 是字面量，直接 includes 即可。
+  return route.path.includes("/posts/") || frontmatter.value.layout === "post";
 });
 
 // 开启右键菜单
@@ -284,9 +285,9 @@ onMounted(() => {
   }
   // 检查字体大小待确认状态
   if (fontSizePending.value) {
-    fontSize.value = 17;
+    fontSize.value = DEFAULT_FONT_SIZE;
     fontSizePending.value = false;
-    document.documentElement.style.fontSize = "17px";
+    document.documentElement.style.fontSize = DEFAULT_FONT_SIZE + "px";
     if (typeof $message !== "undefined") {
       $message.warning("上次的字体大小未确认，已恢复为默认大小");
     }

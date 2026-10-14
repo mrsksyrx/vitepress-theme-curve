@@ -13,7 +13,7 @@
       </div>
       <div class="meta-item">
         <span class="tip">发布于</span>
-        <span class="name">{{ formatTimestampAt(postData?.date, now) }}</span>
+        <span class="name">{{ formatTimestampAt(postData?.dateYMD || postData?.date, now) }}</span>
       </div>
       <div class="meta-item">
         <span class="tip">更新于</span>

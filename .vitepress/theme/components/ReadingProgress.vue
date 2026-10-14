@@ -14,7 +14,7 @@ import { storeToRefs } from "pinia";
 import { mainStore } from "@/store";
 
 const store = mainStore();
-const { readingProgressEnabled, pwaCacheLimit } = storeToRefs(store);
+const { readingProgressEnabled, readingHistoryLimit } = storeToRefs(store);
 const route = useRoute();
 const { frontmatter } = useData();
 
@@ -101,7 +101,7 @@ const saveReadingData = (postId = route.path) => {
 
   // 限制存储条目数量（0 表示无限）
   const keys = Object.keys(readingData);
-  const limit = pwaCacheLimit.value;
+  const limit = readingHistoryLimit.value;
   if (limit > 0 && keys.length > limit) {
     const sortedKeys = keys.sort(
       (a, b) => (readingData[a].lastVisit || 0) - (readingData[b].lastVisit || 0),
@@ -181,8 +181,8 @@ const loadReadingData = () => {
 
 // 检查是否为文章页面（posts/ 路径，或 frontmatter 声明 layout: post）
 const checkIsPostPage = () => {
-  const routePath = decodeURIComponent(route.path);
-  isPostPage.value = routePath.includes("/posts/") || frontmatter.value.layout === "post";
+  // 不要 decodeURIComponent：裸 % 会抛 URIError（同 App.vue isPostPage）
+  isPostPage.value = route.path.includes("/posts/") || frontmatter.value.layout === "post";
   isVisible.value = isPostPage.value;
 };
 

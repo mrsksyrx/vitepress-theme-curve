@@ -8,8 +8,10 @@ let appCursorInstance;
 let scheduledThemeTimer = null;
 const isMobile =
   typeof navigator !== "undefined" && /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+// 全站字号默认值：移动端 16，桌面 17。恢复默认/超时回滚必须用它，不要写死 17。
+export const DEFAULT_FONT_SIZE = isMobile ? 16 : 17;
 // 开发用版本号，每次改默认值时 +1，自动清除旧缓存
-const PERSIST_VERSION = 37;
+const PERSIST_VERSION = 41;
 // 开发模式开关（1 = 未开启，2 = 开启）
 const DEFAULT_DEV_MODE = 1;
 
@@ -17,18 +19,9 @@ const DEFAULT_DEV_MODE = 1;
 if (typeof localStorage !== "undefined") {
   const storedVersion = parseInt(localStorage.getItem("siteDataVersion") || "0", 10);
   if (storedVersion !== PERSIST_VERSION) {
-    let old = {};
-    try {
-      old = JSON.parse(localStorage.getItem("siteData") || "{}") || {};
-    } catch {
-      old = {};
-    }
-    const keep = {
-      siteVersion: old.siteVersion,
-      siteVersionDate: old.siteVersionDate,
-    };
+    // 版本迁移：清空旧持久化数据。站点版本/构建信息是构建期常量，
+    // 不在 PERSIST_PATHS，无需保留——直接取当前构建的初始值即可。
     localStorage.removeItem("siteData");
-    localStorage.setItem("siteData", JSON.stringify(keep));
     localStorage.setItem("siteDataVersion", String(PERSIST_VERSION));
   }
 }
@@ -115,7 +108,7 @@ export const mainStore = defineStore("main", {
       // 全站字体
       fontFamily: "misans",
       // 全站字体大小
-      fontSize: isMobile ? 16 : 17,
+      fontSize: DEFAULT_FONT_SIZE,
       fontSizePending: false,
       // 信息显示位置
       infoPosition: "fixed",
@@ -164,9 +157,10 @@ export const mainStore = defineStore("main", {
       customThemeBeforeHighContrast: false,
       // 移除动画
       removeAnimations: false,
-      // PWA 缓存增强
+      // PWA 缓存增强（预留；SW 缓存策略构建期写死，此开关当前不改变行为）
       pwaCacheEnabled: true,
-      pwaCacheLimit: 100,
+      // 阅读历史条目上限（超出时按 lastVisit 裁剪 localStorage.readingData）
+      readingHistoryLimit: 100,
       // 阅读进度条
       readingProgressEnabled: true,
       // 正文逐行悬停侧边线（移动端默认关闭）
@@ -194,8 +188,8 @@ export const mainStore = defineStore("main", {
       siteVersion: "V1.4",
       siteVersionDate: "2026.10.5",
       // 分支版本（自动递增）
-      branchVersion: 180,
-      branchBuildTime: "2026.10.12 10:57:09",
+      branchVersion: 185,
+      branchBuildTime: "2026.10.14 17:29:50",
     };
   },
   actions: {

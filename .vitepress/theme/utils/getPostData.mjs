@@ -1,7 +1,7 @@
 import { globby } from "globby";
 import matter from "gray-matter";
 import fs from "fs-extra";
-import { toLocalDayTimestamp } from "./dateAnchor.mjs";
+import { toLocalDayTimestamp, toUTCMidnightTimestamp, toDateString } from "./dateAnchor.mjs";
 import { normalizeList } from "./normalizeList.mjs";
 
 // 重新导出，保持既有引用（如 `.dsh_baseline` 探针、外部脚本）不失效。
@@ -135,10 +135,14 @@ export const getAllPosts = async () => {
           // 统计字数和阅读时间
           const wordCount = countWords(markdownBody);
           const readTime = calcReadTime(wordCount);
-          // date 解析：缺失或非法（toLocalDayTimestamp 返回 NaN）都回退到文件创建时间。
+          // date 解析：缺失或非法都回退到文件创建时间。
           // NaN 会一路污染排序比较器、归档分组和日期展示，必须在源头消掉。
-          const parsedDate = date ? toLocalDayTimestamp(date) : NaN;
+          // dateYMD 存作者书写的日历日（与构建机时区无关）；date 存 UTC 零点
+          // 时间戳（确定性，可排序）。客户端展示/归档一律优先用 dateYMD。
+          const parsedDate = date ? toUTCMidnightTimestamp(date) : NaN;
           const dateValue = Number.isNaN(parsedDate) ? birthtimeMs : parsedDate;
+          // date 缺失或解析失败时统一从 dateValue 取日历日，保证 dateYMD 与 date 一致
+          const dateYMD = toDateString(Number.isNaN(parsedDate) ? new Date(birthtimeMs) : date);
           if (date && Number.isNaN(parsedDate)) {
             console.warn(
               `文章 '${item}' 的 date 无法解析（${JSON.stringify(date)}），已回退到文件创建时间`,
@@ -163,6 +167,7 @@ export const getAllPosts = async () => {
             id: item,
             title: title || "未命名文章",
             date: dateValue,
+            dateYMD,
             lastModified: mtimeMs,
             // expired, // 构建期冻结，无消费点，见上方说明
             tags: toListOrUndefined(tags),

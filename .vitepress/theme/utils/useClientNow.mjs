@@ -45,7 +45,8 @@ export const useClientNow = ({ interval = 1000 } = {}) => {
  * - 7 天内（未来）：n天后
  * - 更早/更远：月/日（当年）或 年/月/日（更早）
  *
- * @param {number|string|Date} timestamp 目标时间
+ * @param {number|string|Date} timestamp 目标时间；优先传 `post.dateYMD`（"YYYY-MM-DD"，
+ *   dayjs 按本地零点解析，与访客时区无关），旧索引可传 epoch 毫秒
  * @param {import("dayjs").Dayjs | null} now 当前时间（来自 useClientNow），为 null 时返回 ""
  * @returns {string}
  */
@@ -69,7 +70,7 @@ export const formatTimestampAt = (timestamp, now) => {
 /**
  * 计算给定日期距离当前日期已过多少天（日历天）。
  *
- * @param {number|string|Date} timestamp 目标时间
+ * @param {number|string|Date} timestamp 目标时间；优先传 `post.dateYMD`
  * @param {import("dayjs").Dayjs | null} now 当前时间（来自 useClientNow），为 null 时返回 null
  * @returns {number|null}
  */

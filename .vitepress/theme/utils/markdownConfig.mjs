@@ -173,12 +173,13 @@ const markdownConfig = (md, themeConfig) => {
     return fence(...args);
   };
 
-  // 构建期正文加密：posts 下带 password 的文章，渲染后的 HTML 转为密文写入 frontmatter.enc
+  // 构建期正文加密：带 password 的文章/页面，渲染后的 HTML 转为密文写入 frontmatter.enc
+  // 注意：不再限定 posts/ —— pages/ 下 layout:post 的密码文同样必须加密，
+  // 否则明文密码与全文会进客户端包（PasswordProtect 只是 UI 遮挡）。
   const originalRender = md.renderer.render.bind(md.renderer);
   md.renderer.render = (tokens, options, env) => {
     const fm = env.frontmatter;
-    const isPost = (env.relativePath || "").startsWith("posts/");
-    if (!isPost || !fm?.password) return originalRender(tokens, options, env);
+    if (!fm?.password) return originalRender(tokens, options, env);
     // 先完整渲染一次：title/headers/links 等副作用在渲染过程中收集，密文只替换最终输出
     const html = originalRender(tokens, options, env);
     env.frontmatter = {

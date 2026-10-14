@@ -1083,7 +1083,10 @@
                       >修改</span
                     >
                     <template v-if="fontSizeEditing">
-                      <span v-if="fontSize !== 17" class="options" @click="resetFontSize"
+                      <span
+                        v-if="fontSize !== DEFAULT_FONT_SIZE"
+                        class="options"
+                        @click="resetFontSize"
                         >恢复默认</span
                       >
                       <span class="options" @click="store.changeFontSize(false)"> - </span>
@@ -1370,13 +1373,13 @@
                     </div>
                   </div>
                   <div v-if="pwaCacheEnabled" class="set-item">
-                    <span class="set-label">缓存条目上限</span>
+                    <span class="set-label">阅读历史条目上限</span>
                     <div class="set-options">
                       <span
                         v-for="limit in [50, 100, 200, 500, 0]"
                         :key="limit"
-                        :class="['options', { choose: pwaCacheLimit === limit }]"
-                        @click="pwaCacheLimit = limit"
+                        :class="['options', { choose: readingHistoryLimit === limit }]"
+                        @click="readingHistoryLimit = limit"
                       >
                         {{ limit === 0 ? "无限" : limit }}
                       </span>
@@ -1658,7 +1661,7 @@
 
 <script setup>
 import { storeToRefs } from "pinia";
-import { mainStore } from "@/store";
+import { mainStore, DEFAULT_FONT_SIZE } from "@/store";
 import { useConfigIO } from "@/utils/useConfigIO.mjs";
 import { useIsMobileLayout } from "@/utils/layout.js";
 
@@ -1723,7 +1726,7 @@ const {
   scheduledLightTime,
   scheduledDarkTime,
   pwaCacheEnabled,
-  pwaCacheLimit,
+  readingHistoryLimit,
   readingProgressEnabled,
   hoverLineEnabled,
   imageWebpEnabled,
@@ -1748,7 +1751,15 @@ const clearPwaCache = async () => {
   try {
     // 清除运行时缓存（保留预缓存）
     const cacheNames = await caches.keys();
-    const runtimeCaches = ["api-cache", "html-cache", "page-cache", "post-cache"];
+    const runtimeCaches = [
+      "api-cache",
+      "html-cache",
+      "page-cache",
+      "post-cache",
+      "static-assets-cache",
+      "image-cache",
+      "js-cache",
+    ];
     let cleared = 0;
     for (const name of cacheNames) {
       if (runtimeCaches.some((rc) => name.includes(rc))) {
@@ -1935,7 +1946,7 @@ const restoreDefaultDevFeatures = () => {
   // 恢复 store/index.js 中的默认值
   backgroundBlur.value = false;
   pwaCacheEnabled.value = true;
-  pwaCacheLimit.value = 100;
+  readingHistoryLimit.value = 100;
   imageWebpEnabled.value = false;
   if (typeof $message !== "undefined") {
     $message.success("开发中的功能已恢复默认设置");
@@ -2044,6 +2055,7 @@ const devModeEntryClose = async () => {
       DEFAULT_DEV_MODE: 2,
       bumpVersion: true,
     });
+    // 无论 save 成败，会话内 devMode 已置 2；失败时 saveStoreDefaults 已提示
     if (typeof $message !== "undefined") {
       $message.success("开发模式已启用");
     }
@@ -2057,9 +2069,9 @@ const devModeEntryClose = async () => {
 };
 
 const resetFontSize = () => {
-  store.fontSize = 17;
+  store.fontSize = DEFAULT_FONT_SIZE;
   if (typeof document !== "undefined") {
-    document.documentElement.style.fontSize = "17px";
+    document.documentElement.style.fontSize = DEFAULT_FONT_SIZE + "px";
   }
 };
 const cancelFontSizeEdit = () => {
@@ -2079,7 +2091,8 @@ const confirmFontSizeEdit = () => {
 };
 // 恢复默认配置
 
-// 写入 store/index.js 默认值
+// 写入 store/index.js 默认值（仅 dev server 的 /api/theme-config 可用）
+// 返回 true 表示写入成功；失败时内部已弹出错误提示，调用方据此决定是否展示成功文案
 const saveStoreDefaults = async (data) => {
   try {
     const res = await fetch("/api/theme-config", {
@@ -2091,9 +2104,15 @@ const saveStoreDefaults = async (data) => {
     if (!json.ok) {
       console.error("Save failed:", json.error);
       $message.warning(`保存失败：${json.error || "格式不合法"}`);
+      return false;
     }
+    return true;
   } catch (e) {
     console.error("Failed to save store defaults:", e);
+    if (typeof $message !== "undefined") {
+      $message.warning("保存失败：接口仅在开发环境可用");
+    }
+    return false;
   }
 };
 
@@ -2118,13 +2137,17 @@ const switchWeatherProvider = (provider) => {
 // 关闭开发模式（写回 store/index.js 默认值；版本号/构建时间由开发模式选项手动维护）
 const confirmCloseDevMode = async () => {
   store.devMode = 1;
-  await saveStoreDefaults({
+  const ok = await saveStoreDefaults({
     DEFAULT_DEV_MODE: 1,
     bumpVersion: true,
   });
   closeDevModeConfirmVisible.value = false;
   if (typeof $message !== "undefined") {
-    $message.warning("已关闭开发模式");
+    if (ok) {
+      $message.warning("已关闭开发模式");
+    } else {
+      $message.warning("已关闭开发模式（仅本次会话生效，生产环境无法持久化到源码）");
+    }
   }
 };
 
@@ -2145,7 +2168,7 @@ const confirmAllVersionFields = async () => {
     return;
   }
   branchVersion.value = num;
-  await saveStoreDefaults({
+  const ok = await saveStoreDefaults({
     siteVersion: siteVersion.value,
     siteVersionDate: siteVersionDate.value,
     branchVersion: num,
@@ -2153,16 +2176,21 @@ const confirmAllVersionFields = async () => {
     bumpVersion: true,
   });
   if (typeof $message !== "undefined") {
-    $message.success("版本信息已保存");
+    if (ok) {
+      $message.success("版本信息已保存");
+    }
+    // 失败时 saveStoreDefaults 已弹出错误提示，不再追加成功文案
   }
 };
 
 // 将 DEFAULT_DEV_MODE 写回为随机数
 const randomizeDefaultDevMode = async () => {
   const random = Math.floor(Math.random() * 1000000);
-  await saveStoreDefaults({ DEFAULT_DEV_MODE: random, bumpVersion: true });
+  const ok = await saveStoreDefaults({ DEFAULT_DEV_MODE: random, bumpVersion: true });
   if (typeof $message !== "undefined") {
-    $message.success(`DEFAULT_DEV_MODE 已设为随机数 ${random}`);
+    if (ok) {
+      $message.success(`DEFAULT_DEV_MODE 已设为随机数 ${random}`);
+    }
   }
 };
 
@@ -2172,18 +2200,9 @@ const handleClearDataKeepDevMode = async () => {
     $message.warning("数据已清除，页面即将刷新");
   }
   const dev = store.devMode;
-  const savedData = {
-    siteVersion: siteVersion.value,
-    siteVersionDate: siteVersionDate.value,
-    branchVersion: branchVersion.value,
-    branchBuildTime: branchBuildTime.value,
-  };
+  // 站点版本/构建信息是构建期常量（不在 PERSIST_PATHS），无需保存/恢复
   const savedVersion = localStorage.getItem("siteDataVersion");
   await saveStoreDefaults({
-    siteVersion: siteVersion.value,
-    siteVersionDate: siteVersionDate.value,
-    branchVersion: branchVersion.value,
-    branchBuildTime: branchBuildTime.value,
     DEFAULT_DEV_MODE: dev,
     bumpVersion: true,
   });
@@ -2218,8 +2237,7 @@ const handleClearDataKeepDevMode = async () => {
     }
   }
 
-  // 恢复保留的数据
-  localStorage.setItem("siteData", JSON.stringify(savedData));
+  // 恢复版本标记（siteData 无需恢复，版本常量直取构建值）
   if (savedVersion) localStorage.setItem("siteDataVersion", savedVersion);
   window.location.reload();
 };
@@ -2238,18 +2256,9 @@ const handleResetConfig = async () => {
     $message.warning("配置已恢复默认，页面即将刷新");
   }
   const dev = store.devMode;
-  const savedData = {
-    siteVersion: siteVersion.value,
-    siteVersionDate: siteVersionDate.value,
-    branchVersion: branchVersion.value,
-    branchBuildTime: branchBuildTime.value,
-  };
+  // 站点版本/构建信息是构建期常量（不在 PERSIST_PATHS），无需保存/恢复
   const savedVersion = localStorage.getItem("siteDataVersion");
   await saveStoreDefaults({
-    siteVersion: siteVersion.value,
-    siteVersionDate: siteVersionDate.value,
-    branchVersion: branchVersion.value,
-    branchBuildTime: branchBuildTime.value,
     DEFAULT_DEV_MODE: dev,
     bumpVersion: true,
   });
@@ -2279,7 +2288,6 @@ const handleResetConfig = async () => {
       }
     }
   }
-  localStorage.setItem("siteData", JSON.stringify(savedData));
   if (savedVersion) localStorage.setItem("siteDataVersion", savedVersion);
   window.location.reload();
 };

@@ -493,7 +493,7 @@ export default withPwa(
           },
         ],
         // 预缓存构建产物
-        globPatterns: ["**/*.{js,css,html,ico,png,jpg,jpeg,gif,svg,woff2,ttf}"],
+        globPatterns: ["**/*.{js,css,html,ico,png,jpg,jpeg,gif,svg,woff2,ttf,json}"],
         globIgnores: ["**/vp-icons.css", "**/sitemap.xml", "**/rss.xml"],
         // 排除路径
         navigateFallbackDenylist: [
