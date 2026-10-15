@@ -1524,17 +1524,31 @@
                 <div class="set-item set-item-channel">
                   <span class="set-label">master分支（release）</span>
                   <span class="set-desc"
-                    >定期收拢各分支进度，更新版本。<br />建议下游开发者跟进此分支。</span
+                    >这是项目的主分支，release版本在该分支推送。<br />建议下游开发者跟进此分支。</span
                   >
                 </div>
                 <div class="set-item set-item-channel">
                   <span class="set-label">selfuse分支</span>
-                  <span class="set-desc">用于作者日常更新，本站的部署跟随该分支。</span>
+                  <span class="set-desc">这是本站的部署分支。</span>
                 </div>
                 <div class="set-item set-item-channel">
-                  <span class="set-label">dev/beta/canary分支</span>
+                  <span class="set-label">dev分支</span>
+                  <span class="set-desc set-desc-strong"
+                    >本站的日常开发于更新在该分支进行，于测试完成后推送到selfuse分支。<br />可以前往
+                    <a
+                      href="https://dev.sgexilq.com"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      class="set-desc-link"
+                      >dev.sgexilq.com</a
+                    >
+                    预览。<br />该分支的稳定性与完成度可能不佳。</span
+                  >
+                </div>
+                <div class="set-item set-item-channel">
+                  <span class="set-label">beta/canary分支</span>
                   <span class="set-desc"
-                    >由于不再需要，已移除。<br />「它们已经完成了它们的使命。」</span
+                    >已移除不再需要的分支。</span
                   >
                 </div>
               </div>
@@ -1555,7 +1569,7 @@
               <span class="set-label">反馈与建议</span>
               <div class="set-options">
                 <a
-                  href="mailto:sgexilq@qq.com"
+                  href="mailto:feedback@sgexilq.com"
                   target="_blank"
                   rel="noopener noreferrer"
                   class="options"
@@ -2838,6 +2852,44 @@ watch(
     color: var(--main-font-color);
     opacity: 0.6;
     margin: -4px 0 12px;
+
+    // 含链接的说明：不用 opacity（会把悬停态一起压灰），改用透明色模拟弱化
+    &.set-desc-strong {
+      opacity: 1;
+      color: var(--main-font-color);
+      color: color-mix(in srgb, var(--main-font-color) 60%, transparent);
+    }
+
+    .set-desc-link {
+      position: relative;
+      display: inline-flex;
+      color: var(--main-color);
+      font-weight: 500;
+
+      // 与文章正文链接一致：细下划线 → 悬停展开为整块高亮底
+      &::before {
+        content: "";
+        position: absolute;
+        border-radius: 4px;
+        bottom: 2px;
+        left: 0;
+        right: 0;
+        height: 1px;
+        opacity: 0.8;
+        background-color: var(--main-color);
+        transition: all 0.3s;
+      }
+
+      &:hover {
+        &::before {
+          height: 100%;
+          opacity: 0.2;
+          bottom: 0;
+          left: -2px;
+          right: -2px;
+        }
+      }
+    }
   }
   .about-version-pill {
     display: inline-flex;
