@@ -206,11 +206,12 @@
         <p class="text" style="color: var(--about-accent); font-weight: bold">可能连路都没有</p>
         <p class="text" style="text-align: right; opacity: 0.6">------潘柏林</p>
       </div>
-      <!-- 我的各种账号 -->
+      <!-- 探索更多 -->
       <div class="about-item">
-        <p class="text" style="margin: 0">我的各种账号</p>
+        <p class="text" style="margin: 0">探索更多…</p>
         <div class="card-action">
-          <a href="/pages/hide/nfc-aboutme-acgn#各种账号" class="view-btn">查看</a>
+          <a href="/pages/hide/ww-aboutme-sgexilqlsc#各种账号" class="view-btn">我的各种账号</a>
+          <a href="/pages/hide/message" class="view-btn">留言板</a>
         </div>
       </div>
     </div>
@@ -316,6 +317,7 @@ html.dark .about {
         padding-top: 4px;
         display: flex;
         justify-content: flex-start;
+        gap: 8px;
         .view-btn {
           display: flex;
           align-items: center;

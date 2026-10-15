@@ -147,9 +147,9 @@ STEAM：<a href="https://myat-steam.20091010.xyz" target="_blank" rel="noopener 
 
 继续探索小站：<a href="/" style="color: var(--main-color)"><strong>回到主页 - sgexilq.com</strong></a>
 
-向我匿名提问！：<a href="https://ngl.sgexilq.com" target="_blank" rel="noopener noreferrer" style="color: var(--main-color)"><strong>NGL.Link</strong></a>（会在Twitter回复）
+向我匿名提问！：<a href="https://ngl.sgexilq.com" target="_blank" rel="noopener noreferrer" style="color: var(--main-color)"><strong>NGL.Link</strong></a>（会在Twitter回复） / <a href="/pages/hide/message" style="color: var(--main-color)"><strong>留言板 - sgexilq.com</strong></a>
 
-本页面最后更新于 **2026.10.11**
+本页面最后更新于 **2026.10.15**
 
 ## <span style="color: var(--main-color)">结语</span>
 
@@ -168,9 +168,12 @@ STEAM：<a href="https://myat-steam.20091010.xyz" target="_blank" rel="noopener 
 
 <hr style="border: none; border-bottom: 1px dashed var(--main-color-bg); height: 0; background: none; margin: 1.5rem 0" />
 
+**无论是什么样的人，都有选择自己未来的权利**
+
 **陷之死地而后生，置之亡地而后存。**  
 **失败的人生同样是人生，她们有权品尝至最后。**
 
 <span style="color: var(--main-accent); opacity: 0.8"><b>年年岁岁花相似，岁岁年年人不同…</b></span>
 
-**愿每个人都被世界温柔以待**
+**愿每个人都被世界温柔以待**  
+**我爱你们**
