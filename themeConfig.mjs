@@ -171,6 +171,9 @@ export const themeConfig = {
         },
       ],
     },
+    HelloGithub: {
+      enable: true,
+    },
   },
 
   // ===== 功能开关 =====
