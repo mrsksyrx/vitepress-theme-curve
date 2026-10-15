@@ -25,6 +25,21 @@
   </main>
   <!-- 页脚 -->
   <FooterLink v-show="!loadingStatus" :showBar="isPostPage && !page.isNotFound" />
+  <!-- 页脚框外致谢 -->
+  <div v-show="!loadingStatus" class="footer-credit">
+    本站的诞生离不开上游作者的开源贡献。在此感谢他（她）们。本站遵循
+    <a href="https://www.gnu.org/licenses/agpl-3.0.html" target="_blank" rel="noopener noreferrer"
+      ><strong>AGPL v3</strong></a
+    >
+    协议
+    <a
+      href="https://github.com/mrsksyrx/vitepress-theme-curve"
+      target="_blank"
+      rel="noopener noreferrer"
+      ><strong>开源</strong></a
+    >
+    。
+  </div>
   <Footer v-show="!loadingStatus" />
   <!-- 悬浮菜单 -->
   <Teleport to="body">
@@ -347,6 +362,22 @@ onBeforeUnmount(() => {
     padding: 1rem 1.5rem;
     &.is-post {
       padding: 0;
+    }
+  }
+}
+.footer-credit {
+  width: 100%;
+  max-width: 1400px;
+  margin: -2rem auto 0.8rem;
+  padding: 0 1rem;
+  text-align: center;
+  font-size: 12px;
+  line-height: 1.6;
+  opacity: 0.5;
+  a {
+    color: var(--main-color);
+    &:hover {
+      opacity: 0.8;
     }
   }
 }
