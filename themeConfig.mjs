@@ -109,29 +109,26 @@ export const themeConfig = {
       {
         text: "项目",
         items: [
-          {
-            text: "本站源码",
-            link: "https://github.com/mrsksyrx/vitepress-theme-curve",
-            newTab: true,
-          },
+          { text: "关于本站", link: "/pages/about-website" },
           { text: "精神状态", link: "https://whendie.sgexilq.com", newTab: true },
+          { text: "友情链接", link: "/pages/link" },
         ],
       },
       {
         text: "页面",
         items: [
-          { text: "关于泠酱", link: "/pages/about-me" },
-          { text: "关于本站", link: "/pages/about-website" },
-          { text: "友情链接", link: "/pages/link" },
-          { text: "TO DO", link: "/pages/todo" },
+          { text: "关于泠酱", link: "/pages/hide/nfc-aboutme-acgn" },
+          { text: "隐私政策", link: "/pages/privacy" },
+          { text: "版权协议", link: "/pages/cc" },
+          // { text: "TO DO", link: "/pages/todo" },
         ],
       },
       {
         text: "服务",
         items: [
           { text: "站点状态", link: "https://status.sgexilq.com", newTab: true },
-          { text: "隐私政策", link: "/pages/privacy" },
-          { text: "版权协议", link: "/pages/cc" },
+          { text: "站点订阅", link: "/rss.xml" },
+          { text: "反馈建议", link: "mailto:feedback@sgexilq.com" },
         ],
       },
     ],
