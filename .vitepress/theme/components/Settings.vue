@@ -314,7 +314,7 @@
             </span>
           </div>
         </div>
-        <span class="title">高级</span>
+        <span class="title">拓展</span>
         <div class="set-item">
           <span class="set-label">主题颜色</span>
           <div class="set-options">
@@ -1011,7 +1011,7 @@
           </div>
         </div>
         <div class="set-item">
-          <span class="set-label">显示更多选项</span>
+          <span class="set-label">显示高级选项</span>
           <div class="set-options">
             <span
               :class="['options', { choose: !showMoreSettings }]"
