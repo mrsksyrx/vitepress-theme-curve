@@ -185,7 +185,12 @@ export const themeConfig = {
     server: "netease",
     type: "playlist",
   },
-  search: { enable: false, appId: "", apiKey: "" }, // TODO: 获取 Algolia appId 和 apiKey 后启用
+  search: {
+    enable: true,
+    appId: "WX8NR2C69E",
+    apiKey: "df2ea8c284a52afd157afa7f16adbca9",
+    index: "sgexilq_com_wx8nr2c69e_pages",
+  },
   // 显式空串覆盖上游 51la 统计凭据，防止进包（defu 空对象不删键，必须空串）
   tongji: { "51la": "" },
   // 图片灯箱（点击放大查看）

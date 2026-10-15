@@ -13,10 +13,13 @@
       :future="{
         preserveSharedStateOnUnmount: true,
       }"
-      index-name="chiyu_it_0f1duc8max_pages"
+      :index-name="index || 'chiyu_it_0f1duc8max_pages'"
       @state-change="searchChange"
     >
-      <ais-configure :hits-per-page.camel="8" />
+      <ais-configure
+        :hits-per-page.camel="8"
+        :attributes-to-highlight.camel="['title', 'description', 'headers', 'content']"
+      />
       <ais-search-box placeholder="想要搜点什么" autofocus />
       <ais-hits v-if="hasSearchValue">
         <template v-slot="{ items }">
@@ -69,7 +72,7 @@ const store = mainStore();
 const router = useRouter();
 
 const { theme } = useData();
-const { appId, apiKey } = theme.value.search ?? {};
+const { appId, apiKey, index } = theme.value.search ?? {};
 
 const hasSearchConfig = Boolean(appId && apiKey);
 if (!hasSearchConfig) {
@@ -87,17 +90,50 @@ const searchChange = ({ uiState, setUiState }) => {
   setUiState(uiState);
 };
 
-// 仅保留高亮标签 <em>，剥除其余所有标签与属性，避免 v-html 注入
+// 保留高亮标签并统一为 <mark>（模板样式即按 mark 写），剥除其余标签与属性，避免 v-html 注入
 const sanitizeHighlight = (value) => {
   if (typeof value !== "string") return "";
-  // 仅保留高亮标签 <em>，剥除其余所有标签与属性，避免 v-html 注入
-  // 用私有区占位符（非控制字符）暂存 <em>，避免 no-control-regex
+  // 高亮标记有三种来源：InstantSearch 请求标记 __ais-highlight__、
+  // 索引默认 <em>、instantsearch hits 插槽转换后的 <mark>，先暂存再统一还原
   return value
+    .replace(/__ais-highlight__/g, "\uE000")
+    .replace(/__\/ais-highlight__/g, "\uE001")
     .replace(/<em[^>]*>/gi, "\uE000")
     .replace(/<\/em\s*>/gi, "\uE001")
+    .replace(/<mark[^>]*>/gi, "\uE000")
+    .replace(/<\/mark\s*>/gi, "\uE001")
     .replace(/<[^>]*>/g, "")
-    .replace(/\uE000/g, "<em>")
-    .replace(/\uE001/g, "</em>");
+    .replace(/\uE000/g, "<mark>")
+    .replace(/\uE001/g, "</mark>");
+};
+
+// 取首个命中搜索词的标题行，否则退回第一行，作为结果卡片的锚点
+const pickHighlightedHeader = (hlHeaders, headers) => {
+  if (Array.isArray(hlHeaders)) {
+    const matched = hlHeaders.find((h) => h?.matchLevel !== "none" && h?.value);
+    if (matched) return matched.value;
+    const first = hlHeaders.find((h) => h?.value);
+    if (first) return first.value;
+  }
+  return Array.isArray(headers) && headers.length ? headers[0] : "";
+};
+
+// 扁平索引的 content 是整页正文：围绕首个命中词截一段，避免整页塞进结果卡片
+const excerptAroundMatch = (raw, max = 160) => {
+  const text = sanitizeHighlight(raw);
+  if (!text) return "";
+  if (text.length <= max) return text;
+  const matched = text.indexOf("<mark>");
+  const start = matched === -1 ? 0 : Math.max(0, matched - 40);
+  // 截取窗口，随后清理可能被切断的半截标签并补齐未闭合的 </mark>
+  let slice = text.slice(start, start + max);
+  const lastLt = slice.lastIndexOf("<");
+  if (lastLt !== -1 && slice.indexOf(">", lastLt) === -1) slice = slice.slice(0, lastLt);
+  if (slice.startsWith("</mark>")) slice = slice.slice(7);
+  const opens = slice.split("<mark>").length - 1;
+  const closes = slice.split("</mark>").length - 1;
+  if (opens > closes) slice += "</mark>";
+  return `${start > 0 ? "…" : ""}${slice}${start + max < text.length ? "…" : ""}`;
 };
 
 // 处理搜索结果
@@ -106,17 +142,25 @@ const formatSearchData = (data) => {
   // 遍历搜索结果
   for (let i = 0; i < data.length; i++) {
     const search = data[i];
-    // 若无 anchor
-    // if (search.anchor === "" || search.anchor === "app") continue;
-    // 获取数据
     const url = search?.url;
-    const type = search.type === "lvl1" ? "post" : "content";
-    const title = sanitizeHighlight(search._highlightResult?.hierarchy?.lvl1?.value);
-    const anchor = sanitizeHighlight(search._highlightResult?.hierarchy?.[search.type]?.value);
-    const content = sanitizeHighlight(search._highlightResult?.content?.value);
-    // 生成搜索数据
-    const searchData = { url, type, title, anchor, content };
-    results.push(searchData);
+    const hl = search?._highlightResult ?? {};
+    // DocSearch 层级结构（上游默认索引）
+    if (hl.hierarchy) {
+      const type = search.type === "lvl1" ? "post" : "content";
+      const title = sanitizeHighlight(hl.hierarchy.lvl1?.value);
+      const anchor = sanitizeHighlight(hl.hierarchy[search.type]?.value);
+      const content = sanitizeHighlight(hl.content?.value);
+      results.push({ url, type, title, anchor, content });
+      continue;
+    }
+    // 扁平结构（Algolia Crawler 抓取的索引：title / headers / content）
+    const title = sanitizeHighlight(hl.title?.value ?? search.title ?? "");
+    const anchor = sanitizeHighlight(pickHighlightedHeader(hl.headers, search.headers));
+    const contentSan = sanitizeHighlight(hl.content?.value);
+    const content = contentSan.includes("<mark>")
+      ? excerptAroundMatch(contentSan)
+      : sanitizeHighlight(hl.description?.value) || contentSan;
+    results.push({ url, type: "post", title, anchor, content });
   }
   return results;
 };
@@ -210,6 +254,11 @@ onBeforeUnmount(() => {
           font-size: 12px;
           padding: 8px;
           border-radius: 8px;
+          // 扁平索引的 content 是整页正文，限三行避免撑爆结果卡片
+          display: -webkit-box;
+          -webkit-line-clamp: 3;
+          -webkit-box-orient: vertical;
+          overflow: hidden;
         }
         p {
           margin: 0;
