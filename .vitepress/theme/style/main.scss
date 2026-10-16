@@ -1587,7 +1587,7 @@ a {
     &::before {
       right: 0;
       left: 4px;
-      background: var(--main-scrolling-bar);
+      background: var(--main-scrollbar-bar);
       transition:
         background 0.3s,
         left 0.3s;
@@ -1885,7 +1885,7 @@ html.force-mobile {
     }
     .nav-center {
       position: absolute !important;
-      top: -80px !important;
+      top: 0 !important;
       left: 0 !important;
       background-color: var(--main-card-background) !important;
       border-bottom: 1px solid var(--main-card-border) !important;

@@ -2,7 +2,7 @@
   <footer id="main-footer" class="main-footer">
     <div class="footer-content">
       <div class="copyright">
-        <span class="time">@ 2026 - {{ thisYear }} By </span>
+        <span class="time">@ {{ startYear }} - {{ thisYear }} By </span>
         <a
           :href="theme.siteMeta.author.link"
           class="author link"
@@ -14,7 +14,7 @@
         <a
           v-if="theme.icp"
           class="icp link"
-          href="https://icp.gov.moe/?keyword=20262118"
+          :href="icpLink"
           target="_blank"
           rel="noopener noreferrer"
         >
@@ -66,24 +66,6 @@
           />
         </a>
       </div>
-      <div class="credit">
-        本站的诞生离不开上游作者的开源贡献。在此感谢他（她）们。本站遵循
-        <a
-          href="https://www.gnu.org/licenses/agpl-3.0.html"
-          target="_blank"
-          rel="noopener noreferrer"
-          ><strong>AGPL v3</strong></a
-        >
-        协议
-        <a
-          href="https://github.com/mrsksyrx/vitepress-theme-curve"
-          target="_blank"
-          rel="noopener noreferrer"
-          style="color: var(--main-color)"
-          ><strong>开源</strong></a
-        >
-        。
-      </div>
     </div>
   </footer>
 </template>
@@ -100,8 +82,18 @@ const { footerIsShow } = storeToRefs(store);
 // 视窗监听器
 const observer = ref(null);
 
-// Keep the SSR output stable; update it only after the client has hydrated.
-const thisYear = ref(2025);
+// 版权起止年：起点读 theme.since，终点为当前年（SSR 取构建年，避免倒置区间）
+const startYear = computed(() => {
+  const y = String(theme.value.since ?? "").match(/(\d{4})/)?.[1];
+  return y ?? String(new Date().getFullYear());
+});
+const thisYear = ref(new Date().getFullYear());
+
+// 备案链接 keyword 从 theme.icp 提取，避免与显示文本漂移
+const icpLink = computed(() => {
+  const keyword = String(theme.value.icp ?? "").match(/\d+/)?.[0];
+  return keyword ? `https://icp.gov.moe/?keyword=${keyword}` : "https://icp.gov.moe/";
+});
 
 // 监听页脚视窗
 const isShowFooter = () => {
@@ -266,19 +258,6 @@ onBeforeUnmount(() => {
           .iconfont {
             display: none;
           }
-        }
-      }
-    }
-    .credit {
-      width: 100%;
-      text-align: center;
-      font-size: 12px;
-      opacity: 0.5;
-      margin-top: 8px;
-      a {
-        color: var(--main-color);
-        &:hover {
-          opacity: 0.8;
         }
       }
     }

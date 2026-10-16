@@ -24,15 +24,7 @@
     </div>
     <div class="meta">
       <span class="tip">此内容根据文章生成，并经过人工审核，仅用于文章内容的解释与总结</span>
-      <!--
-      <a
-        href="https://eqnxweimkr5.feishu.cn/share/base/form/shrcnCXCPmxCKKJYI3RKUfefJre"
-        class="report"
-        target="_blank"
-      >
-        投诉
-      </a>
-      -->
+      <a href="mailto:feedback@sgexilq.com" class="report">投诉</a>
     </div>
   </div>
 </template>
@@ -58,7 +50,7 @@ const typeWriter = (text = null) => {
     if (showIndex.value < data.length) {
       abstractData.value += data.charAt(showIndex.value++);
       // 生成字符延迟
-      const delay = Math.random() * (150 - 30) + 30;
+      const delay = Math.random() * (60 - 10) + 10;
       typeTimer = setTimeout(() => {
         typeWriter(text);
       }, delay);
@@ -87,7 +79,7 @@ const initAbstract = () => {
 const showOther = () => {
   if (loading.value) return false;
   const text =
-    "我是泠诗尘开发的摘要生成助理 FakeGPT，如你所见，这是一个假的 GPT，所有文本皆源于本地书写的内容。我在这里只负责显示，并仿照 GPT 的形式输出。";
+    "我是摘要生成助理 FakeGPT，如你所见，这是一个假的 GPT，所有文本皆源于本地书写的内容。我在这里只负责显示，并仿照 GPT 的形式输出。";
   showIndex.value = 0;
   loading.value = true;
   abstractData.value = "";

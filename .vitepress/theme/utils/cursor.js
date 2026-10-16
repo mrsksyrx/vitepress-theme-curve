@@ -9,17 +9,6 @@ const lerp = (a, b, n) => {
   return (1 - n) * a + n * b;
 };
 
-// getStyle 辅助函数也需要只在客户端运行
-const getStyle = (el, attr) => {
-  if (typeof window === "undefined") return false; // 在非浏览器环境下直接返回
-  try {
-    return window.getComputedStyle ? window.getComputedStyle(el)[attr] : el.currentStyle[attr];
-  } catch (e) {
-    console.error(e);
-  }
-  return false;
-};
-
 const cursorInit = () => {
   // 确保只在客户端初始化光标
   if (typeof window !== "undefined") {
@@ -35,7 +24,6 @@ class Cursor {
       curr: null,
       prev: null,
     };
-    this.pt = [];
     this.currentThemeType = "auto";
     this.rafId = null;
 
@@ -90,10 +78,6 @@ class Cursor {
       document.body.style.cursor = "auto";
       return;
     }
-
-    var el = document.getElementsByTagName("*");
-    for (let i = 0; i < el.length; i++)
-      if (getStyle(el[i], "cursor") == "pointer") this.pt.push(el[i].outerHTML);
 
     if (!this.scr) {
       document.body.appendChild((this.scr = document.createElement("style")));
@@ -214,7 +198,6 @@ class Cursor {
       curr: null,
       prev: null,
     };
-    this.pt = [];
 
     this.create();
     this.init();

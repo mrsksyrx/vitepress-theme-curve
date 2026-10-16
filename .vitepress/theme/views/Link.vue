@@ -48,7 +48,12 @@ const allLinkData = computed(() => {
 const randomJump = () => {
   try {
     const friendList = allLinkData.value;
+    if (!friendList.length) {
+      if (typeof $message !== "undefined") $message.warning("暂无友链，无法随机访问");
+      return;
+    }
     const randomList = friendList[Math.floor(Math.random() * friendList.length)];
+    if (typeof $message === "undefined") return;
     $message.warning(
       `您即将前往 ${randomList?.name}，请注意链接是否安全`,
       {
@@ -61,7 +66,7 @@ const randomJump = () => {
     );
   } catch (error) {
     console.error("友链随机访问时出错：", error);
-    $message.error("友链随机访问时出错，请重试");
+    if (typeof $message !== "undefined") $message.error("友链随机访问时出错，请重试");
   }
 };
 </script>
@@ -154,7 +159,7 @@ const randomJump = () => {
         }
       }
     }
-    @media (max-width: 800px) {
+    @media (max-width: 768px) {
       min-height: auto;
       .menu,
       .link-group {

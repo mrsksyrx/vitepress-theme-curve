@@ -24,7 +24,7 @@
                     :key="i"
                     :href="link.url"
                     class="more-link"
-                    :target="link.url.startsWith('/') ? '_self' : '_blank'"
+                    :target="link.url?.startsWith('/') ? '_self' : '_blank'"
                   >
                     <span class="link-name">{{ link.name }}</span>
                   </a>

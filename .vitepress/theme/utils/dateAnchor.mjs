@@ -49,4 +49,44 @@ export const toLocalDayTimestamp = (value) => {
     : new Date(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate()).getTime();
 };
 
+/**
+ * 提取作者书写的日历日（`YYYY-MM-DD`），与执行机器时区无关。
+ * postData.json 的 `dateYMD` 字段用它生成，客户端据此构造本地日期，
+ * 彻底消除构建机时区对展示/归档的影响。
+ *
+ * @param {Date|string|number} value frontmatter 的 date 值
+ * @returns {string|null} "YYYY-MM-DD"，无法解析时返回 null
+ */
+export const toDateString = (value) => {
+  if (value instanceof Date) {
+    const y = value.getUTCFullYear();
+    const m = String(value.getUTCMonth() + 1).padStart(2, "0");
+    const d = String(value.getUTCDate()).padStart(2, "0");
+    return `${y}-${m}-${d}`;
+  }
+  const m = String(value)
+    .trim()
+    .match(/^(\d{4})-(\d{1,2})-(\d{1,2})/);
+  if (m) {
+    return `${m[1]}-${String(m[2]).padStart(2, "0")}-${String(m[3]).padStart(2, "0")}`;
+  }
+  const d = new Date(value);
+  if (Number.isNaN(d.getTime())) return null;
+  return toDateString(d);
+};
+
+/**
+ * 把日历日锚定为 **UTC 零点** 时间戳（与机器时区无关，可安全序列化到 postData.json）。
+ * 排序/比较用它；展示请用 `dateYMD` 或 `toLocalDateFromUTCAnchor`。
+ *
+ * @param {Date|string|number} value frontmatter 的 date 值
+ * @returns {number} UTC 零点 epoch 毫秒，无法解析时返回 NaN
+ */
+export const toUTCMidnightTimestamp = (value) => {
+  const ymd = toDateString(value);
+  if (!ymd) return NaN;
+  const [y, m, d] = ymd.split("-").map(Number);
+  return Date.UTC(y, m - 1, d);
+};
+
 export default toLocalDayTimestamp;

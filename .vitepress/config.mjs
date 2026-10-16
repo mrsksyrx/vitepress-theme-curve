@@ -105,6 +105,9 @@ export default withPwa(
     // 主题配置
     themeConfig: {
       ...themeConfig,
+      // 构建期文章索引注入：客户端首次渲染即可出列表，
+      // postData.json 请求慢/失败时首页不再空白（usePostData.mjs 会用它播种）。
+      postData,
       postCount: postData.length,
     },
     // markdown
@@ -493,7 +496,7 @@ export default withPwa(
           },
         ],
         // 预缓存构建产物
-        globPatterns: ["**/*.{js,css,html,ico,png,jpg,jpeg,gif,svg,woff2,ttf}"],
+        globPatterns: ["**/*.{js,css,html,ico,png,jpg,jpeg,gif,svg,woff2,ttf,json}"],
         globIgnores: ["**/vp-icons.css", "**/sitemap.xml", "**/rss.xml"],
         // 排除路径
         navigateFallbackDenylist: [

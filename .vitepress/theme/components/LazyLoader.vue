@@ -2,15 +2,15 @@
 <template>
   <div v-if="!load" ref="box" :style="{ height, width }" class="loading" />
   <slot v-else />
-  <div v-if="useFriendsLink" class="hidden">
+  <div v-if="friendsLinkSrc" class="hidden">
     <!-- 适配友链朋友圈 -->
-    <img :data-lazy-src="useFriendsLink" class="cf-friends-avatar" alt="cover" />
+    <img :data-lazy-src="friendsLinkSrc" class="cf-friends-avatar" alt="cover" />
   </div>
 </template>
 
 <script setup>
 const props = defineProps({
-  // 兼容友链朋友圈
+  // 兼容友链朋友圈：传图片 URL 字符串；布尔仅作开关，不当作 URL
   useFriendsLink: {
     type: [Boolean, String],
     default: false,
@@ -23,6 +23,11 @@ const props = defineProps({
     type: String,
     default: "100%",
   },
+});
+
+const friendsLinkSrc = computed(() => {
+  const src = props.useFriendsLink;
+  return typeof src === "string" && src ? src : null;
 });
 
 // IntersectionObserver

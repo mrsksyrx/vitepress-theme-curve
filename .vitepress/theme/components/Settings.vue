@@ -314,7 +314,7 @@
             </span>
           </div>
         </div>
-        <span class="title">高级</span>
+        <span class="title">拓展</span>
         <div class="set-item">
           <span class="set-label">主题颜色</span>
           <div class="set-options">
@@ -1011,7 +1011,7 @@
           </div>
         </div>
         <div class="set-item">
-          <span class="set-label">显示更多选项</span>
+          <span class="set-label">显示高级选项</span>
           <div class="set-options">
             <span
               :class="['options', { choose: !showMoreSettings }]"
@@ -1083,7 +1083,10 @@
                       >修改</span
                     >
                     <template v-if="fontSizeEditing">
-                      <span v-if="fontSize !== 17" class="options" @click="resetFontSize"
+                      <span
+                        v-if="fontSize !== DEFAULT_FONT_SIZE"
+                        class="options"
+                        @click="resetFontSize"
                         >恢复默认</span
                       >
                       <span class="options" @click="store.changeFontSize(false)"> - </span>
@@ -1370,13 +1373,13 @@
                     </div>
                   </div>
                   <div v-if="pwaCacheEnabled" class="set-item">
-                    <span class="set-label">缓存条目上限</span>
+                    <span class="set-label">阅读历史条目上限</span>
                     <div class="set-options">
                       <span
                         v-for="limit in [50, 100, 200, 500, 0]"
                         :key="limit"
-                        :class="['options', { choose: pwaCacheLimit === limit }]"
-                        @click="pwaCacheLimit = limit"
+                        :class="['options', { choose: readingHistoryLimit === limit }]"
+                        @click="readingHistoryLimit = limit"
                       >
                         {{ limit === 0 ? "无限" : limit }}
                       </span>
@@ -1521,17 +1524,31 @@
                 <div class="set-item set-item-channel">
                   <span class="set-label">master分支（release）</span>
                   <span class="set-desc"
-                    >定期收拢各分支进度，更新版本。<br />建议下游开发者跟进此分支。</span
+                    >这是项目的主分支，release版本在该分支推送。<br />建议下游开发者跟进此分支。</span
                   >
                 </div>
                 <div class="set-item set-item-channel">
                   <span class="set-label">selfuse分支</span>
-                  <span class="set-desc">用于作者日常更新，本站的部署跟随该分支。</span>
+                  <span class="set-desc">这是本站的部署分支。</span>
                 </div>
                 <div class="set-item set-item-channel">
-                  <span class="set-label">dev/beta/canary分支</span>
+                  <span class="set-label">dev分支</span>
+                  <span class="set-desc set-desc-strong"
+                    >本站的日常开发于更新在该分支进行，于测试完成后推送到selfuse分支。<br />可以前往
+                    <a
+                      href="https://dev.sgexilq.com"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      class="set-desc-link"
+                      >dev.sgexilq.com</a
+                    >
+                    预览。<br />该分支的稳定性与完成度可能不佳。</span
+                  >
+                </div>
+                <div class="set-item set-item-channel">
+                  <span class="set-label">beta/canary分支</span>
                   <span class="set-desc"
-                    >由于不再需要，已移除。<br />「它们已经完成了它们的使命。」</span
+                    >已移除不再需要的分支。</span
                   >
                 </div>
               </div>
@@ -1552,7 +1569,7 @@
               <span class="set-label">反馈与建议</span>
               <div class="set-options">
                 <a
-                  href="mailto:sgexilq@qq.com"
+                  href="mailto:feedback@sgexilq.com"
                   target="_blank"
                   rel="noopener noreferrer"
                   class="options"
@@ -1658,7 +1675,7 @@
 
 <script setup>
 import { storeToRefs } from "pinia";
-import { mainStore } from "@/store";
+import { mainStore, DEFAULT_FONT_SIZE } from "@/store";
 import { useConfigIO } from "@/utils/useConfigIO.mjs";
 import { useIsMobileLayout } from "@/utils/layout.js";
 
@@ -1723,7 +1740,7 @@ const {
   scheduledLightTime,
   scheduledDarkTime,
   pwaCacheEnabled,
-  pwaCacheLimit,
+  readingHistoryLimit,
   readingProgressEnabled,
   hoverLineEnabled,
   imageWebpEnabled,
@@ -1748,7 +1765,15 @@ const clearPwaCache = async () => {
   try {
     // 清除运行时缓存（保留预缓存）
     const cacheNames = await caches.keys();
-    const runtimeCaches = ["api-cache", "html-cache", "page-cache", "post-cache"];
+    const runtimeCaches = [
+      "api-cache",
+      "html-cache",
+      "page-cache",
+      "post-cache",
+      "static-assets-cache",
+      "image-cache",
+      "js-cache",
+    ];
     let cleared = 0;
     for (const name of cacheNames) {
       if (runtimeCaches.some((rc) => name.includes(rc))) {
@@ -1935,7 +1960,7 @@ const restoreDefaultDevFeatures = () => {
   // 恢复 store/index.js 中的默认值
   backgroundBlur.value = false;
   pwaCacheEnabled.value = true;
-  pwaCacheLimit.value = 100;
+  readingHistoryLimit.value = 100;
   imageWebpEnabled.value = false;
   if (typeof $message !== "undefined") {
     $message.success("开发中的功能已恢复默认设置");
@@ -2044,6 +2069,7 @@ const devModeEntryClose = async () => {
       DEFAULT_DEV_MODE: 2,
       bumpVersion: true,
     });
+    // 无论 save 成败，会话内 devMode 已置 2；失败时 saveStoreDefaults 已提示
     if (typeof $message !== "undefined") {
       $message.success("开发模式已启用");
     }
@@ -2057,9 +2083,9 @@ const devModeEntryClose = async () => {
 };
 
 const resetFontSize = () => {
-  store.fontSize = 17;
+  store.fontSize = DEFAULT_FONT_SIZE;
   if (typeof document !== "undefined") {
-    document.documentElement.style.fontSize = "17px";
+    document.documentElement.style.fontSize = DEFAULT_FONT_SIZE + "px";
   }
 };
 const cancelFontSizeEdit = () => {
@@ -2079,7 +2105,8 @@ const confirmFontSizeEdit = () => {
 };
 // 恢复默认配置
 
-// 写入 store/index.js 默认值
+// 写入 store/index.js 默认值（仅 dev server 的 /api/theme-config 可用）
+// 返回 true 表示写入成功；失败时内部已弹出错误提示，调用方据此决定是否展示成功文案
 const saveStoreDefaults = async (data) => {
   try {
     const res = await fetch("/api/theme-config", {
@@ -2091,9 +2118,15 @@ const saveStoreDefaults = async (data) => {
     if (!json.ok) {
       console.error("Save failed:", json.error);
       $message.warning(`保存失败：${json.error || "格式不合法"}`);
+      return false;
     }
+    return true;
   } catch (e) {
     console.error("Failed to save store defaults:", e);
+    if (typeof $message !== "undefined") {
+      $message.warning("保存失败：接口仅在开发环境可用");
+    }
+    return false;
   }
 };
 
@@ -2118,13 +2151,17 @@ const switchWeatherProvider = (provider) => {
 // 关闭开发模式（写回 store/index.js 默认值；版本号/构建时间由开发模式选项手动维护）
 const confirmCloseDevMode = async () => {
   store.devMode = 1;
-  await saveStoreDefaults({
+  const ok = await saveStoreDefaults({
     DEFAULT_DEV_MODE: 1,
     bumpVersion: true,
   });
   closeDevModeConfirmVisible.value = false;
   if (typeof $message !== "undefined") {
-    $message.warning("已关闭开发模式");
+    if (ok) {
+      $message.warning("已关闭开发模式");
+    } else {
+      $message.warning("已关闭开发模式（仅本次会话生效，生产环境无法持久化到源码）");
+    }
   }
 };
 
@@ -2145,7 +2182,7 @@ const confirmAllVersionFields = async () => {
     return;
   }
   branchVersion.value = num;
-  await saveStoreDefaults({
+  const ok = await saveStoreDefaults({
     siteVersion: siteVersion.value,
     siteVersionDate: siteVersionDate.value,
     branchVersion: num,
@@ -2153,16 +2190,21 @@ const confirmAllVersionFields = async () => {
     bumpVersion: true,
   });
   if (typeof $message !== "undefined") {
-    $message.success("版本信息已保存");
+    if (ok) {
+      $message.success("版本信息已保存");
+    }
+    // 失败时 saveStoreDefaults 已弹出错误提示，不再追加成功文案
   }
 };
 
 // 将 DEFAULT_DEV_MODE 写回为随机数
 const randomizeDefaultDevMode = async () => {
   const random = Math.floor(Math.random() * 1000000);
-  await saveStoreDefaults({ DEFAULT_DEV_MODE: random, bumpVersion: true });
+  const ok = await saveStoreDefaults({ DEFAULT_DEV_MODE: random, bumpVersion: true });
   if (typeof $message !== "undefined") {
-    $message.success(`DEFAULT_DEV_MODE 已设为随机数 ${random}`);
+    if (ok) {
+      $message.success(`DEFAULT_DEV_MODE 已设为随机数 ${random}`);
+    }
   }
 };
 
@@ -2172,18 +2214,9 @@ const handleClearDataKeepDevMode = async () => {
     $message.warning("数据已清除，页面即将刷新");
   }
   const dev = store.devMode;
-  const savedData = {
-    siteVersion: siteVersion.value,
-    siteVersionDate: siteVersionDate.value,
-    branchVersion: branchVersion.value,
-    branchBuildTime: branchBuildTime.value,
-  };
+  // 站点版本/构建信息是构建期常量（不在 PERSIST_PATHS），无需保存/恢复
   const savedVersion = localStorage.getItem("siteDataVersion");
   await saveStoreDefaults({
-    siteVersion: siteVersion.value,
-    siteVersionDate: siteVersionDate.value,
-    branchVersion: branchVersion.value,
-    branchBuildTime: branchBuildTime.value,
     DEFAULT_DEV_MODE: dev,
     bumpVersion: true,
   });
@@ -2218,8 +2251,7 @@ const handleClearDataKeepDevMode = async () => {
     }
   }
 
-  // 恢复保留的数据
-  localStorage.setItem("siteData", JSON.stringify(savedData));
+  // 恢复版本标记（siteData 无需恢复，版本常量直取构建值）
   if (savedVersion) localStorage.setItem("siteDataVersion", savedVersion);
   window.location.reload();
 };
@@ -2238,18 +2270,9 @@ const handleResetConfig = async () => {
     $message.warning("配置已恢复默认，页面即将刷新");
   }
   const dev = store.devMode;
-  const savedData = {
-    siteVersion: siteVersion.value,
-    siteVersionDate: siteVersionDate.value,
-    branchVersion: branchVersion.value,
-    branchBuildTime: branchBuildTime.value,
-  };
+  // 站点版本/构建信息是构建期常量（不在 PERSIST_PATHS），无需保存/恢复
   const savedVersion = localStorage.getItem("siteDataVersion");
   await saveStoreDefaults({
-    siteVersion: siteVersion.value,
-    siteVersionDate: siteVersionDate.value,
-    branchVersion: branchVersion.value,
-    branchBuildTime: branchBuildTime.value,
     DEFAULT_DEV_MODE: dev,
     bumpVersion: true,
   });
@@ -2279,7 +2302,6 @@ const handleResetConfig = async () => {
       }
     }
   }
-  localStorage.setItem("siteData", JSON.stringify(savedData));
   if (savedVersion) localStorage.setItem("siteDataVersion", savedVersion);
   window.location.reload();
 };
@@ -2830,6 +2852,44 @@ watch(
     color: var(--main-font-color);
     opacity: 0.6;
     margin: -4px 0 12px;
+
+    // 含链接的说明：不用 opacity（会把悬停态一起压灰），改用透明色模拟弱化
+    &.set-desc-strong {
+      opacity: 1;
+      color: var(--main-font-color);
+      color: color-mix(in srgb, var(--main-font-color) 60%, transparent);
+    }
+
+    .set-desc-link {
+      position: relative;
+      display: inline-flex;
+      color: var(--main-color);
+      font-weight: 500;
+
+      // 与文章正文链接一致：细下划线 → 悬停展开为整块高亮底
+      &::before {
+        content: "";
+        position: absolute;
+        border-radius: 4px;
+        bottom: 2px;
+        left: 0;
+        right: 0;
+        height: 1px;
+        opacity: 0.8;
+        background-color: var(--main-color);
+        transition: all 0.3s;
+      }
+
+      &:hover {
+        &::before {
+          height: 100%;
+          opacity: 0.2;
+          bottom: 0;
+          left: -2px;
+          right: -2px;
+        }
+      }
+    }
   }
   .about-version-pill {
     display: inline-flex;

@@ -10,7 +10,7 @@ layout: post
 
 ::: tip Tips
 
-来自扩列卡二维码或NFC的访问会指向本页面（即 <a href="https://card.sgexilq.top" target="_blank" rel="noopener noreferrer" style="color: var(--main-color)"><strong>card.sgexilq.top</strong></a> ）  
+来自扩列卡二维码或NFC的访问会指向本页面（即 <a href="https://i.sgexilq.com" target="_blank" rel="noopener noreferrer" style="color: var(--main-color)"><strong>card.sgexilq.top</strong></a> ）  
 如果泥是通过卡片进入，可以使用 <a href="https://nfc.software/zh" target="_blank" rel="noopener noreferrer" style="color: var(--main-color)"><strong>NFC Tools</strong></a> 工具将其修改为泥想要的功能哦
 
 :::
@@ -23,8 +23,7 @@ layout: post
 ### 称呼
 
 我的名字/cn是
-**泠诗尘**
-
+**泠诗尘**  
 可以叫我诗尘、泠泠、泠酱…怎么样都可以啦
 
 ### 标识
@@ -148,9 +147,9 @@ STEAM：<a href="https://myat-steam.20091010.xyz" target="_blank" rel="noopener 
 
 继续探索小站：<a href="/" style="color: var(--main-color)"><strong>回到主页 - sgexilq.com</strong></a>
 
-向我匿名提问！：<a href="https://ngl.sgexilq.com" target="_blank" rel="noopener noreferrer" style="color: var(--main-color)"><strong>NGL.Link</strong></a>（会在Twitter回复）
+向我匿名提问！：<a href="https://ngl.sgexilq.com" target="_blank" rel="noopener noreferrer" style="color: var(--main-color)"><strong>NGL.Link</strong></a>（会在Twitter回复） / <a href="/pages/hide/message" style="color: var(--main-color)"><strong>留言板 - sgexilq.com</strong></a>
 
-本页面最后更新于 **2026.10.11**
+本页面最后更新于 **2026.10.15**
 
 ## <span style="color: var(--main-color)">结语</span>
 
@@ -169,9 +168,12 @@ STEAM：<a href="https://myat-steam.20091010.xyz" target="_blank" rel="noopener 
 
 <hr style="border: none; border-bottom: 1px dashed var(--main-color-bg); height: 0; background: none; margin: 1.5rem 0" />
 
+**无论是什么样的人，都有选择自己未来的权利**
+
 **陷之死地而后生，置之亡地而后存。**  
 **失败的人生同样是人生，她们有权品尝至最后。**
 
 <span style="color: var(--main-accent); opacity: 0.8"><b>年年岁岁花相似，岁岁年年人不同…</b></span>
 
-**愿每个人都被世界温柔以待**
+**愿每个人都被世界温柔以待**  
+**我爱你们**

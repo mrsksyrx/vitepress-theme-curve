@@ -311,7 +311,8 @@ const parseLrc = (text) => {
   const lines = text.split("\n");
   const result = [];
   const timeMap = new Map();
-  const timeExp = /\[(\d{2,}):(\d{2})(?:\.(\d{2,3}))?\]/g;
+  // 分钟 1–3 位（兼容 [0:23.45]），秒保持 2 位，降低正文 [1:2] 类误匹配
+  const timeExp = /\[(\d{1,3}):(\d{2})(?:\.(\d{2,3}))?\]/g;
 
   for (const line of lines) {
     const matches = [...line.matchAll(timeExp)];
@@ -375,13 +376,17 @@ const loadEmbeddedCover = async (src) => {
     const abs = new URL(src, location.href).href;
     jsmediatags.read(abs, {
       onSuccess: (tag) => {
-        const picture = tag.tags.picture;
-        if (picture) {
-          let base64String = "";
-          for (let i = 0; i < picture.data.length; i++) {
-            base64String += String.fromCharCode(picture.data[i]);
+        try {
+          const picture = tag.tags?.picture;
+          if (picture) {
+            let base64String = "";
+            for (let i = 0; i < picture.data.length; i++) {
+              base64String += String.fromCharCode(picture.data[i]);
+            }
+            embeddedCover.value = "data:" + picture.format + ";base64," + window.btoa(base64String);
           }
-          embeddedCover.value = "data:" + picture.format + ";base64," + window.btoa(base64String);
+        } catch (error) {
+          console.warn("Failed to parse embedded cover", error);
         }
       },
       onError: (error) => {
