@@ -83,7 +83,7 @@
     <div class="about-content" style="display: flex">
       <div class="about-item" style="padding: 1.2rem 2rem">
         <p class="text" style="margin: 0.2rem 0; font-size: 1.6em">
-          <strong style="color: var(--main-color)">本站仍在建设中</strong>
+          <strong style="color: var(--main-color)">站点信息</strong>
         </p>
         <p class="text" style="margin: 0.2rem 0">
           最近一次功能性或质量性更新于
@@ -96,13 +96,76 @@
           定义版本随 <strong style="color: var(--main-color)">release</strong> 推送更新
         </p>
         <p class="text" style="margin: 0.2rem 0">
-          详见本站
+          当前分支内部版本
+          <strong style="color: var(--main-accent)">{{ displayBranchVersion }}</strong>
+        </p>
+        <p class="text" style="margin: 0.2rem 0">
+          内部版本构建时间
+          <strong style="color: var(--main-accent)">{{ displayBranchBuildTime }}</strong>
+        </p>
+        <p class="text" style="margin: 0.2rem 0">
+          本站可用域名
+          <strong style="color: var(--main-accent)"
+            >sgexilq.com / sgexilq.top / mrsksyrx.top</strong
+          >
+        </p>
+        <p class="text" style="margin: 0.2rem 0">
+          服务域名 <strong style="color: var(--main-accent)">20091010.xyz</strong>
+        </p>
+        <p class="text" style="margin: 0.2rem 0">
+          隐私政策
+          <a
+            href="https://sgexilq.com/pages/privacy"
+            target="_blank"
+            rel="noopener noreferrer"
+            style="color: var(--main-color)"
+            ><strong>https://sgexilq.com/pages/privacy</strong></a
+          >
+        </p>
+        <p class="text" style="margin: 0.2rem 0">
+          版权协议
+          <a
+            href="https://sgexilq.com/pages/cc"
+            target="_blank"
+            rel="noopener noreferrer"
+            style="color: var(--main-color)"
+            ><strong>https://sgexilq.com/pages/cc</strong></a
+          >
+        </p>
+        <p class="text" style="margin: 0.2rem 0">
+          站点订阅
+          <a
+            href="https://sgexilq.com/rss.xml"
+            target="_blank"
+            rel="noopener noreferrer"
+            style="color: var(--main-color)"
+            ><strong>https://sgexilq.com/rss.xml</strong></a
+          >
+        </p>
+        <p class="text" style="margin: 0.2rem 0">
+          站点状态
+          <a
+            href="https://status.sgexilq.com"
+            target="_blank"
+            rel="noopener noreferrer"
+            style="color: var(--main-color)"
+            ><strong>Better Stack</strong></a
+          >
+        </p>
+        <p class="text" style="margin: 0.2rem 0">
+          反馈建议
+          <a href="mailto:feedback@sgexilq.com" style="color: var(--main-color)"
+            ><strong>feedback@sgexilq.com</strong></a
+          >
+        </p>
+        <p class="text" style="margin: 0.2rem 0">
+          本站开源地址
           <a
             href="https://github.com/mrsksyrx/vitepress-theme-curve"
             target="_blank"
             rel="noopener noreferrer"
             style="color: var(--main-color)"
-            ><strong>源码 </strong></a
+            ><strong>https://github.com/mrsksyrx/vitepress-theme-curve</strong></a
           >
         </p>
       </div>
@@ -169,6 +232,10 @@ const store = mainStore();
 // 站点版本信息（store 优先，fallback 到 themeConfig）
 const displaySiteVersion = computed(() => store.siteVersion || theme.value.siteVersion);
 const displaySiteVersionDate = computed(() => store.siteVersionDate || theme.value.siteVersionDate);
+const displayBranchVersion = computed(() => store.branchVersion ?? theme.value.branchVersion);
+const displayBranchBuildTime = computed(
+  () => store.branchBuildTime || theme.value.branchBuildTime || "--",
+);
 
 // 站点上线天数：本地日历天口径，客户端时钟实时计算，避免 SSG 固化构建日天数
 const { now } = useClientNow();

@@ -11,7 +11,7 @@ const isMobile =
 // 全站字号默认值：移动端 16，桌面 17。恢复默认/超时回滚必须用它，不要写死 17。
 export const DEFAULT_FONT_SIZE = isMobile ? 16 : 17;
 // 开发用版本号，每次改默认值时 +1，自动清除旧缓存
-const PERSIST_VERSION = 41;
+const PERSIST_VERSION = 44;
 // 开发模式开关（1 = 未开启，2 = 开启）
 const DEFAULT_DEV_MODE = 1;
 
@@ -188,8 +188,8 @@ export const mainStore = defineStore("main", {
       siteVersion: "V1.4",
       siteVersionDate: "2026.10.5",
       // 分支版本（自动递增）
-      branchVersion: 185,
-      branchBuildTime: "2026.10.14 17:29:50",
+      branchVersion: 196,
+      branchBuildTime: "2026.10.16 22:49:35",
     };
   },
   actions: {
