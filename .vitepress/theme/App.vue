@@ -368,7 +368,7 @@ onBeforeUnmount(() => {
 .footer-credit {
   width: 100%;
   max-width: 1400px;
-  margin: -2rem auto 0.8rem;
+  margin: -0.5rem auto 0.8rem;
   padding: 0 1rem;
   text-align: center;
   font-size: 12px;
