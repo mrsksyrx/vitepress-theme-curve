@@ -114,6 +114,7 @@ export const themeConfig = {
         items: [
           { text: "关于本站", link: "/pages/about-website" },
           { text: "精神状态", link: "https://whendie.sgexilq.com", newTab: true },
+          { text: "音乐下载", link: "https://ncmmdp.mrsksyrx.top", newTab: true },
           { text: "友情链接", link: "/pages/link" },
         ],
       },
