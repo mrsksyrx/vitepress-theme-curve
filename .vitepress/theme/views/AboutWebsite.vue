@@ -657,6 +657,13 @@ onMounted(() => {
           overflow-wrap: anywhere;
         }
 
+        // 桌面端单行的 2 倍行高在小屏折行后间距过大；
+        // 收紧行高后用外边距补回标题与边框、正文之间的呼吸空间
+        &.hello .title2 {
+          line-height: 1.4;
+          margin: 0.6rem 0 1.2rem;
+        }
+
         .text {
           font-size: 1rem;
         }
