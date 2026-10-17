@@ -113,27 +113,25 @@
           服务域名 <strong style="color: var(--main-accent)">20091010.xyz</strong>
         </p>
         <p class="text" style="margin: 0.2rem 0">
-          隐私政策
+          本站的
           <a
             href="https://sgexilq.com/pages/privacy"
             target="_blank"
             rel="noopener noreferrer"
             style="color: var(--main-color)"
-            ><strong>https://sgexilq.com/pages/privacy</strong></a
+            ><strong>隐私政策</strong></a
           >
-        </p>
-        <p class="text" style="margin: 0.2rem 0">
-          版权协议
+          与
           <a
             href="https://sgexilq.com/pages/cc"
             target="_blank"
             rel="noopener noreferrer"
             style="color: var(--main-color)"
-            ><strong>https://sgexilq.com/pages/cc</strong></a
+            ><strong>版权协议</strong></a
           >
         </p>
         <p class="text" style="margin: 0.2rem 0">
-          站点订阅
+          订阅本站
           <a
             href="https://sgexilq.com/rss.xml"
             target="_blank"
@@ -143,7 +141,7 @@
           >
         </p>
         <p class="text" style="margin: 0.2rem 0">
-          站点状态
+          站点状态提供
           <a
             href="https://status.sgexilq.com"
             target="_blank"
@@ -657,6 +655,13 @@ onMounted(() => {
           font-size: clamp(1.5rem, 8vw, 2rem);
           margin-right: 0;
           overflow-wrap: anywhere;
+        }
+
+        // 桌面端单行的 2 倍行高在小屏折行后间距过大；
+        // 收紧行高后用外边距补回标题与边框、正文之间的呼吸空间
+        &.hello .title2 {
+          line-height: 1.4;
+          margin: 0.6rem 0 1.2rem;
         }
 
         .text {
