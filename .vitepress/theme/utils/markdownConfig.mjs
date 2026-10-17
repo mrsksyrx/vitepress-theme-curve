@@ -113,11 +113,15 @@ const markdownConfig = (md, themeConfig) => {
     const src = md.utils.escapeHtml(token.attrs?.[token.attrIndex("src")]?.[1] ?? "");
     const alt = md.utils.escapeHtml(token.content);
 
-    // 生成 WebP 路径（将扩展名替换为 .webp）
-    const webpSrc = src.replace(/\.(png|jpe?g|bmp|tiff)$/i, ".webp");
+    // 只为站内图片生成 WebP 探测属性：外链图床常忽略扩展名直接返回原图，
+    // 探测会被 initImageLazy 当成"webp 加载成功"，等于同一张图拉两次。
+    const isExternal = /^(?:[a-z][a-z0-9+.-]*:|\/\/)/i.test(src);
+    const webpAttr = isExternal
+      ? ""
+      : ` data-webp="${src.replace(/\.(png|jpe?g|bmp|tiff)$/i, ".webp")}"`;
 
     if (!themeConfig.fancybox.enable) {
-      return `<img src="${src}" alt="${alt}" loading="lazy" data-webp="${webpSrc}">`;
+      return `<img src="${src}" alt="${alt}" loading="lazy"${webpAttr}>`;
     }
     // 作者已用 [![img](src)](href) 指明图片的点击目标时，不能再包一层 <a>：
     // 嵌套 <a> 会让外层作者链接变成空壳，点击图片会进灯箱而不是作者写的 href。
@@ -127,7 +131,7 @@ const markdownConfig = (md, themeConfig) => {
       return `<span class="img-fancybox"><img class="post-img" src="${src}" alt="${alt}" loading="lazy" data-fancybox="gallery" data-caption="${alt}" /><span class="post-img-tip">${alt}</span></span>`;
     }
     return `<a class="img-fancybox" href="${src}" data-fancybox="gallery" data-caption="${alt}">
-                <img class="post-img" src="${src}" alt="${alt}" loading="lazy" data-webp="${webpSrc}" />
+                <img class="post-img" src="${src}" alt="${alt}" loading="lazy"${webpAttr} />
                 <span class="post-img-tip">${alt}</span>
               </a>`;
   };
