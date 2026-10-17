@@ -182,9 +182,9 @@
                 </div>
               </Transition>
               <div class="set-item">
-                <span class="set-label">DEFAULT_DEV_MODE 随机化</span>
+                <span class="set-label">PERSIST_VERSION 随机化</span>
                 <div class="set-options">
-                  <span class="options" @click="randomizeDefaultDevMode">确认</span>
+                  <span class="options" @click="randomizePersistVersion">确认</span>
                 </div>
               </div>
               <div class="set-item">
@@ -206,7 +206,8 @@
                   @click="closeDevModeConfirmVisible = false"
                 >
                   <span class="warn-text"
-                    >你指的是要关闭开发模式吗 / 请确认推送前已经完成了相关设置</span
+                    >你指的是要关闭开发模式吗 / 将同时复位 PERSIST_VERSION 为 1 /
+                    请确认推送前已经完成了相关设置</span
                   >
                   <span class="options" @click.stop="confirmCloseDevMode">确认</span>
                 </div>
@@ -270,12 +271,11 @@
         <div class="set-item">
           <span class="set-label">调整明暗显示外观</span>
           <div class="set-options">
-            <span v-if="scheduledThemeEnabled" class="options choose"> 定时切换 </span>
             <span
               :class="['options', { choose: !scheduledThemeEnabled && themeType === 'auto' }]"
               @click="setThemeType('auto')"
             >
-              跟随系统
+              系统
             </span>
             <span
               :class="['options', { choose: !scheduledThemeEnabled && themeType === 'dark' }]"
@@ -289,8 +289,38 @@
             >
               浅色
             </span>
+            <span
+              :class="['options', { choose: scheduledThemeEnabled }]"
+              @click="toggleScheduledTheme(true)"
+            >
+              定时
+            </span>
           </div>
         </div>
+        <template v-if="scheduledThemeEnabled">
+          <div class="set-item">
+            <span class="set-label">浅色模式时间</span>
+            <div class="set-options">
+              <input
+                v-model="scheduledLightTime"
+                type="time"
+                class="time-input"
+                @change="onScheduledTimeChange"
+              />
+            </div>
+          </div>
+          <div class="set-item">
+            <span class="set-label">深色模式时间</span>
+            <div class="set-options">
+              <input
+                v-model="scheduledDarkTime"
+                type="time"
+                class="time-input"
+                @change="onScheduledTimeChange"
+              />
+            </div>
+          </div>
+        </template>
         <div class="set-item">
           <span class="set-label">全站字体</span>
           <div class="set-options">
@@ -990,6 +1020,23 @@
                 </span>
               </div>
             </div>
+            <div class="set-item">
+              <span class="set-label">背景模糊</span>
+              <div class="set-options">
+                <span
+                  :class="['options', { choose: !backgroundBlur }]"
+                  @click="backgroundBlur = false"
+                >
+                  关闭
+                </span>
+                <span
+                  :class="['options', { choose: backgroundBlur }]"
+                  @click="backgroundBlur = true"
+                >
+                  开启
+                </span>
+              </div>
+            </div>
           </div>
         </Transition>
         <span class="title">杂项</span>
@@ -1171,45 +1218,6 @@
               </div>
             </Transition>
             <div class="set-item">
-              <span class="set-label">定时切换明暗显示外观</span>
-              <div class="set-options">
-                <span
-                  :class="['options', { choose: !scheduledThemeEnabled }]"
-                  @click="toggleScheduledTheme(false)"
-                >
-                  关闭
-                </span>
-                <span
-                  :class="['options', { choose: scheduledThemeEnabled }]"
-                  @click="toggleScheduledTheme(true)"
-                >
-                  开启
-                </span>
-              </div>
-            </div>
-            <div v-if="scheduledThemeEnabled" class="set-item">
-              <span class="set-label">浅色模式时间</span>
-              <div class="set-options">
-                <input
-                  v-model="scheduledLightTime"
-                  type="time"
-                  class="time-input"
-                  @change="onScheduledTimeChange"
-                />
-              </div>
-            </div>
-            <div v-if="scheduledThemeEnabled" class="set-item">
-              <span class="set-label">深色模式时间</span>
-              <div class="set-options">
-                <input
-                  v-model="scheduledDarkTime"
-                  type="time"
-                  class="time-input"
-                  @change="onScheduledTimeChange"
-                />
-              </div>
-            </div>
-            <div class="set-item">
               <span class="set-label">天气小组件</span>
               <div class="set-options">
                 <span
@@ -1338,23 +1346,6 @@
               </div>
               <Transition name="fade-up">
                 <div v-if="devFeaturesExpanded" class="set-expand-box">
-                  <div class="set-item">
-                    <span class="set-label">背景模糊</span>
-                    <div class="set-options">
-                      <span
-                        :class="['options', { choose: !backgroundBlur }]"
-                        @click="backgroundBlur = false"
-                      >
-                        关闭
-                      </span>
-                      <span
-                        :class="['options', { choose: backgroundBlur }]"
-                        @click="backgroundBlur = true"
-                      >
-                        开启
-                      </span>
-                    </div>
-                  </div>
                   <div class="set-item">
                     <span class="set-label">PWA 缓存增强</span>
                     <div class="set-options">
@@ -1945,11 +1936,8 @@ const handleCollapseAllGroups = () => {
 };
 
 // 停用所有开发中的功能：开启=一键关闭该分组全部选项；关闭=恢复默认设置
-const devFeaturesDisabled = computed(
-  () => !backgroundBlur.value && !pwaCacheEnabled.value && !imageWebpEnabled.value,
-);
+const devFeaturesDisabled = computed(() => !pwaCacheEnabled.value && !imageWebpEnabled.value);
 const disableAllDevFeatures = () => {
-  backgroundBlur.value = false;
   pwaCacheEnabled.value = false;
   imageWebpEnabled.value = false;
   if (typeof $message !== "undefined") {
@@ -1958,7 +1946,6 @@ const disableAllDevFeatures = () => {
 };
 const restoreDefaultDevFeatures = () => {
   // 恢复 store/index.js 中的默认值
-  backgroundBlur.value = false;
   pwaCacheEnabled.value = true;
   readingHistoryLimit.value = 100;
   imageWebpEnabled.value = false;
@@ -2148,12 +2135,13 @@ const switchWeatherProvider = (provider) => {
   }
 };
 
-// 关闭开发模式（写回 store/index.js 默认值；版本号/构建时间由开发模式选项手动维护）
+// 关闭开发模式（写回 store/index.js：DEFAULT_DEV_MODE=1，PERSIST_VERSION 复位为 1）
 const confirmCloseDevMode = async () => {
   store.devMode = 1;
+  // resetVersion 优先于 bumpVersion，直接把 PERSIST_VERSION 定为 1
   const ok = await saveStoreDefaults({
     DEFAULT_DEV_MODE: 1,
-    bumpVersion: true,
+    resetVersion: 1,
   });
   closeDevModeConfirmVisible.value = false;
   if (typeof $message !== "undefined") {
@@ -2197,13 +2185,13 @@ const confirmAllVersionFields = async () => {
   }
 };
 
-// 将 DEFAULT_DEV_MODE 写回为随机数
-const randomizeDefaultDevMode = async () => {
-  const random = Math.floor(Math.random() * 1000000);
-  const ok = await saveStoreDefaults({ DEFAULT_DEV_MODE: random, bumpVersion: true });
+// 将 PERSIST_VERSION 写回为随机数（触发旧缓存清理；避开 0，中间件用 truthy 判断 resetVersion）
+const randomizePersistVersion = async () => {
+  const random = Math.floor(Math.random() * 999999) + 1;
+  const ok = await saveStoreDefaults({ resetVersion: random });
   if (typeof $message !== "undefined") {
     if (ok) {
-      $message.success(`DEFAULT_DEV_MODE 已设为随机数 ${random}`);
+      $message.success(`PERSIST_VERSION 已设为随机数 ${random}`);
     }
   }
 };
@@ -2422,18 +2410,19 @@ const setRemoveAnimations = (enabled) => {
 
 // 定时切换明暗显示外观
 const toggleScheduledTheme = (enabled) => {
+  if (enabled && scheduledThemeEnabled.value) return; // 已在定时模式，避免重复提示
   scheduledThemeEnabled.value = enabled;
   if (enabled) {
     store.startScheduledTheme();
     if (typeof $message !== "undefined") {
-      $message.success("显示外观已切换为定时切换");
+      $message.success("显示外观已切换为定时");
     }
   } else {
     store.stopScheduledTheme();
     themeType.value = "auto";
     store.updateActualThemeValue();
     if (typeof $message !== "undefined") {
-      $message.success("显示外观已切换为跟随系统");
+      $message.success("显示外观已切换为系统");
     }
   }
 };
@@ -2462,7 +2451,7 @@ const setThemeType = (type) => {
     store.stopScheduledTheme();
   }
   themeType.value = type;
-  const typeNames = { auto: "跟随系统", dark: "深色", light: "浅色" };
+  const typeNames = { auto: "系统", dark: "深色", light: "浅色" };
   if (typeof $message !== "undefined") {
     $message.success(`显示外观已切换为${typeNames[type]}`);
   }
