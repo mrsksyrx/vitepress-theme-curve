@@ -169,6 +169,10 @@ export const mainStore = defineStore("main", {
       imageWebpEnabled: false,
       // 天气小组件开关
       weatherWidgetEnabled: true,
+      // HelloGithub 热榜开关
+      helloGithubWidgetEnabled: true,
+      // 标签列表开关
+      tagsWidgetEnabled: true,
       // 天气小组件折叠状态
       weatherSectionExpanded: false,
       // 天气数据源（amap = 高德，wttr = wttr.in，openmeteo = Open-Meteo）

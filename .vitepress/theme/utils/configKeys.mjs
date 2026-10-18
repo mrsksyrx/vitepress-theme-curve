@@ -50,6 +50,8 @@ export const PERSIST_PATHS = [
   "weatherLocationMode",
   "weatherManualCity",
   "weatherWidgetEnabled",
+  "helloGithubWidgetEnabled",
+  "tagsWidgetEnabled",
   "scheduledThemeEnabled",
   "scheduledLightTime",
   "scheduledDarkTime",

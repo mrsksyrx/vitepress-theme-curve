@@ -1039,6 +1039,72 @@
             </div>
           </div>
         </Transition>
+        <div class="set-item">
+          <span class="set-label">小组件</span>
+          <div class="set-options">
+            <span
+              :class="['options', { choose: widgetsSectionExpanded }]"
+              @click="widgetsSectionExpanded = !widgetsSectionExpanded"
+            >
+              {{ widgetsSectionExpanded ? "收起" : "展开" }}
+            </span>
+          </div>
+        </div>
+        <Transition name="fade-up">
+          <div v-if="widgetsSectionExpanded" class="set-expand-box">
+            <div class="set-item">
+              <span class="set-label">天气</span>
+              <div class="set-options">
+                <span
+                  :class="['options', { choose: !weatherWidgetEnabled }]"
+                  @click="weatherWidgetEnabled = false"
+                >
+                  关闭
+                </span>
+                <span
+                  :class="['options', { choose: weatherWidgetEnabled }]"
+                  @click="weatherWidgetEnabled = true"
+                >
+                  开启
+                </span>
+              </div>
+            </div>
+            <div class="set-item">
+              <span class="set-label">HelloGithub热榜</span>
+              <div class="set-options">
+                <span
+                  :class="['options', { choose: !helloGithubWidgetEnabled }]"
+                  @click="helloGithubWidgetEnabled = false"
+                >
+                  关闭
+                </span>
+                <span
+                  :class="['options', { choose: helloGithubWidgetEnabled }]"
+                  @click="helloGithubWidgetEnabled = true"
+                >
+                  开启
+                </span>
+              </div>
+            </div>
+            <div class="set-item">
+              <span class="set-label">标签列表</span>
+              <div class="set-options">
+                <span
+                  :class="['options', { choose: !tagsWidgetEnabled }]"
+                  @click="tagsWidgetEnabled = false"
+                >
+                  关闭
+                </span>
+                <span
+                  :class="['options', { choose: tagsWidgetEnabled }]"
+                  @click="tagsWidgetEnabled = true"
+                >
+                  开启
+                </span>
+              </div>
+            </div>
+          </div>
+        </Transition>
         <span class="title">杂项</span>
         <div class="set-item">
           <span class="set-label">额外信息显示位置</span>
@@ -1057,6 +1123,103 @@
             </span>
           </div>
         </div>
+        <div class="set-item">
+          <span class="set-label">天气小组件选项</span>
+          <div class="set-options">
+            <span
+              :class="['options', { choose: weatherSectionExpanded }]"
+              @click="weatherSectionExpanded = !weatherSectionExpanded"
+            >
+              {{ weatherSectionExpanded ? "收起" : "展开" }}
+            </span>
+          </div>
+        </div>
+        <Transition name="fade-up">
+          <div v-if="weatherSectionExpanded" class="set-expand-box">
+            <div class="set-item">
+              <span class="set-label">定位方式</span>
+              <div class="set-options">
+                <span
+                  :class="['options', { choose: weatherLocationMode === 'satellite' }]"
+                  @click="switchLocationMode('satellite', '自动')"
+                >
+                  自动
+                </span>
+                <span
+                  :class="['options', { choose: weatherLocationMode === 'ip' }]"
+                  @click="switchLocationMode('ip', 'IP地址')"
+                >
+                  IP地址
+                </span>
+                <span
+                  :class="['options', { choose: weatherLocationMode === 'manual' }]"
+                  @click="switchLocationMode('manual', '自定义')"
+                >
+                  自定义
+                </span>
+              </div>
+            </div>
+            <div v-if="weatherLocationMode === 'manual'" class="set-item">
+              <span class="set-label">城市名称</span>
+              <div class="set-options">
+                <input
+                  v-model="weatherManualCity"
+                  type="text"
+                  style="
+                    padding: 6px 8px;
+                    font-size: 0.9375rem;
+                    border-radius: 8px;
+                    min-width: 80px;
+                    border: 1px solid var(--main-card-border);
+                    background-color: var(--main-card-background);
+                    color: var(--main-font-color);
+                    font-family: var(--main-font-family);
+                    text-align: center;
+                    height: 100%;
+                    box-sizing: border-box;
+                  "
+                  placeholder="例如：苏州"
+                  @keyup.enter="
+                    weatherRefreshTrigger++;
+                    window.dispatchEvent(new Event('weather-refresh'));
+                  "
+                />
+                <span
+                  class="options"
+                  @click="
+                    weatherRefreshTrigger++;
+                    window.dispatchEvent(new Event('weather-refresh'));
+                  "
+                >
+                  确认
+                </span>
+              </div>
+            </div>
+            <div class="set-item">
+              <span class="set-label">天气数据源</span>
+              <div class="set-options">
+                <span
+                  :class="['options', { choose: weatherProvider === 'amap' }]"
+                  @click="switchWeatherProvider('amap')"
+                >
+                  高德
+                </span>
+                <span
+                  :class="['options', { choose: weatherProvider === 'wttr' }]"
+                  @click="switchWeatherProvider('wttr')"
+                >
+                  wttr.in
+                </span>
+                <span
+                  :class="['options', { choose: weatherProvider === 'openmeteo' }]"
+                  @click="switchWeatherProvider('openmeteo')"
+                >
+                  Open-Meteo
+                </span>
+              </div>
+            </div>
+          </div>
+        </Transition>
         <div class="set-item">
           <span class="set-label">显示高级选项</span>
           <div class="set-options">
@@ -1214,120 +1377,6 @@
                 <div class="warn-actions">
                   <span class="options warn-no" @click.stop="handleLayoutFail">不能</span>
                   <span class="options warn-yes" @click.stop="handleLayoutOk">是的</span>
-                </div>
-              </div>
-            </Transition>
-            <div class="set-item">
-              <span class="set-label">天气小组件</span>
-              <div class="set-options">
-                <span
-                  :class="['options', { choose: weatherSectionExpanded }]"
-                  @click="weatherSectionExpanded = !weatherSectionExpanded"
-                >
-                  {{ weatherSectionExpanded ? "收起" : "展开" }}
-                </span>
-              </div>
-            </div>
-            <Transition name="fade-up">
-              <div v-if="weatherSectionExpanded" class="set-expand-box">
-                <div class="set-item">
-                  <span class="set-label">天气小组件</span>
-                  <div class="set-options">
-                    <span
-                      :class="['options', { choose: !weatherWidgetEnabled }]"
-                      @click="weatherWidgetEnabled = false"
-                    >
-                      关闭
-                    </span>
-                    <span
-                      :class="['options', { choose: weatherWidgetEnabled }]"
-                      @click="weatherWidgetEnabled = true"
-                    >
-                      开启
-                    </span>
-                  </div>
-                </div>
-                <div class="set-item">
-                  <span class="set-label">定位方式</span>
-                  <div class="set-options">
-                    <span
-                      :class="['options', { choose: weatherLocationMode === 'satellite' }]"
-                      @click="switchLocationMode('satellite', '自动')"
-                    >
-                      自动
-                    </span>
-                    <span
-                      :class="['options', { choose: weatherLocationMode === 'ip' }]"
-                      @click="switchLocationMode('ip', 'IP地址')"
-                    >
-                      IP地址
-                    </span>
-                    <span
-                      :class="['options', { choose: weatherLocationMode === 'manual' }]"
-                      @click="switchLocationMode('manual', '自定义')"
-                    >
-                      自定义
-                    </span>
-                  </div>
-                </div>
-                <div v-if="weatherLocationMode === 'manual'" class="set-item">
-                  <span class="set-label">城市名称</span>
-                  <div class="set-options">
-                    <input
-                      v-model="weatherManualCity"
-                      type="text"
-                      style="
-                        padding: 6px 8px;
-                        font-size: 0.9375rem;
-                        border-radius: 8px;
-                        min-width: 80px;
-                        border: 1px solid var(--main-card-border);
-                        background-color: var(--main-card-background);
-                        color: var(--main-font-color);
-                        font-family: var(--main-font-family);
-                        text-align: center;
-                        height: 100%;
-                        box-sizing: border-box;
-                      "
-                      placeholder="例如：苏州"
-                      @keyup.enter="
-                        weatherRefreshTrigger++;
-                        window.dispatchEvent(new Event('weather-refresh'));
-                      "
-                    />
-                    <span
-                      class="options"
-                      @click="
-                        weatherRefreshTrigger++;
-                        window.dispatchEvent(new Event('weather-refresh'));
-                      "
-                    >
-                      确认
-                    </span>
-                  </div>
-                </div>
-                <div class="set-item">
-                  <span class="set-label">天气数据源</span>
-                  <div class="set-options">
-                    <span
-                      :class="['options', { choose: weatherProvider === 'amap' }]"
-                      @click="switchWeatherProvider('amap')"
-                    >
-                      高德
-                    </span>
-                    <span
-                      :class="['options', { choose: weatherProvider === 'wttr' }]"
-                      @click="switchWeatherProvider('wttr')"
-                    >
-                      wttr.in
-                    </span>
-                    <span
-                      :class="['options', { choose: weatherProvider === 'openmeteo' }]"
-                      @click="switchWeatherProvider('openmeteo')"
-                    >
-                      Open-Meteo
-                    </span>
-                  </div>
                 </div>
               </div>
             </Transition>
@@ -1538,9 +1587,7 @@
                 </div>
                 <div class="set-item set-item-channel">
                   <span class="set-label">beta/canary分支</span>
-                  <span class="set-desc"
-                    >已移除不再需要的分支。</span
-                  >
+                  <span class="set-desc">已移除不再需要的分支。</span>
                 </div>
               </div>
             </Transition>
@@ -1740,6 +1787,8 @@ const {
   weatherManualCity,
   weatherRefreshTrigger,
   weatherWidgetEnabled,
+  helloGithubWidgetEnabled,
+  tagsWidgetEnabled,
   weatherSectionExpanded,
   devModeOptionsExpanded,
   siteVersion,
@@ -1885,6 +1934,8 @@ const devModeEntrySuccess = ref(false);
 const islandSettingsExpanded = ref(false);
 // 音乐播放器设置展开状态
 const musicPlayerExpanded = ref(false);
+// 小组件合并菜单展开状态
+const widgetsSectionExpanded = ref(false);
 // 自定义歌单 ID 临时输入值
 const playerCustomIdsInput = ref(playerCustomIds.value);
 const confirmCustomIds = () => {
@@ -1906,6 +1957,7 @@ const applyExpandAllGroups = () => {
   islandSettingsExpanded.value = true;
   musicPlayerExpanded.value = true;
   moreFontsExpanded.value = true;
+  widgetsSectionExpanded.value = true;
   weatherSectionExpanded.value = true;
   devFeaturesExpanded.value = true;
   aboutWebsiteExpanded.value = true;
@@ -1920,6 +1972,7 @@ const applyCollapseAllGroups = () => {
   islandSettingsExpanded.value = false;
   musicPlayerExpanded.value = false;
   moreFontsExpanded.value = false;
+  widgetsSectionExpanded.value = false;
   weatherSectionExpanded.value = false;
   devFeaturesExpanded.value = false;
   aboutWebsiteExpanded.value = false;
@@ -2766,6 +2819,7 @@ watch(
       islandSettingsExpanded.value = false;
       themeColorExpanded.value = false;
       musicPlayerExpanded.value = false;
+      widgetsSectionExpanded.value = false;
       playerCustomIdsInput.value = playerCustomIds.value;
       closeDevModeConfirmVisible.value = false;
       // 重置开发模式入口状态
