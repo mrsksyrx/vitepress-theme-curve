@@ -310,7 +310,8 @@ const openSettings = () => {
   left: 0;
   width: 100vw;
   height: 100vh;
-  z-index: 3000;
+  // 高于 BottomPills（9999），避免播放器胶囊压住侧边栏
+  z-index: 10000;
   .menu-mask {
     position: absolute;
     top: 0;

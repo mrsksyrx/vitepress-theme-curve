@@ -1,9 +1,17 @@
 <!-- 弹窗组件 -->
 <template>
   <Teleport to="body">
-    <!-- gestureClosing：手势已手动滑出，关掉 CSS leave，避免再从原位播一次闪现 -->
-    <Transition name="fade" mode="out-in" :css="!gestureClosing">
-      <div v-if="show" :class="['modal', { 'modal-wrapper-mobile': isMobileLayout }]">
+    <!-- gestureClosing：手势已手动滑出，用 CSS 跳过 leave，避免再从原位播一次闪现 -->
+    <!-- persistent：内容常驻（v-show），避免每次打开重新挂载重依赖（如搜索 InstantSearch） -->
+    <Transition name="fade">
+      <div
+        v-if="persistent || show"
+        v-show="persistent ? show : true"
+        :class="[
+          'modal',
+          { 'modal-wrapper-mobile': isMobileLayout, 'gesture-closing': gestureClosing },
+        ]"
+      >
         <div ref="modalMaskEl" class="modal-mask" @click.stop="maskClick" />
         <div
           ref="modalMainEl"
@@ -78,6 +86,11 @@ const props = defineProps({
     type: Number,
     default: 80,
   },
+  // 内容常驻：关闭时只隐藏不卸载，适合搜索等重依赖，避免每次打开卡一下
+  persistent: {
+    type: Boolean,
+    default: false,
+  },
 });
 
 // 发射事件
@@ -97,14 +110,28 @@ let touchStartY = 0;
 let touchCurrentY = 0;
 let isDragging = false;
 let startTime = 0;
-// 手势关闭中：跳过 Transition 的 leave 动画（面板已被手动滑出）
+// 手势关闭中：CSS 跳过 leave 动画（面板已被手动滑出）
 const gestureClosing = ref(false);
 
-// 重新打开时复位，保证下次进场动画正常
+const clearDragStyles = () => {
+  if (modalMainEl.value) {
+    modalMainEl.value.style.transform = "";
+    modalMainEl.value.style.transition = "";
+    modalMainEl.value.style.opacity = "";
+  }
+  if (modalMaskEl.value) {
+    modalMaskEl.value.style.opacity = "";
+    modalMaskEl.value.style.transition = "";
+  }
+};
+
+// 重新打开时复位：清掉手势 inline 样式，保证下次进场动画正常
 watch(
   () => props.show,
   (val) => {
-    if (val) gestureClosing.value = false;
+    if (!val) return;
+    gestureClosing.value = false;
+    clearDragStyles();
   },
 );
 
@@ -148,7 +175,7 @@ const onTouchEnd = () => {
   const shouldClose = diff > 80 || velocity > 0.5;
 
   if (shouldClose) {
-    // 先标记再关闭：leave 阶段不再叠加 slide-down
+    // 标记后关闭：leave 阶段不再叠加 slide-down
     gestureClosing.value = true;
     if (modalMain) {
       modalMain.style.transition = "transform 0.3s ease-out, opacity 0.3s ease-out";
@@ -160,7 +187,6 @@ const onTouchEnd = () => {
       mask.style.opacity = "0";
     }
     setTimeout(() => {
-      // 不清 inline 样式：元素即将卸载，清掉反而会闪回原位
       modalClose();
     }, 300);
   } else {
@@ -174,12 +200,8 @@ const onTouchEnd = () => {
       mask.style.opacity = "";
     }
     setTimeout(() => {
-      if (modalMain) {
-        modalMain.style.transition = "";
-      }
-      if (mask) {
-        mask.style.transition = "";
-      }
+      if (modalMain) modalMain.style.transition = "";
+      if (mask) mask.style.transition = "";
     }, 250);
   }
   touchStartY = 0;
@@ -212,7 +234,8 @@ onUnmounted(() => {
   justify-content: center;
   width: 100vw;
   height: 100vh;
-  z-index: 2000;
+  // 高于 BottomPills（9999），避免播放器胶囊压住搜索/设置弹层
+  z-index: 10000;
   .modal-mask {
     position: absolute;
     top: 0;
@@ -365,6 +388,16 @@ onUnmounted(() => {
 }
 .modal.fade-leave-active .modal-mobile {
   animation: slide-down 0.3s ease-in forwards;
+}
+// 手势关闭：面板已被手动滑出，leave 立即结束，避免卡住导致打不开
+.modal.gesture-closing.fade-leave-active {
+  transition: none;
+  opacity: 0;
+}
+.modal.gesture-closing.fade-leave-active .modal-mobile {
+  animation: none;
+  transform: translateY(100%);
+  opacity: 0;
 }
 @keyframes slide-up {
   from {

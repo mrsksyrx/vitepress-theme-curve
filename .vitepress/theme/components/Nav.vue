@@ -146,10 +146,20 @@
     <MobileMenu />
     <!-- 移动端小组件浮层 -->
     <MobileWidgets />
-    <!-- 全局搜索 -->
-    <ClientOnly>
-      <SearchModal v-if="theme.search?.enable" />
-    </ClientOnly>
+    <!-- 全局搜索：persistent 常驻内容，打开无需重新挂载 InstantSearch -->
+    <Modal
+      v-if="theme.search?.enable"
+      :show="store.searchShow"
+      persistent
+      title="全局搜索"
+      titleIcon="search"
+      @mask-click="store.changeShowStatus('searchShow')"
+      @modal-close="store.changeShowStatus('searchShow')"
+    >
+      <ClientOnly>
+        <SearchModal />
+      </ClientOnly>
+    </Modal>
   </header>
 </template>
 
@@ -159,21 +169,12 @@ import { mainStore } from "@/store";
 import { smoothScrolling, shufflePost } from "@/utils/helper";
 import { usePostData } from "@/utils/usePostData.mjs";
 import { useIsMobileLayout } from "@/utils/layout.js";
+import SearchModal from "@/components/Search.vue";
 
 const router = useRouter();
 const store = mainStore();
 const { loadPostData } = usePostData();
 const isMobileLayout = useIsMobileLayout();
-const app = getCurrentInstance()?.appContext.app;
-const SearchModal = defineAsyncComponent(async () => {
-  const [{ default: InstantSearch }, searchComponent] = await Promise.all([
-    import("vue-instantsearch/vue3/es"),
-    import("@/components/Search.vue"),
-  ]);
-
-  app?.use(InstantSearch);
-  return searchComponent.default;
-});
 const { scrollData } = storeToRefs(store);
 const { site, theme, frontmatter, page } = useData();
 
