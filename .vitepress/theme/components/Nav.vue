@@ -4,14 +4,25 @@
       <div class="nav-all">
         <!-- 导航栏左侧 -->
         <div class="left-nav">
-          <!-- 移动端返回按钮 -->
+          <!-- 移动端返回按钮；扩列卡直达页显示为主页 -->
           <div
             v-show="isMobileLayout && frontmatter.layout !== 'home'"
-            class="back-btn nav-btn"
-            title="返回"
+            :class="['back-btn', 'nav-btn', { 'is-home': isCardEntryPage }]"
+            :title="isCardEntryPage ? '回到主页' : '返回'"
             @click="goBack"
           >
-            <i class="iconfont icon-left"></i>
+            <i :class="`iconfont ${isCardEntryPage ? 'icon-home' : 'icon-left'}`"></i>
+          </div>
+          <!-- 移动端首页：小组件浮层入口（设置里可关） -->
+          <div
+            v-show="
+              isMobileLayout && frontmatter.layout === 'home' && store.mobileWidgetsEnabled
+            "
+            class="widget-placeholder nav-btn"
+            title="小组件"
+            @click="store.changeShowStatus('mobileWidgetsShow')"
+          >
+            <i class="iconfont icon-window"></i>
           </div>
           <div class="more-menu nav-btn" title="更多内容">
             <i class="iconfont icon-menu" />
@@ -133,10 +144,22 @@
     </nav>
     <!-- 移动端菜单 -->
     <MobileMenu />
-    <!-- 全局搜索 -->
-    <ClientOnly>
-      <SearchModal v-if="theme.search?.enable" />
-    </ClientOnly>
+    <!-- 移动端小组件浮层 -->
+    <MobileWidgets />
+    <!-- 全局搜索：persistent 常驻内容，打开无需重新挂载 InstantSearch -->
+    <Modal
+      v-if="theme.search?.enable"
+      :show="store.searchShow"
+      persistent
+      title="全局搜索"
+      titleIcon="search"
+      @mask-click="store.changeShowStatus('searchShow')"
+      @modal-close="store.changeShowStatus('searchShow')"
+    >
+      <ClientOnly>
+        <SearchModal />
+      </ClientOnly>
+    </Modal>
   </header>
 </template>
 
@@ -146,21 +169,13 @@ import { mainStore } from "@/store";
 import { smoothScrolling, shufflePost } from "@/utils/helper";
 import { usePostData } from "@/utils/usePostData.mjs";
 import { useIsMobileLayout } from "@/utils/layout.js";
+import SearchModal from "@/components/Search.vue";
 
 const router = useRouter();
+const route = useRoute();
 const store = mainStore();
 const { loadPostData } = usePostData();
 const isMobileLayout = useIsMobileLayout();
-const app = getCurrentInstance()?.appContext.app;
-const SearchModal = defineAsyncComponent(async () => {
-  const [{ default: InstantSearch }, searchComponent] = await Promise.all([
-    import("vue-instantsearch/vue3/es"),
-    import("@/components/Search.vue"),
-  ]);
-
-  app?.use(InstantSearch);
-  return searchComponent.default;
-});
 const { scrollData } = storeToRefs(store);
 const { site, theme, frontmatter, page } = useData();
 
@@ -168,7 +183,18 @@ const { site, theme, frontmatter, page } = useData();
 const desktopNavItems = (items) => (items || []).filter((item) => !item.mobileOnly);
 
 // 移动端返回
+// 扩列卡/NFC 直达页：history.back 可能离开本站，固定回主页并换 home 图标
+const CARD_ENTRY_SLUG = "ww-aboutme-sgexilqlsc";
+const isCardEntryPage = computed(() => {
+  // 路由 path 最稳；page.path 在 VitePress 里可能带 .html
+  const p = route.path || page.path || "";
+  return p.includes(CARD_ENTRY_SLUG);
+});
 const goBack = () => {
+  if (isCardEntryPage.value) {
+    router.go("/");
+    return;
+  }
   if (window.history.length > 1) {
     window.history.back();
   } else {
@@ -359,6 +385,10 @@ const goLink = (link) => {
       flex-direction: row;
       align-items: center;
       min-width: 200px;
+      .widget-placeholder {
+        display: none;
+        margin-right: 4px;
+      }
       .more-menu {
         position: relative;
         margin-right: 4px;
@@ -841,6 +871,9 @@ const goLink = (link) => {
           opacity 0.3s,
           visibility 0s;
         .back-btn {
+          display: flex;
+        }
+        .widget-placeholder {
           display: flex;
         }
       }

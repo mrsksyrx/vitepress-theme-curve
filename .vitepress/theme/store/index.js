@@ -99,6 +99,8 @@ export const mainStore = defineStore("main", {
       islandStyle: "extended",
       // 移动端菜单显示
       mobileMenuShow: false,
+      // 移动端小组件浮层显示
+      mobileWidgetsShow: false,
       // 使用自定义右键菜单
       useRightMenu: true,
       // 使用自定义鼠标样式
@@ -118,9 +120,6 @@ export const mainStore = defineStore("main", {
       backgroundType: "patterns",
       // 第三方图片接口（非本站源），无 SRI 校验，内容与可用性由第三方控制，风险自担
       backgroundUrl: "https://api.miaomc.cn/image/get",
-      // 显示更多设置
-      showMoreSettings: false,
-      showMoreSettingsConfirmed: false,
       // 开发中的功能展开状态
       devFeaturesExpanded: false,
       // 分支策略展开状态
@@ -169,6 +168,12 @@ export const mainStore = defineStore("main", {
       imageWebpEnabled: false,
       // 天气小组件开关
       weatherWidgetEnabled: true,
+      // HelloGithub 热榜开关
+      helloGithubWidgetEnabled: true,
+      // 标签列表开关
+      tagsWidgetEnabled: true,
+      // 移动端小组件面板入口开关（关闭后隐藏首页左上角入口）
+      mobileWidgetsEnabled: true,
       // 天气小组件折叠状态
       weatherSectionExpanded: false,
       // 天气数据源（amap = 高德，wttr = wttr.in，openmeteo = Open-Meteo）
@@ -188,8 +193,8 @@ export const mainStore = defineStore("main", {
       siteVersion: "V1.4",
       siteVersionDate: "2026.10.5",
       // 分支版本（自动递增）
-      branchVersion: 211,
-      branchBuildTime: "2026.10.17 18:33:58",
+      branchVersion: 219,
+      branchBuildTime: "2026.10.18 16:41:25",
     };
   },
   actions: {

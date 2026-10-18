@@ -20,8 +20,6 @@ export const PERSIST_PATHS = [
   "fontSizePending",
   "infoPosition",
   "backgroundUrl",
-  "showMoreSettings",
-  "showMoreSettingsConfirmed",
   "highContrast",
   "siteLayout",
   "siteLayoutPending",
@@ -50,6 +48,9 @@ export const PERSIST_PATHS = [
   "weatherLocationMode",
   "weatherManualCity",
   "weatherWidgetEnabled",
+  "helloGithubWidgetEnabled",
+  "tagsWidgetEnabled",
+  "mobileWidgetsEnabled",
   "scheduledThemeEnabled",
   "scheduledLightTime",
   "scheduledDarkTime",
@@ -59,7 +60,7 @@ export const PERSIST_PATHS = [
 // 不参与配置导入/导出往返的键：
 // - 站点元数据：以当前构建为准，从旧配置回放会覆盖掉当前版本信息
 // - 一次性 UI 标志：next-render 用完即弃，跨浏览器迁移没有意义
-const NON_PORTABLE_KEYS = ["fontSizePending", "siteLayoutPending", "showMoreSettingsConfirmed"];
+const NON_PORTABLE_KEYS = ["fontSizePending", "siteLayoutPending"];
 
 // [B36] aside.hello.text 为有意 HTML（themeConfig 构建期注入），勿加入持久化/导入白名单
 // 可迁移的用户配置 = 持久化键 - 非迁移键

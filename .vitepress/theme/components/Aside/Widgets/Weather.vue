@@ -51,6 +51,14 @@ const store = mainStore();
 // 声明会在请求出错时抛出的事件
 const emit = defineEmits(["fetch-error"]);
 
+const props = defineProps({
+  // 移动端浮层等场景强制拉取（侧边栏默认移动端不请求）
+  forceFetch: {
+    type: Boolean,
+    default: false,
+  },
+});
+
 const weatherData = ref(null);
 const loading = ref(true);
 const error = ref(false);
@@ -295,7 +303,9 @@ onMounted(() => window.addEventListener("weather-refresh", onWeatherRefresh));
 onBeforeUnmount(() => window.removeEventListener("weather-refresh", onWeatherRefresh));
 
 onMounted(async () => {
-  if (isMobileLayout.value) {
+  // 移动端侧边栏不挂载 Weather；小组件浮层挂载时必须拉数据。
+  // 仅在「桌面布局却处于移动端宽度」时跳过，避免隐藏状态下白跑定位。
+  if (isMobileLayout.value && !props.forceFetch) {
     loading.value = false;
     return;
   }

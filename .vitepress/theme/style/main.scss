@@ -16,7 +16,8 @@
   --main-card-border: #f0e4ea;
   --main-border-shadow: #2c2d300c;
   --main-scrollbar-bar: rgba(60, 60, 67, 0.4);
-  --main-mask-background: rgba(255, 255, 255, 0.95);
+  // 遮罩：0.55 可透出背景轮廓，又不至于抢内容
+  --main-mask-background: rgba(255, 255, 255, 0.55);
   --main-mask-Inverse-background: rgba(0, 0, 0, 0.08);
   --main-mask-second-background: rgba(255, 255, 255, 0.45);
   --main-color-opacity: rgba(255, 255, 255, 0.15);
@@ -57,7 +58,8 @@ html.dark {
   --main-card-border: #3d3d3f;
   --main-border-shadow: #00000050;
   --main-scrollbar-bar: rgba(200, 200, 223, 0.4);
-  --main-mask-background: rgba(0, 0, 0, 0.95);
+  // 遮罩：0.55 可透出背景轮廓，又不至于抢内容
+  --main-mask-background: rgba(0, 0, 0, 0.55);
   --main-mask-Inverse-background: rgba(255, 255, 255, 0.08);
   --main-mask-second-background: rgba(0, 0, 0, 0.45);
   --main-color-opacity: rgba(0, 0, 0, 0.15);

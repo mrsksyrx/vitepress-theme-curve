@@ -1,72 +1,75 @@
-<!-- 全局搜索 -->
+<!-- 全局搜索内容（Modal 壳在 Nav 同步渲染，这里只放重依赖的 Algolia 部分） -->
 <template>
-  <Modal
-    :show="store.searchShow"
-    title="全局搜索"
-    titleIcon="search"
-    @mask-click="store.changeShowStatus('searchShow')"
-    @modal-close="store.changeShowStatus('searchShow')"
+  <ais-instant-search
+    v-if="hasSearchConfig"
+    ref="instantSearchRef"
+    :search-client="searchClient"
+    :future="{
+      preserveSharedStateOnUnmount: true,
+    }"
+    :index-name="indexName"
+    @state-change="searchChange"
   >
-    <ais-instant-search
-      v-if="hasSearchConfig"
-      :search-client="searchClient"
-      :future="{
-        preserveSharedStateOnUnmount: true,
-      }"
-      :index-name="index || 'chiyu_it_0f1duc8max_pages'"
-      @state-change="searchChange"
-    >
-      <ais-configure
-        :hits-per-page.camel="8"
-        :attributes-to-highlight.camel="['title', 'description', 'headers', 'content']"
-      />
-      <ais-search-box placeholder="想要搜点什么" autofocus />
-      <ais-hits v-if="hasSearchValue">
-        <template v-slot="{ items }">
-          <Transition name="fade" mode="out-in">
-            <div v-if="formatSearchData(items)?.length" class="search-list">
-              <div
-                v-for="(item, index) in formatSearchData(items)"
-                :key="index"
-                class="search-item s-card hover"
-                @click="jumpSearch(item.url)"
-              >
-                <p class="title" v-html="item.title" />
-                <p v-if="item?.anchor" class="anchor" v-html="item.anchor" />
-                <p v-if="item?.content" class="content s-card" v-html="item.content" />
-              </div>
+    <ais-configure
+      :hits-per-page.camel="8"
+      :attributes-to-highlight.camel="['title', 'description', 'headers', 'content']"
+    />
+    <ais-search-box :key="searchBoxKey" placeholder="想要搜点什么" autofocus />
+    <ais-hits v-if="hasSearchValue">
+      <template v-slot="{ items }">
+        <Transition name="fade" mode="out-in">
+          <div v-if="formatSearchData(items)?.length" class="search-list">
+            <div
+              v-for="(item, index) in formatSearchData(items)"
+              :key="index"
+              class="search-item s-card hover"
+              @click="jumpSearch(item.url)"
+            >
+              <p class="title" v-html="item.title" />
+              <p v-if="item?.anchor" class="anchor" v-html="item.anchor" />
+              <p v-if="item?.content" class="content s-card" v-html="item.content" />
             </div>
-            <div v-else class="no-result">
-              <i class="iconfont icon-search-empty" />
-              <span class="text">搜索结果为空</span>
-            </div>
-          </Transition>
-        </template>
-      </ais-hits>
-      <ais-pagination v-if="hasSearchValue" />
-      <ais-stats>
-        <template v-slot="{ processingTimeMS }">
-          <div class="information">
-            <span v-if="hasSearchValue" class="text"> 本次用时 {{ processingTimeMS }} 毫秒 </span>
           </div>
-          <a
-            class="power"
-            href="https://www.algolia.com/"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <i class="iconfont icon-algolia" />
-            <span class="name">Algolia</span>
-          </a>
-        </template>
-      </ais-stats>
-    </ais-instant-search>
-  </Modal>
+          <div v-else class="no-result">
+            <i class="iconfont icon-search-empty" />
+            <span class="text">搜索结果为空</span>
+          </div>
+        </Transition>
+      </template>
+    </ais-hits>
+    <ais-pagination v-if="hasSearchValue" />
+    <ais-stats>
+      <template v-slot="{ processingTimeMS }">
+        <div class="information">
+          <span v-if="hasSearchValue" class="text"> 本次用时 {{ processingTimeMS }} 毫秒 </span>
+        </div>
+        <a
+          class="power"
+          href="https://www.algolia.com/"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          <i class="iconfont icon-algolia" />
+          <span class="name">Algolia</span>
+        </a>
+      </template>
+    </ais-stats>
+  </ais-instant-search>
+  <div v-else class="no-config">搜索未配置</div>
 </template>
 
 <script setup>
 import { mainStore } from "@/store";
 import { liteClient } from "algoliasearch/lite";
+// 显式导入，避免依赖 app.use 全局注册（Nav 里注册时机不可靠会导致组件不渲染）
+import {
+  AisInstantSearch,
+  AisConfigure,
+  AisSearchBox,
+  AisHits,
+  AisPagination,
+  AisStats,
+} from "vue-instantsearch/vue3/es";
 
 const store = mainStore();
 const router = useRouter();
@@ -79,9 +82,24 @@ if (!hasSearchConfig) {
   console.warn("[Search] theme.search 缺少 appId / apiKey，搜索功能不可用");
 }
 const searchClient = hasSearchConfig ? liteClient(appId, apiKey) : null;
+const indexName = index || "chiyu_it_0f1duc8max_pages";
 
 // 是否具有搜索词
 const hasSearchValue = ref(false);
+
+// 关闭弹层时清空搜索词（Modal persistent 常驻，不能靠卸载重置）
+// setUiState 清的是 InstantSearch 状态；SearchBox 是非受控输入，需换 key 强制重建
+const instantSearchRef = ref(null);
+const searchBoxKey = ref(0);
+watch(
+  () => store.searchShow,
+  (open) => {
+    if (open) return;
+    hasSearchValue.value = false;
+    searchBoxKey.value += 1;
+    instantSearchRef.value?.instantSearchInstance?.setUiState({ [indexName]: { query: "" } });
+  },
+);
 
 // 搜索变化
 const searchChange = ({ uiState, setUiState }) => {
@@ -366,5 +384,11 @@ onBeforeUnmount(() => {
       }
     }
   }
+}
+.no-config {
+  padding: 24px 0;
+  text-align: center;
+  color: var(--main-font-second-color);
+  opacity: 0.7;
 }
 </style>

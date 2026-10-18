@@ -2,11 +2,22 @@
   <Teleport to="body">
     <!-- 移动端菜单 -->
     <Transition name="fade" mode="out-in">
-      <div v-show="store.mobileMenuShow" class="mobile-menu">
+      <div
+        v-show="store.mobileMenuShow"
+        :class="['mobile-menu', { 'gesture-closing': gestureClosing }]"
+      >
         <!-- 背景遮罩 -->
-        <div class="menu-mask" @click="store.changeShowStatus('mobileMenuShow')" />
+        <div ref="menuMaskEl" class="menu-mask" @click="closeMenu" />
         <Transition name="toLeft" mode="out-in">
-          <div v-show="store.mobileMenuShow" class="menu-content s-card">
+          <div
+            v-show="store.mobileMenuShow"
+            ref="menuContentEl"
+            :class="['menu-content', 's-card', { 'gesture-closing': gestureClosing }]"
+            @click.stop
+            @touchstart.passive="onTouchStart"
+            @touchmove.passive="onTouchMove"
+            @touchend="onTouchEnd"
+          >
             <!-- 顶部控制栏：网址 + 关闭按钮 -->
             <div class="menu-top-control">
               <!-- 网址 -->
@@ -14,7 +25,7 @@
                 <span>sgexilq</span><span class="pill-domain">.com</span>
               </span>
               <!-- 关闭按钮 -->
-              <div class="close-control" @click="store.changeShowStatus('mobileMenuShow')">
+              <div class="close-control" @click="closeMenu">
                 <i class="iconfont icon-close"></i>
               </div>
             </div>
@@ -88,6 +99,133 @@ const store = mainStore();
 const router = useRouter();
 const { theme } = useData();
 
+const closeMenu = () => store.changeShowStatus("mobileMenuShow");
+
+// 右滑关闭手势（侧边栏从右侧滑入）
+const menuContentEl = ref(null);
+const menuMaskEl = ref(null);
+const gestureClosing = ref(false);
+
+let touchStartX = 0;
+let touchStartY = 0;
+let touchCurrentX = 0;
+let isDragging = false;
+let dragAxis = null; // null | "x" | "y" — 首次移动时锁定轴向，避免和纵向滚动打架
+
+const onTouchStart = (e) => {
+  // 列表已滚动时不接管，交给内部滚动
+  const el = menuContentEl.value;
+  if (el && el.scrollTop > 0) {
+    isDragging = false;
+    return;
+  }
+  touchStartX = e.touches[0].clientX;
+  touchStartY = e.touches[0].clientY;
+  touchCurrentX = touchStartX;
+  isDragging = true;
+  dragAxis = null;
+};
+
+const onTouchMove = (e) => {
+  if (!isDragging) return;
+  const x = e.touches[0].clientX;
+  const y = e.touches[0].clientY;
+  const dx = x - touchStartX;
+  const dy = y - touchStartY;
+
+  // 首次超过阈值时锁定轴向：横向则接管跟手，纵向则放弃交给滚动
+  if (!dragAxis) {
+    if (Math.abs(dx) < 8 && Math.abs(dy) < 8) return;
+    dragAxis = Math.abs(dx) > Math.abs(dy) ? "x" : "y";
+    if (dragAxis === "y") {
+      isDragging = false;
+      return;
+    }
+  }
+  if (dragAxis !== "x") return;
+
+  touchCurrentX = x;
+  // 只允许向右拖（dx > 0），向左回拖贴 0
+  const diff = Math.max(0, dx);
+  const panel = menuContentEl.value;
+  if (panel) {
+    const progress = Math.min(diff / 300, 1);
+    const opacity = 1 - progress * 0.3;
+    panel.style.transform = `translateX(${diff}px)`;
+    panel.style.transition = "none";
+    panel.style.opacity = opacity;
+    const mask = menuMaskEl.value;
+    if (mask) {
+      mask.style.opacity = opacity;
+    }
+  }
+};
+
+const onTouchEnd = () => {
+  if (!isDragging || dragAxis !== "x") {
+    isDragging = false;
+    dragAxis = null;
+    return;
+  }
+  const diff = touchCurrentX - touchStartX;
+  const panel = menuContentEl.value;
+  const mask = menuMaskEl.value;
+  const shouldClose = diff > 80;
+
+  if (shouldClose) {
+    // 标记后关闭：跳过 toLeft leave，避免从原位再播一次
+    gestureClosing.value = true;
+    if (panel) {
+      panel.style.transition = "transform 0.3s ease-out, opacity 0.3s ease-out";
+      panel.style.transform = "translateX(100%)";
+      panel.style.opacity = "0";
+    }
+    if (mask) {
+      mask.style.transition = "opacity 0.3s ease-out";
+      mask.style.opacity = "0";
+    }
+    setTimeout(() => {
+      closeMenu();
+    }, 300);
+  } else {
+    if (panel) {
+      panel.style.transition = "transform 0.25s ease-out, opacity 0.25s ease-out";
+      panel.style.transform = "";
+      panel.style.opacity = "";
+    }
+    if (mask) {
+      mask.style.transition = "opacity 0.25s ease-out";
+      mask.style.opacity = "";
+    }
+    setTimeout(() => {
+      if (panel) panel.style.transition = "";
+      if (mask) mask.style.transition = "";
+    }, 250);
+  }
+  isDragging = false;
+  dragAxis = null;
+};
+
+// 重新打开时复位：清掉手势 inline 样式，保证下次进场动画正常
+watch(
+  () => store.mobileMenuShow,
+  (val) => {
+    if (!val) return;
+    gestureClosing.value = false;
+    const panel = menuContentEl.value;
+    const mask = menuMaskEl.value;
+    if (panel) {
+      panel.style.transform = "";
+      panel.style.transition = "";
+      panel.style.opacity = "";
+    }
+    if (mask) {
+      mask.style.opacity = "";
+      mask.style.transition = "";
+    }
+  },
+);
+
 // 菜单数据
 // nav 来自主题配置；tagsData **不在** themeConfig 里（config.mjs 只注入了 postCount），
 // 必须走文章索引。原实现 `const { nav, tagsData } = theme.value` 解构的是不存在的字段，
@@ -127,12 +265,10 @@ const toggleTheme = () => {
   store.changeThemeType();
 };
 
-// 关闭侧栏后弹出个性化配置
+// 打开个性化配置，同时收起侧边栏
 const openSettings = () => {
   store.changeShowStatus("mobileMenuShow");
-  setTimeout(() => {
-    store.changeShowStatus("showSettings");
-  }, 300);
+  store.changeShowStatus("showSettings");
 };
 
 // [B48-冗余] 与上方 onMounted 重复，loadPostData 幂等，注释掉
@@ -156,13 +292,24 @@ const openSettings = () => {
     transform: rotate(0deg) scale(1);
   }
 }
+// 手势关闭：面板已被手动滑出，跳过 toLeft leave，避免从原位再播一次闪现
+.menu-content.gesture-closing.toLeft-leave-active {
+  transition: none;
+  transform: translateX(100%);
+  opacity: 0;
+}
+.mobile-menu.gesture-closing.fade-leave-active {
+  transition: none;
+  opacity: 0;
+}
 .mobile-menu {
   position: fixed;
   top: 0;
   left: 0;
   width: 100vw;
   height: 100vh;
-  z-index: 3000;
+  // 高于 BottomPills（9999），避免播放器胶囊压住侧边栏
+  z-index: 10000;
   .menu-mask {
     position: absolute;
     top: 0;
