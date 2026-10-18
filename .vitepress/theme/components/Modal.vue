@@ -1,7 +1,8 @@
 <!-- 弹窗组件 -->
 <template>
   <Teleport to="body">
-    <Transition name="fade" mode="out-in">
+    <!-- gestureClosing：手势已手动滑出，关掉 CSS leave，避免再从原位播一次闪现 -->
+    <Transition name="fade" mode="out-in" :css="!gestureClosing">
       <div v-if="show" :class="['modal', { 'modal-wrapper-mobile': isMobileLayout }]">
         <div ref="modalMaskEl" class="modal-mask" @click.stop="maskClick" />
         <div
@@ -96,6 +97,16 @@ let touchStartY = 0;
 let touchCurrentY = 0;
 let isDragging = false;
 let startTime = 0;
+// 手势关闭中：跳过 Transition 的 leave 动画（面板已被手动滑出）
+const gestureClosing = ref(false);
+
+// 重新打开时复位，保证下次进场动画正常
+watch(
+  () => props.show,
+  (val) => {
+    if (val) gestureClosing.value = false;
+  },
+);
 
 const onTouchStart = (e) => {
   const modalContent = modalContentEl.value;
@@ -137,6 +148,8 @@ const onTouchEnd = () => {
   const shouldClose = diff > 80 || velocity > 0.5;
 
   if (shouldClose) {
+    // 先标记再关闭：leave 阶段不再叠加 slide-down
+    gestureClosing.value = true;
     if (modalMain) {
       modalMain.style.transition = "transform 0.3s ease-out, opacity 0.3s ease-out";
       modalMain.style.transform = "translateY(100vh) scale(0.95)";
@@ -147,15 +160,7 @@ const onTouchEnd = () => {
       mask.style.opacity = "0";
     }
     setTimeout(() => {
-      if (modalMain) {
-        modalMain.style.transform = "";
-        modalMain.style.transition = "";
-        modalMain.style.opacity = "";
-      }
-      if (mask) {
-        mask.style.opacity = "";
-        mask.style.transition = "";
-      }
+      // 不清 inline 样式：元素即将卸载，清掉反而会闪回原位
       modalClose();
     }, 300);
   } else {

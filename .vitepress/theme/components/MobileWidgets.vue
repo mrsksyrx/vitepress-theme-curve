@@ -2,23 +2,35 @@
 <template>
   <Teleport to="body">
     <!-- v-if：关闭时卸载，避免天气定位 / 热榜接口在进站时白跑 -->
-    <Transition name="fade">
+    <!-- gestureClosing：手势已手动滑出，关掉 CSS leave，避免再从原位播一次闪现 -->
+    <Transition name="fade" :css="!gestureClosing">
       <div v-if="store.mobileWidgetsShow" class="mobile-widgets">
         <!-- 遮罩：点击关闭 -->
-        <div class="widgets-mask" @click="store.changeShowStatus('mobileWidgetsShow')" />
-        <div class="widgets-panel s-card">
+        <div ref="widgetsMaskEl" class="widgets-mask" @click="closePanel" />
+        <div
+          ref="widgetsPanelEl"
+          class="widgets-panel s-card"
+          @click.stop
+          @touchstart.passive="onTouchStart"
+          @touchmove.passive="onTouchMove"
+          @touchend="onTouchEnd"
+        >
+          <!-- 移动端下滑把手 -->
+          <div class="panel-drag-handle">
+            <div class="drag-bar" />
+          </div>
           <!-- 顶部：标题 + 关闭 -->
           <div class="panel-top">
             <span class="panel-title">
               <i class="iconfont icon-window"></i>
               小组件
             </span>
-            <div class="close-btn" @click="store.changeShowStatus('mobileWidgetsShow')">
+            <div class="close-btn" @click="closePanel">
               <i class="iconfont icon-close"></i>
             </div>
           </div>
           <!-- 小组件列表：数据类在上，时间类沉底 -->
-          <div class="widgets-body">
+          <div ref="widgetsBodyEl" class="widgets-body">
             <Weather
               v-if="theme.aside?.weather?.enable && store.weatherWidgetEnabled"
               class="panel-widget"
@@ -60,6 +72,19 @@ import SiteData from "@/components/Aside/Widgets/SiteData.vue";
 const store = mainStore();
 const { theme } = useData();
 
+const closePanel = () => store.changeShowStatus("mobileWidgetsShow");
+
+// 手势关闭中：跳过 Transition 的 leave 动画（面板已被手动滑出）
+const gestureClosing = ref(false);
+
+// 重新打开时复位，保证下次进场动画正常
+watch(
+  () => store.mobileWidgetsShow,
+  (val) => {
+    if (val) gestureClosing.value = false;
+  },
+);
+
 // 天气获取失败时关掉开关（与 Aside 一致）
 const onWeatherError = (err) => {
   console.error("天气组件获取失败：", err);
@@ -83,6 +108,96 @@ const hasAnyWidget = computed(() => {
       aside.siteData?.enable,
   );
 });
+
+// 移动端下滑手势（与 Modal 一致）
+const widgetsPanelEl = ref(null);
+const widgetsMaskEl = ref(null);
+const widgetsBodyEl = ref(null);
+
+let touchStartY = 0;
+let touchCurrentY = 0;
+let isDragging = false;
+let startTime = 0;
+
+const onTouchStart = (e) => {
+  // 列表已滚动时不接管手势，交给内部滚动
+  const body = widgetsBodyEl.value;
+  if (body && body.scrollTop > 0) {
+    isDragging = false;
+    return;
+  }
+  touchStartY = e.touches[0].clientY;
+  startTime = Date.now();
+  isDragging = true;
+};
+
+const onTouchMove = (e) => {
+  if (!isDragging) return;
+  touchCurrentY = e.touches[0].clientY;
+  const diff = Math.max(0, touchCurrentY - touchStartY);
+  const panel = widgetsPanelEl.value;
+  if (panel) {
+    const progress = Math.min(diff / 300, 1);
+    const scale = 1 - progress * 0.05;
+    const opacity = 1 - progress * 0.3;
+    panel.style.transform = `translateY(${diff}px) scale(${scale})`;
+    panel.style.transition = "none";
+    panel.style.opacity = opacity;
+    const mask = widgetsMaskEl.value;
+    if (mask) {
+      mask.style.opacity = opacity;
+    }
+  }
+};
+
+const onTouchEnd = () => {
+  if (!isDragging) return;
+  const diff = touchCurrentY - touchStartY;
+  const elapsed = Date.now() - startTime;
+  const velocity = diff / elapsed;
+  const panel = widgetsPanelEl.value;
+  const mask = widgetsMaskEl.value;
+  const shouldClose = diff > 80 || velocity > 0.5;
+
+  if (shouldClose) {
+    // 先标记再关闭：leave 阶段不再叠加 slide-down
+    gestureClosing.value = true;
+    if (panel) {
+      panel.style.transition = "transform 0.3s ease-out, opacity 0.3s ease-out";
+      panel.style.transform = "translateY(100vh) scale(0.95)";
+      panel.style.opacity = "0";
+    }
+    if (mask) {
+      mask.style.transition = "opacity 0.3s ease-out";
+      mask.style.opacity = "0";
+    }
+    setTimeout(() => {
+      // 不清 inline 样式：元素即将卸载，清掉反而会闪回原位
+      closePanel();
+    }, 300);
+  } else {
+    if (panel) {
+      panel.style.transition = "transform 0.25s ease-out, opacity 0.25s ease-out";
+      panel.style.transform = "";
+      panel.style.opacity = "";
+    }
+    if (mask) {
+      mask.style.transition = "opacity 0.25s ease-out";
+      mask.style.opacity = "";
+    }
+    setTimeout(() => {
+      if (panel) {
+        panel.style.transition = "";
+      }
+      if (mask) {
+        mask.style.transition = "";
+      }
+    }, 250);
+  }
+  touchStartY = 0;
+  touchCurrentY = 0;
+  isDragging = false;
+};
 </script>
 
 <style lang="scss" scoped>
@@ -110,6 +225,21 @@ const hasAnyWidget = computed(() => {
     border-radius: 20px 20px 0 0;
     padding: 16px 16px calc(16px + env(safe-area-inset-bottom, 0px));
     overflow: hidden;
+
+    .panel-drag-handle {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 0 0 8px;
+      cursor: grab;
+      touch-action: none;
+      .drag-bar {
+        width: 40px;
+        height: 4px;
+        border-radius: 2px;
+        background-color: var(--main-card-border);
+      }
+    }
 
     .panel-top {
       display: flex;
