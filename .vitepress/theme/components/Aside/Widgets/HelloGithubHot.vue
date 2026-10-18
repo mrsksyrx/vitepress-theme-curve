@@ -1,13 +1,17 @@
 <template>
-  <!-- 移动端不渲染 -->
-  <div v-if="!isMobile" class="site-data s-card">
+  <!-- 默认移动端不渲染；小组件浮层可传 showOnMobile 强制显示 -->
+  <div v-if="showOnMobile || !isMobile" class="site-data s-card">
     <div class="title">
       <i class="iconfont icon-chart"></i>
       <span class="title-name">HelloGithub 热榜</span>
     </div>
 
-    <!-- 列表容器：动态计算高度，始终只露出前 5 条 -->
-    <div class="all-data" ref="listContainer" :style="{ maxHeight: containerHeight + 'px' }">
+    <!-- 列表容器：默认只露出前 5 条；expandAll 时不限高，全量展示 -->
+    <div
+      class="all-data"
+      ref="listContainer"
+      :style="!expandAll && containerHeight > 0 ? { maxHeight: containerHeight + 'px' } : null"
+    >
       <div class="data-item" v-for="(item, index) in list" :key="item.id">
         <span class="name">{{ index + 1 }}.</span>
         <span class="num">
@@ -29,6 +33,19 @@ import { useIsMobileLayout } from "@/utils/layout.js";
 
 const store = mainStore();
 const isMobile = useIsMobileLayout();
+
+const props = defineProps({
+  // 移动端浮层等场景强制显示并拉取
+  showOnMobile: {
+    type: Boolean,
+    default: false,
+  },
+  // 不折叠：展示全部条目（侧边栏默认只露前 5 条）
+  expandAll: {
+    type: Boolean,
+    default: false,
+  },
+});
 
 // 数据与状态
 // —— 新增：定义 emit ——
@@ -56,8 +73,10 @@ async function fetchData() {
   try {
     const res = await fetch(API_URL);
     const data = await res.json();
+    // 接口通常返回 20 条；expandAll 时全量展示，否则仍由 calcHeight 裁到前 5 条高度
     list.value = data.data || [];
     rawUpdateTime.value = data.updateTime || "";
+    if (props.expandAll) return;
     await nextTick();
     calcHeight();
   } catch (e) {
@@ -81,9 +100,11 @@ function calcHeight() {
 }
 
 onMounted(() => {
-  if (isMobile.value || !API_URL) return;
+  if ((!props.showOnMobile && isMobile.value) || !API_URL) return;
   fetchData();
-  window.addEventListener("resize", calcHeight);
+  if (!props.expandAll) {
+    window.addEventListener("resize", calcHeight);
+  }
 });
 
 onBeforeUnmount(() => {

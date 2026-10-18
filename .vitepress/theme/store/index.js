@@ -99,6 +99,8 @@ export const mainStore = defineStore("main", {
       islandStyle: "extended",
       // 移动端菜单显示
       mobileMenuShow: false,
+      // 移动端小组件浮层显示
+      mobileWidgetsShow: false,
       // 使用自定义右键菜单
       useRightMenu: true,
       // 使用自定义鼠标样式
@@ -170,6 +172,8 @@ export const mainStore = defineStore("main", {
       helloGithubWidgetEnabled: true,
       // 标签列表开关
       tagsWidgetEnabled: true,
+      // 移动端小组件面板入口开关（关闭后隐藏首页左上角入口）
+      mobileWidgetsEnabled: true,
       // 天气小组件折叠状态
       weatherSectionExpanded: false,
       // 天气数据源（amap = 高德，wttr = wttr.in，openmeteo = Open-Meteo）

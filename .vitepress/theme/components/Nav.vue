@@ -13,6 +13,17 @@
           >
             <i class="iconfont icon-left"></i>
           </div>
+          <!-- 移动端首页：小组件浮层入口（设置里可关） -->
+          <div
+            v-show="
+              isMobileLayout && frontmatter.layout === 'home' && store.mobileWidgetsEnabled
+            "
+            class="widget-placeholder nav-btn"
+            title="小组件"
+            @click="store.changeShowStatus('mobileWidgetsShow')"
+          >
+            <i class="iconfont icon-window"></i>
+          </div>
           <div class="more-menu nav-btn" title="更多内容">
             <i class="iconfont icon-menu" />
             <span class="site-name">{{ site.title }}</span>
@@ -133,6 +144,8 @@
     </nav>
     <!-- 移动端菜单 -->
     <MobileMenu />
+    <!-- 移动端小组件浮层 -->
+    <MobileWidgets />
     <!-- 全局搜索 -->
     <ClientOnly>
       <SearchModal v-if="theme.search?.enable" />
@@ -359,6 +372,10 @@ const goLink = (link) => {
       flex-direction: row;
       align-items: center;
       min-width: 200px;
+      .widget-placeholder {
+        display: none;
+        margin-right: 4px;
+      }
       .more-menu {
         position: relative;
         margin-right: 4px;
@@ -841,6 +858,9 @@ const goLink = (link) => {
           opacity 0.3s,
           visibility 0s;
         .back-btn {
+          display: flex;
+        }
+        .widget-placeholder {
           display: flex;
         }
       }

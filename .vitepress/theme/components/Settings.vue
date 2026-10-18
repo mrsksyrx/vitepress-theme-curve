@@ -1053,6 +1053,23 @@
         <Transition name="fade-up">
           <div v-if="widgetsSectionExpanded" class="set-expand-box">
             <div class="set-item">
+              <span class="set-label">移动端小组件面板</span>
+              <div class="set-options">
+                <span
+                  :class="['options', { choose: !mobileWidgetsEnabled }]"
+                  @click="setMobileWidgetsEnabled(false)"
+                >
+                  关闭
+                </span>
+                <span
+                  :class="['options', { choose: mobileWidgetsEnabled }]"
+                  @click="setMobileWidgetsEnabled(true)"
+                >
+                  开启
+                </span>
+              </div>
+            </div>
+            <div class="set-item">
               <span class="set-label">天气</span>
               <div class="set-options">
                 <span
@@ -1747,6 +1764,7 @@ const {
   weatherWidgetEnabled,
   helloGithubWidgetEnabled,
   tagsWidgetEnabled,
+  mobileWidgetsEnabled,
   weatherSectionExpanded,
   devModeOptionsExpanded,
   siteVersion,
@@ -1886,6 +1904,13 @@ const islandSettingsExpanded = ref(false);
 const musicPlayerExpanded = ref(false);
 // 小组件合并菜单展开状态
 const widgetsSectionExpanded = ref(false);
+// 移动端小组件面板：关闭时同步收起已打开的浮层
+const setMobileWidgetsEnabled = (enabled) => {
+  mobileWidgetsEnabled.value = enabled;
+  if (!enabled && store.mobileWidgetsShow) {
+    store.changeShowStatus("mobileWidgetsShow");
+  }
+};
 // 自定义歌单 ID 临时输入值
 const playerCustomIdsInput = ref(playerCustomIds.value);
 const confirmCustomIds = () => {

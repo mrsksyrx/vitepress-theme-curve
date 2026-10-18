@@ -284,6 +284,8 @@ onUnmounted(() => {
     max-height: calc(100dvh - 48px);
     border-radius: 20px 20px 0 0;
     overflow: hidden;
+    // 关掉桌面端 fade-up，只走下方滑入滑出
+    animation: none;
     .modal-drag-handle {
       display: flex;
       justify-content: center;
@@ -352,10 +354,11 @@ onUnmounted(() => {
   height: 100vh;
   height: 100dvh;
 }
-.modal-mobile.fade-enter-active {
+// Transition 类加在 .modal 上，面板动画用后代选择器（与 MobileWidgets 一致）
+.modal.fade-enter-active .modal-mobile {
   animation: slide-up 0.3s ease-out forwards;
 }
-.modal-mobile.fade-leave-active {
+.modal.fade-leave-active .modal-mobile {
   animation: slide-down 0.3s ease-in forwards;
 }
 @keyframes slide-up {
