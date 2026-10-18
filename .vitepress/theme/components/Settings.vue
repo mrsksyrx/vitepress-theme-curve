@@ -206,8 +206,7 @@
                   @click="closeDevModeConfirmVisible = false"
                 >
                   <span class="warn-text"
-                    >你指的是要关闭开发模式吗 / 将同时复位 PERSIST_VERSION 为 1 /
-                    请确认推送前已经完成了相关设置</span
+                    >你指的是要关闭开发模式吗，请确认推送前已经完成了相关设置</span
                   >
                   <span class="options" @click.stop="confirmCloseDevMode">确认</span>
                 </div>

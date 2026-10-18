@@ -193,8 +193,8 @@ export const mainStore = defineStore("main", {
       siteVersion: "V1.4",
       siteVersionDate: "2026.10.5",
       // 分支版本（自动递增）
-      branchVersion: 211,
-      branchBuildTime: "2026.10.17 18:33:58",
+      branchVersion: 219,
+      branchBuildTime: "2026.10.18 16:41:25",
     };
   },
   actions: {

@@ -4,14 +4,14 @@
       <div class="nav-all">
         <!-- 导航栏左侧 -->
         <div class="left-nav">
-          <!-- 移动端返回按钮 -->
+          <!-- 移动端返回按钮；扩列卡直达页显示为主页 -->
           <div
             v-show="isMobileLayout && frontmatter.layout !== 'home'"
-            class="back-btn nav-btn"
-            title="返回"
+            :class="['back-btn', 'nav-btn', { 'is-home': isCardEntryPage }]"
+            :title="isCardEntryPage ? '回到主页' : '返回'"
             @click="goBack"
           >
-            <i class="iconfont icon-left"></i>
+            <i :class="`iconfont ${isCardEntryPage ? 'icon-home' : 'icon-left'}`"></i>
           </div>
           <!-- 移动端首页：小组件浮层入口（设置里可关） -->
           <div
@@ -172,6 +172,7 @@ import { useIsMobileLayout } from "@/utils/layout.js";
 import SearchModal from "@/components/Search.vue";
 
 const router = useRouter();
+const route = useRoute();
 const store = mainStore();
 const { loadPostData } = usePostData();
 const isMobileLayout = useIsMobileLayout();
@@ -182,7 +183,18 @@ const { site, theme, frontmatter, page } = useData();
 const desktopNavItems = (items) => (items || []).filter((item) => !item.mobileOnly);
 
 // 移动端返回
+// 扩列卡/NFC 直达页：history.back 可能离开本站，固定回主页并换 home 图标
+const CARD_ENTRY_SLUG = "ww-aboutme-sgexilqlsc";
+const isCardEntryPage = computed(() => {
+  // 路由 path 最稳；page.path 在 VitePress 里可能带 .html
+  const p = route.path || page.path || "";
+  return p.includes(CARD_ENTRY_SLUG);
+});
 const goBack = () => {
+  if (isCardEntryPage.value) {
+    router.go("/");
+    return;
+  }
   if (window.history.length > 1) {
     window.history.back();
   } else {
