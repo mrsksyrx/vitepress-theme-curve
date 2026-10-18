@@ -265,12 +265,10 @@ const toggleTheme = () => {
   store.changeThemeType();
 };
 
-// 关闭侧栏后弹出个性化配置
+// 打开个性化配置，同时收起侧边栏
 const openSettings = () => {
   store.changeShowStatus("mobileMenuShow");
-  setTimeout(() => {
-    store.changeShowStatus("showSettings");
-  }, 300);
+  store.changeShowStatus("showSettings");
 };
 
 // [B48-冗余] 与上方 onMounted 重复，loadPostData 幂等，注释掉
