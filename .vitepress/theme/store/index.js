@@ -118,9 +118,6 @@ export const mainStore = defineStore("main", {
       backgroundType: "patterns",
       // 第三方图片接口（非本站源），无 SRI 校验，内容与可用性由第三方控制，风险自担
       backgroundUrl: "https://api.miaomc.cn/image/get",
-      // 显示更多设置
-      showMoreSettings: false,
-      showMoreSettingsConfirmed: false,
       // 开发中的功能展开状态
       devFeaturesExpanded: false,
       // 分支策略展开状态
