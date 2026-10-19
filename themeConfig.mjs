@@ -122,7 +122,7 @@ export const themeConfig = {
         text: "页面",
         items: [
           { text: "畅所欲言", link: "/pages/hide/message" },
-          { text: "关于泠酱", link: "/pages/hide/ww-aboutme-sgexilqlsc" },
+          { text: "关于泠泠", link: "/pages/hide/ww-aboutme-sgexilqlsc" },
           { text: "隐私政策", link: "/pages/privacy" },
           { text: "版权协议", link: "/pages/cc" },
           // { text: "TO DO", link: "/pages/todo" },

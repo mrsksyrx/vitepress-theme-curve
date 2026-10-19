@@ -45,6 +45,12 @@ Zukicy、mrsksyrx
 **VOCALOID**、二次元、百合、番剧、漫画  
 PJSK、EndField、maimaiDX、Minecraft、STEAM独立游戏
 
+### 喜欢的P主
+
+**牙姐、存娘、霾大、雷子**  
+DECO、小绵羊  
+奥利安多幻想曲、Mara_然、彼岸的栗子、MaxXSoft
+
 ### 推
 
 **洛天依**、初音未来、晓山瑞希  
