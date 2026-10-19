@@ -204,8 +204,8 @@ const onTouchEnd = () => {
 .mobile-widgets {
   position: fixed;
   inset: 0;
-  // 高于 BottomPills（9999），避免播放器胶囊压住小组件面板
-  z-index: 10000;
+  // 常规弹层：高于导航（1000），低于消息（3000）与 BottomPills（9999）
+  z-index: 2000;
 
   .widgets-mask {
     position: absolute;
