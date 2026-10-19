@@ -44,10 +44,12 @@
               expand-all
               @fetch-error="onHotError"
             />
+            <!-- 点标签即跳转并收起面板（事件冒泡到组件根节点） -->
             <Tags
               v-if="theme.aside?.tags?.enable && store.tagsWidgetEnabled"
               class="panel-widget"
               expand-all
+              @click="closePanel"
             />
             <SiteData v-if="theme.aside?.siteData?.enable" class="panel-widget" />
             <Countdown v-if="theme.aside?.countDown?.enable" class="panel-widget" />
