@@ -57,6 +57,8 @@
   </Teleport>
   <!-- 右键菜单 -->
   <RightMenu ref="rightMenuRef" />
+  <!-- 全局分享面板 -->
+  <SharePanel />
   <!-- 全局消息 -->
   <Message />
   <!-- 底部固定药丸 -->

@@ -44,6 +44,25 @@
             <i class="iconfont icon-fire" />
             <span id="twikoo_visitors" class="artalk-pv-count">-</span>
           </span>
+          <!-- 分享 -->
+          <span class="share meta hover" title="分享本页" @click="openSharePanel">
+            <svg
+              class="share-icon"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <circle cx="18" cy="5" r="3" />
+              <circle cx="6" cy="12" r="3" />
+              <circle cx="18" cy="19" r="3" />
+              <line x1="8.59" y1="13.51" x2="15.42" y2="17.49" />
+              <line x1="15.41" y1="6.51" x2="8.59" y2="10.49" />
+            </svg>
+            <span class="name">分享</span>
+          </span>
         </div>
         <div class="meta-row stats">
           <!-- 字数 -->
@@ -117,6 +136,24 @@
             </a>
           </div>
           <div class="meta-actions">
+            <span class="share-btn" @click="openSharePanel">
+              <svg
+                class="share-icon"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <circle cx="18" cy="5" r="3" />
+                <circle cx="6" cy="12" r="3" />
+                <circle cx="18" cy="19" r="3" />
+                <line x1="8.59" y1="13.51" x2="15.42" y2="17.49" />
+                <line x1="15.41" y1="6.51" x2="8.59" y2="10.49" />
+              </svg>
+              分享
+            </span>
             <EditLink />
             <a href="mailto:feedback@sgexilq.com" class="report">
               <i class="iconfont icon-report" />
@@ -198,6 +235,9 @@ const postMetaData = computed(() => {
 const expiredDays = computed(() =>
   daysPassedAt(postMetaData.value?.dateYMD || postMetaData.value?.date, now.value),
 );
+
+// 打开分享面板：模板里不能直接写 window.$share（会被编译成 _ctx.window）
+const openSharePanel = () => window.$share?.open(postMetaData.value?.title);
 
 // 密码保护相关
 const hasPassword = computed(() => !!(frontmatter.value.password || frontmatter.value.enc));
@@ -369,6 +409,15 @@ onMounted(() => {
             font-size: 18px;
           }
         }
+        &.share {
+          // 分享按钮排在热度之后
+          order: 6;
+          .share-icon {
+            width: 16px;
+            height: 16px;
+            margin-right: 6px;
+          }
+        }
         &.hover {
           transition:
             color 0.3s,
@@ -479,6 +528,27 @@ onMounted(() => {
           display: flex;
           align-items: center;
           gap: 12px;
+        }
+        .share-btn {
+          display: flex;
+          flex-direction: row;
+          align-items: center;
+          padding: 6px 12px;
+          font-size: 14px;
+          font-weight: bold;
+          border-radius: 8px;
+          background-color: var(--main-card-border);
+          white-space: nowrap;
+          cursor: pointer;
+          .share-icon {
+            width: 16px;
+            height: 16px;
+            margin-right: 6px;
+          }
+          &:hover {
+            color: var(--main-color);
+            background-color: var(--main-color-bg);
+          }
         }
         .report {
           display: flex;

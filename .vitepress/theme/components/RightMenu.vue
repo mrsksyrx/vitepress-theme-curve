@@ -159,6 +159,17 @@
               <i class="iconfont icon-copy"></i>
               <span class="name">复制本页地址</span>
             </div>
+            <!-- 分享本页 -->
+            <div class="btn" @click="rightMenuFunc('share-page')">
+              <svg class="share-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="18" cy="5" r="3" />
+                <circle cx="6" cy="12" r="3" />
+                <circle cx="18" cy="19" r="3" />
+                <line x1="8.59" y1="13.51" x2="15.42" y2="17.49" />
+                <line x1="15.41" y1="6.51" x2="8.59" y2="10.49" />
+              </svg>
+              <span class="name">分享本页</span>
+            </div>
             <!-- 明暗模式 -->
             <div class="btn" @click.stop="store.changeThemeType">
               <i
@@ -378,6 +389,10 @@ const rightMenuFunc = async (type) => {
         }
         copyText(pageLink);
         break;
+      case "share-page":
+        closeRightMenu({ preventDefault() {} });
+        nextTick(() => window.$share?.open());
+        break;
       // 以下为源代码 2025.06.10修改
       // 修复内容：右键复制本页地址信息undefined
       // 问题原因：pageLink赋值错误
@@ -596,6 +611,10 @@ defineExpose({ openRightMenu });
       .iconfont {
         font-size: 20px;
         transition: color 0.3s;
+      }
+      .share-icon {
+        width: 20px;
+        height: 20px;
       }
       .name {
         margin-left: 12px;
