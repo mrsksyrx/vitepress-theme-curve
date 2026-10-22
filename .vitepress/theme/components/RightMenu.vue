@@ -165,9 +165,7 @@
                 :class="`iconfont icon-${themeType === 'auto' ? 'dark' : themeType === 'dark' ? 'light' : 'auto'}`"
               />
               <span class="name">
-                {{
-                  themeType === "auto" ? "深色模式" : themeType === "dark" ? "浅色模式" : "系统"
-                }}
+                {{ themeType === "auto" ? "深色模式" : themeType === "dark" ? "浅色模式" : "系统" }}
               </span>
             </div>
           </div>

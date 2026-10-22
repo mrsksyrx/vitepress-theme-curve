@@ -393,6 +393,13 @@ export const themeConfig = {
     // 支付宝二维码
     alipay: "https://raw.20100907.xyz/pic/pay/zfb.webp",
   },
+  // 「编辑此页」链接（文章底部，链到 GitHub 源文件编辑页）
+  editLink: {
+    enable: false,
+    repo: "", // 如 "https://github.com/user/repo"
+    branch: "main",
+    text: "编辑此页",
+  },
   // 图片灯箱
   fancybox: {
     enable: true,
@@ -420,6 +427,7 @@ export const themeConfig = {
       "skills-item",
       "right-menu-link",
       "link-card",
+      "edit-link",
     ],
   },
   // 站点统计

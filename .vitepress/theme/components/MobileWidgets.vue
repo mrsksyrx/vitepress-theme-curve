@@ -103,11 +103,11 @@ const hasAnyWidget = computed(() => {
   const aside = theme.value.aside || {};
   return Boolean(
     (aside.weather?.enable && store.weatherWidgetEnabled) ||
-      aside.countDown?.enable ||
-      aside.timing?.enable ||
-      (aside.HelloGithub?.enable && store.helloGithubWidgetEnabled) ||
-      (aside.tags?.enable && store.tagsWidgetEnabled) ||
-      aside.siteData?.enable,
+    aside.countDown?.enable ||
+    aside.timing?.enable ||
+    (aside.HelloGithub?.enable && store.helloGithubWidgetEnabled) ||
+    (aside.tags?.enable && store.tagsWidgetEnabled) ||
+    aside.siteData?.enable,
   );
 });
 

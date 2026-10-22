@@ -116,10 +116,13 @@
               <span class="name">{{ item }}</span>
             </a>
           </div>
-          <a href="mailto:feedback@sgexilq.com" class="report">
-            <i class="iconfont icon-report" />
-            反馈与投诉
-          </a>
+          <div class="meta-actions">
+            <EditLink />
+            <a href="mailto:feedback@sgexilq.com" class="report">
+              <i class="iconfont icon-report" />
+              反馈与投诉
+            </a>
+          </div>
         </div>
         <RewardBtn />
         <!-- 下一篇 -->
@@ -472,6 +475,11 @@ onMounted(() => {
             }
           }
         }
+        .meta-actions {
+          display: flex;
+          align-items: center;
+          gap: 12px;
+        }
         .report {
           display: flex;
           flex-direction: row;
@@ -556,8 +564,11 @@ onMounted(() => {
               margin-top: 12px;
             }
           }
-          .report {
+          .meta-actions {
             margin-top: 20px;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 12px;
           }
         }
       }

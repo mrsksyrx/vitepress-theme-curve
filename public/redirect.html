@@ -21,7 +21,10 @@
           if (data.themeColor && data.themeColor !== "pink") {
             root.classList.add("theme-" + data.themeColor);
           }
-          if (data.customThemeEnabled && /^#(?:[0-9a-fA-F]{3}){1,2}$/.test(data.customPrimaryColor || "")) {
+          if (
+            data.customThemeEnabled &&
+            /^#(?:[0-9a-fA-F]{3}){1,2}$/.test(data.customPrimaryColor || "")
+          ) {
             root.style.setProperty("--main-color", data.customPrimaryColor);
             root.style.setProperty("--main-color-bg", data.customPrimaryColor + "0d");
           }

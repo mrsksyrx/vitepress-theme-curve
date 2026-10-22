@@ -15,9 +15,7 @@
           </div>
           <!-- 移动端首页：小组件浮层入口（设置里可关） -->
           <div
-            v-show="
-              isMobileLayout && frontmatter.layout === 'home' && store.mobileWidgetsEnabled
-            "
+            v-show="isMobileLayout && frontmatter.layout === 'home' && store.mobileWidgetsEnabled"
             class="widget-placeholder nav-btn"
             title="小组件"
             @click="store.changeShowStatus('mobileWidgetsShow')"
