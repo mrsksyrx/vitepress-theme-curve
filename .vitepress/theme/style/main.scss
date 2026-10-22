@@ -1504,11 +1504,16 @@ html {
   }
 }
 
-// 无 JS 时隐藏依赖交互和客户端数据的区域，避免 SSR 占位内容误导用户
+// 无 JS 时保留已静态生成的文章内容，隐藏仅供交互使用的控件
 html:not(.js-enabled) {
   .main-header,
   .main-aside,
   .left-menu {
+    display: none !important;
+  }
+
+  // 分页页码是真实链接可直接点，只有快速跳转输入框依赖 JS
+  .pagination .fast-jump {
     display: none !important;
   }
 

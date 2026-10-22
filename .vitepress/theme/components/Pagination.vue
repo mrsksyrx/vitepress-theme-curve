@@ -1,31 +1,22 @@
 <!-- 分页 -->
 <template>
   <div v-if="total > 0" class="pagination">
-    <div
-      v-if="currentPage > 1"
-      class="page-item prev"
-      @click="
-        jumpPage(
-          currentPage === 2 ? `${routePath}` : `${routePath}/page/${currentPage - 1}`,
-          currentPage === 2 ? 1 : currentPage - 1,
-        )
-      "
-    >
+    <!-- 真实链接：无 JS 的浏览器也能直接翻页，交给 VitePress 全局链接拦截走 SPA 导航 -->
+    <a v-if="currentPage > 1" class="page-item prev" :href="pageHref(currentPage - 1)">
       <i class="iconfont icon-page-right" />
       <span class="page-text">上页</span>
-    </div>
+    </a>
     <div class="page-number">
-      <div
+      <component
         v-for="(item, index) in pageNumber"
         :key="index"
+        :is="item === '...' ? 'span' : 'a'"
         :class="[item === '...' ? 'point' : 'page-item', { choose: item === currentPage }]"
-        @click="
-          item !== '...' &&
-          jumpPage(item === 1 ? `${routePath}` : `${routePath}/page/${item}`, item)
-        "
+        :href="item === '...' ? undefined : pageHref(item)"
+        :aria-current="item === currentPage ? 'page' : undefined"
       >
         <span class="page-num">{{ item }}</span>
-      </div>
+      </component>
       <!-- 快速跳转 -->
       <div :class="['fast-jump', { focus: inputFocus }]" title="快速跳转">
         <input
@@ -40,14 +31,10 @@
         <i :class="['iconfont icon-arrow-right', { click: jumpInput }]" @click.stop="fastJump" />
       </div>
     </div>
-    <div
-      v-if="currentPage * limit < total"
-      class="page-item next"
-      @click="jumpPage(`${routePath}/page/${currentPage + 1}`, currentPage + 1)"
-    >
+    <a v-if="currentPage * limit < total" class="page-item next" :href="pageHref(currentPage + 1)">
       <span class="page-text">下页</span>
       <i class="iconfont icon-page-right" />
-    </div>
+    </a>
   </div>
 </template>
 
@@ -75,11 +62,6 @@ const props = defineProps({
   routePath: {
     type: String,
     default: "",
-  },
-  // 使用参数
-  useParams: {
-    type: Boolean,
-    default: false,
   },
 });
 
@@ -133,63 +115,41 @@ const validateInput = () => {
   }
 };
 
-// 跳转页面
-const jumpPage = (url, page) => {
-  currentPage.value = page;
-  // 使用参数跳转
-  if (props.useParams) {
-    const target = page === 1 ? `${props.routePath}` : `${props.routePath}?page=${page}`;
-    // [B22-旧] setTimeout 在 router.go 的 Promise 兑现前就派发，可能读到旧 URL
-    // setTimeout(() => {
-    //   window.dispatchEvent(new CustomEvent("pagination-change"));
-    // });
-    // [B21/B22] 等 router.go 完成后再派发；两个分支统一派发，
-    // 让 Home 以 URL 为唯一信源刷新 currentPage，避免高亮与列表分叉
-    Promise.resolve(router.go(target)).then(() => {
-      window.dispatchEvent(new CustomEvent("pagination-change"));
-    });
-  }
-  // 正常跳转（路径分页 /page/N）
-  else {
-    // [B21-旧] 此分支原先不派发事件，Home 只能等 props.page 更新
-    // router.go(url);
-    Promise.resolve(router.go(url)).then(() => {
-      window.dispatchEvent(new CustomEvent("pagination-change"));
-    });
-  }
+// 真实链接可供无 JavaScript 的浏览器直接打开静态分页页。
+const pageHref = (page) => {
+  return page === 1 ? props.routePath || "/" : `${props.routePath}/page/${page}`;
 };
 
-// 快速跳转
+// 快速跳转（输入框没有真实链接可点，仍走 router.go SPA 跳转）
 const fastJump = () => {
   inputFocus.value = false;
   if (!jumpInput.value) return false;
-  jumpPage(
-    jumpInput.value === 1 ? `${props.routePath}` : `${props.routePath}/page/${jumpInput.value}`,
-    jumpInput.value,
-  );
+  currentPage.value = jumpInput.value;
+  // [B21/B22] 等 router.go 完成后再派发，让 Home 以 URL 为唯一信源刷新
+  // currentPage，避免高亮与列表分叉（Home 侧监听在 popstate 一节）
+  Promise.resolve(router.go(pageHref(jumpInput.value))).then(() => {
+    window.dispatchEvent(new CustomEvent("pagination-change"));
+  });
 };
 
-// 检查当前路径参数
+// 与 Home.vue 的 clampPage 保持同一口径，否则会出现
+// "页码高亮在末页、列表却是空" 这类两处行为分叉。
 const checkCurrentPage = () => {
-  if (!props.useParams) {
-    currentPage.value = props.page;
-    return;
-  }
-  const params = new URLSearchParams(window.location.search);
-  const page = Number(params.get("page"));
+  const page = Number(props.page);
   // 先做下界校验：非整数 / <= 0 / 空值一律回落到第 1 页
   if (!Number.isInteger(page) || page < 1) {
     currentPage.value = 1;
     return;
   }
   // 再做上界钳制：越界时钳到最后一页，而不是丢弃成第 1 页。
-  // 理由：?page=99 的用户意图是"翻到更靠后的内容"，钳到末页能给出
+  // 理由：/page=99 的用户意图是"翻到更靠后的内容"，钳到末页能给出
   // 非空列表且当前页在页码列表内（高亮正常）；回落成第 1 页则与用户
   // 意图相反，且会让"翻到最后一页"和"翻过头"看起来毫无区别。
   //
-  // ⚠️ 上界只能依据**已加载**的 total：文章索引是挂载后才 fetch 的，
-  // 未就绪时 totalPages 为 0，钳制会把 ?page=2 误判成越界并与列表分叉。
-  // 未就绪时先只做下界校验，待数据到达后由 watch(totalPages) 重算。
+  // ⚠️ 上界只能依据**已加载**的 total：构建期索引未注入、走 fetch 兜底
+  // 的环境里 total 未就绪时 totalPages 为 0，钳制会把 /page/2 误判成
+  // 越界并与列表分叉。未就绪时先只做下界校验，待数据到达后由
+  // watch(totalPages) 重算。
   if (props.total <= 0) {
     currentPage.value = page;
     return;
@@ -200,11 +160,6 @@ const checkCurrentPage = () => {
 
 onMounted(() => {
   checkCurrentPage();
-  window.addEventListener("popstate", checkCurrentPage);
-});
-
-onBeforeUnmount(() => {
-  window.removeEventListener("popstate", checkCurrentPage);
 });
 
 watch(

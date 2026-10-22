@@ -34,7 +34,7 @@ VitePress blog theme (Vue 3 + Pinia + SCSS). Single package, no monorepo (`pnpm-
 - Post frontmatter: `title`, `date`, `categories`, `tags`, `description`, `top` (pin), `cover`, `articleGPT` (AI abstract widget).
 - `tags` / `categories` accept a bare string **or** an array — `normalizeList.mjs` normalizes both. Don't assume arrays.
 - **Password posts**: set `password` in frontmatter. Build-time encryption (AES-GCM, `mdEncrypt.mjs`) turns the rendered HTML into `frontmatter.enc` and **strips `password`**; client unlock is `decryptPost.mjs` / `PasswordProtect.vue`. Decrypted HTML is injected via `v-html` without VitePress's usual wrapper div.
-- Dynamic routes via `*.paths.mjs`: `pages/tags/[name]`, `pages/categories/[name]`, `page/[num]` (page size = `postSize` in themeConfig).
+- Dynamic routes via `*.paths.mjs`: `pages/tags/[name]`, `pages/categories/[name]`, `page/[num]` (page size = `postSize` in themeConfig). Tag/category page 2+ is a **real static route** (`pages/tags/[name]/page/[num]` etc.); pagination renders real `<a href>` links (no-JS friendly, SPA-intercepted by VitePress router). `Pagination.vue`'s old `useParams` (`?page=` query) mode was removed — `Home.vue` still reads legacy `?page=` for bookmarked URLs, but `clampPage`/URL-as-source-of-truth ([B21]) must be preserved when touching either file.
 
 ## Generated / do-not-edit
 
