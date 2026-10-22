@@ -5,23 +5,32 @@
       <i class="iconfont icon-hashtag"></i>
       <span class="title-name">标签列表</span>
     </div>
-    <div class="all-tags">
+    <!-- expandAll：移动端浮层等场景不限高、无渐变遮罩，全量展示 -->
+    <div :class="['all-tags', { expand: expandAll }]">
       <a
         v-for="(item, tag, index) in tagsData"
         :key="index"
-        :href="`/pages/tags/${tag}`"
+        :href="`/pages/tags/${encodeURIComponent(tag)}`"
         class="tags"
       >
         <span class="name">{{ tag }}</span>
         <sup class="num">{{ item.count }}</sup>
       </a>
     </div>
-    <a href="/pages/tags" class="more-tags">查看全部</a>
+    <a v-if="!expandAll" href="/pages/tags" class="more-tags">查看全部</a>
   </div>
 </template>
 
 <script setup>
 import { usePostData } from "@/utils/usePostData.mjs";
+
+defineProps({
+  // 不折叠：展示全部标签（侧边栏默认限高 + 渐变）
+  expandAll: {
+    type: Boolean,
+    default: false,
+  },
+});
 
 const { tagsData, loadPostData } = usePostData();
 
@@ -67,6 +76,14 @@ onMounted(() => {
       max-height: 150px;
       background-image: linear-gradient(to top, var(--main-card-background), transparent);
       pointer-events: none;
+    }
+    // 全量展示：去掉限高与底部渐变
+    &.expand {
+      max-height: none;
+      overflow: visible;
+      &::after {
+        display: none;
+      }
     }
   }
   .more-tags {

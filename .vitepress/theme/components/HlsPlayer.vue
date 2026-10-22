@@ -12,6 +12,12 @@
   </div>
 </template>
 
+<script>
+// 模块级缓存 HLS.js 加载 Promise（所有实例共享，避免重复注入 <script>）。
+// 必须放在普通 <script> 块：若放进 <script setup>，顶层 let 是实例作用域，缓存会失效。
+let hlsJsLoader = null;
+</script>
+
 <script setup>
 // 定义组件属性
 const props = defineProps({
@@ -28,10 +34,10 @@ let observer = null;
 // hls.js 实例必须由组件持有：它内部有 loader / 定时器 / 事件监听，
 // 局部常量会让它在组件卸载后无法 destroy（SPA 路由切换即泄漏）。
 let hls = null;
+// 卸载标志：await loadHlsJsOnce() 期间组件可能已卸载，续体必须据此放弃
+let disposed = false;
 
-// 全局缓存 HLS.js 加载 Promise，避免重复加载
-let hlsJsLoader = null;
-
+// hlsJsLoader 缓存在上方普通 <script> 块（模块级），跨实例共享
 function loadHlsJsOnce() {
   if (window.Hls) return Promise.resolve(window.Hls);
   if (hlsJsLoader) return hlsJsLoader;
@@ -60,6 +66,8 @@ async function initPlayer() {
   } else {
     // 动态加载 HLS.js，仅加载一次
     const Hls = await loadHlsJsOnce();
+    // 卸载发生在 await 期间时不再创建实例，避免 loader/定时器泄漏
+    if (disposed || !video.value) return;
     if (Hls.isSupported()) {
       hls = new Hls();
       hls.loadSource(props.src);
@@ -97,6 +105,7 @@ onMounted(() => {
 });
 
 onBeforeUnmount(() => {
+  disposed = true;
   if (observer) observer.disconnect();
   // 释放 hls.js 实例（loader / 定时器 / 媒体源），并清掉 video 的 src
   if (hls) {

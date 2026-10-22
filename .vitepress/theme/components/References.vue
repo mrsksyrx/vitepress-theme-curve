@@ -12,6 +12,7 @@
         :href="item.url"
         class="list-item"
         target="_blank"
+        rel="noopener noreferrer"
       >
         <span class="item-title">{{ item.title }}</span>
       </a>
@@ -22,8 +23,8 @@
 <script setup>
 const { frontmatter } = useData();
 const screenWidth = ref(0);
-// 直接使用 frontmatter 来初始化 references
-const references = ref(frontmatter.value?.references || []); // 不需要重新声明 frontmatter
+// 直接从 frontmatter 派生，SPA 切文章时自动跟随更新
+const references = computed(() => frontmatter.value?.references || []);
 
 // 计算属性，用于动态限制标题字数
 const limitedReferences = computed(() => {
@@ -35,16 +36,15 @@ const limitedReferences = computed(() => {
   // computed 求值时没有活跃组件实例，Vue 会告警
   // "onMounted is called when no active component instance"，且它创建的
   // 局部变量会被立即丢弃 —— 已移除。
-  // 注意：screenWidth 目前没有任何地方赋值（恒为 0），下面的截断实际不生效
-  // （maxChars 为 NaN，比较恒为 false），标题保持完整。是否真正启用
-  // "按屏宽截断"属产品决定，未擅自改动。
+  // 注意：screenWidth 未挂载时为 0，此时不能按 0 截断（会把标题压成 "..."），
+  // 视为不限制；挂载/resize 后按估算宽度截断。
   // 假设你想让标题占据屏幕宽度的某个百分比，例如 70%
   // 这里的 '16' 是一个估算值，代表一个汉字或英文字符的平均像素宽度。
   // 你需要根据你的字体大小和字体类型进行精确调整。
-  const maxChars = Math.floor((screenWidth.value * 0.7) / 16); // 估算最大字符数
+  const maxChars = screenWidth.value ? Math.floor((screenWidth.value * 0.7) / 16) : Infinity;
 
   return references.value.map((item) => {
-    let title = item.title;
+    let title = String(item?.title ?? "");
     if (title.length > maxChars) {
       title = title.substring(0, maxChars) + "...";
     }
@@ -71,16 +71,9 @@ onBeforeUnmount(() => {
   window.removeEventListener("resize", updateReferences);
 });
 
-// 更新 references 的函数，触发 computed 重新计算
+// 更新屏幕宽度，触发标题截断 computed 重新计算
 const updateReferences = () => {
-  // 这里的 references.value 应该从 useData() 提供的最新 frontmatter 中获取
-  // 因为 frontmatter 已经是响应式的，当数据变化时，computed 会自动更新。
-  // 如果 frontmatter.value?.references 不会自动更新，你可能需要确保 useData() 返回的是响应式数据
-  // 或者在 VitePress 的生命周期中，当 frontmatter 更新时，手动触发 references.value 的更新
-  // 在 VitePress 中，useData() 返回的数据通常是响应式的，所以这里可能不需要手动更新 references.value
-  // 如果需要，可以这样：
   screenWidth.value = window.innerWidth;
-  references.value = frontmatter.value?.references || [];
 };
 </script>
 

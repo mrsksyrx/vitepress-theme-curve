@@ -364,11 +364,14 @@ onMounted(() => {
   };
   window.addEventListener("scroll", scrollHandler, { passive: true });
 
-  // 监听移动端弹窗内部滚动
+  // 监听移动端弹窗 / 小组件浮层内部滚动
   let lastModalScrollTop = 0;
   modalScrollHandler = (e) => {
     const el = e.target;
-    if (!el || !el.classList || !el.classList.contains("modal-content")) return;
+    if (!el || !el.classList) return;
+    const inOverlay =
+      el.classList.contains("modal-content") || el.classList.contains("widgets-body");
+    if (!inOverlay) return;
     const atBottom = el.scrollTop + el.clientHeight >= el.scrollHeight - 50;
     if (!store.playerFolded) store.playerFolded = true;
     if (atBottom) {
@@ -382,7 +385,8 @@ onMounted(() => {
 });
 onBeforeUnmount(() => {
   if (scrollHandler) window.removeEventListener("scroll", scrollHandler);
-  if (modalScrollHandler) document.removeEventListener("scroll", modalScrollHandler, { capture: true });
+  if (modalScrollHandler)
+    document.removeEventListener("scroll", modalScrollHandler, { capture: true });
 });
 const attachAudioListeners = () => {
   const audio = window.$player?.audio;

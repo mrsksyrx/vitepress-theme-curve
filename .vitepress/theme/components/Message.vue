@@ -461,6 +461,10 @@ onUnmounted(() => {
   clearInterval(timeInterval);
   clearInterval(progressInterval);
   clearTimeout(islandWrapperHideTimeout.value);
+  clearTimeout(messageTimeOut.value);
+  Object.values(islandMessageTimeouts.value).forEach(clearTimeout);
+  islandMessageTimeouts.value = {};
+  if (window.$message === message) delete window.$message;
 });
 </script>
 

@@ -6,10 +6,10 @@ VitePress blog theme (Vue 3 + Pinia + SCSS). Single package, no monorepo (`pnpm-
 
 - **Dev**: `pnpm dev` — port 9877 (hardcoded in `.vitepress/config.mjs`)
 - **Build**: `pnpm build` → `.vitepress/dist` (also emits `sitemap.xml`, `rss.xml`, PWA assets)
-- **Verify**: `pnpm format` (Prettier) → `pnpm lint` (ESLint, runs with `--fix`)
+- **Verify**: `pnpm format` (Prettier) → `pnpm lint` (ESLint check-only; use `pnpm lint:fix` to auto-fix)
 - **Preview**: `pnpm preview`
 - **No tests and no typecheck script exist** — don't hunt for them; verify with lint + build.
-- Use **pnpm** (`.npmrc` pins npmmirror registry + `shamefully-hoist`). `package-lock.json` is stale upstream residue — `pnpm-lock.yaml` is the source of truth.
+- Use **pnpm** (`.npmrc` pins npmmirror registry + `shamefully-hoist`). `package-lock.json` 已删除并加入 `.gitignore`（上游 npm 残留，勿再生成）；`pnpm-lock.yaml` 是唯一锁文件。
 
 ## Architecture
 
@@ -45,23 +45,23 @@ VitePress blog theme (Vue 3 + Pinia + SCSS). Single package, no monorepo (`pnpm-
 ## Build gotchas
 
 - **Production build strips `console.log`** (terser `pure_funcs`) — debug logging won't appear in `pnpm build` output; use `console.warn`/`error` or `pnpm dev`.
-- **gray-matter caches by file content**: byte-identical `.md` files (`page.md`, `page/index.md`, `page/1.md`, `pages/index.md`) share one `frontmatter` object. `transformPageData` whitelists + rebuilds `head` per page for this reason — **never `push` into `pageData.frontmatter.head`** or canonical tags will accumulate across pages again.
+- **gray-matter caches by file content**: byte-identical `.md` files (`page.md`, `page/index.md`, `page/1.md`, `pages/index.md`) share one `head` array. `transformPageData` rebuilds `head` per page (replace the reference, never mutate) and keeps user-defined frontmatter head items — **never `push` into `pageData.frontmatter.head`** or canonical tags will accumulate across pages again. Do not reintroduce a meta-refresh-only whitelist; that silently drops custom `frontmatter.head` entries.
 - Sitemap deliberately **excludes the redirect shells** `/page`, `/page/1`, `/pages` (see `transformItems` + `removeRedirectPagesFromSitemap` in `config.mjs`). Don't "fix" this.
 - VitePress 1.6.4 emits a broken empty `vp-icons.css` preload — `transformHtml` strips it; keep that workaround.
 - Dev server exposes `POST /api/theme-config` that regex-rewrites `.vitepress/theme/store/index.js` (version-bump tooling) — don't be surprised by dev-server file mutations.
-- `jumpRedirect` (outbound-link interstitial) is **disabled** and buggy — `$(el).text()` drops nested icons/images, and it has no same-origin check. Fix both before enabling.
+- `jumpRedirect` (outbound-link interstitial) is **enabled** in root `themeConfig.mjs` (`jumpRedirect.enable: true`; the theme default stays `false`). Earlier defects (`$(el).text()` dropping nested icons, missing same-origin check) are fixed. Remaining invariants — don't regress them: `shouldSkipRedirect` must only pass `http:`/`https:` through (otherwise `mailto:`/`tel:` become dead links behind the interstitial), and `toBase64` in `commonTools.mjs` must stay UTF-8-symmetric with the `atob` + `TextDecoder` decode in `public/redirect.html` (bare `btoa`/`atob` mangles non-Latin1 URLs).
 - `public/` is a source dir copied verbatim into `dist`; don't put hand-maintained build artifacts there.
 
 ## Verify & style caveats
 
-- **ESLint 8 ignores dot-directories** — `.vitepress/` (the bulk of the code) is **not** linted, and `--ext` omits `.ts`. `pnpm lint` green ≠ full coverage.
+- **ESLint 8 ignores dot-directories** — `.vitepress/` (the bulk of the code) is **not** linted unless passed explicitly (the scripts do pass it). `--ext` now includes `.ts` (TypeScript via `@typescript-eslint/parser` override); `**/*.d.ts` is ignored via `.eslintignore`.
 - **`linebreak-style` is off** on purpose: the repo checks out with `core.autocrlf=true` (CRLF). Don't enable it or mass-convert line endings.
 - `npx tsc --noEmit` typechecks only a handful of `.ts` files — no `vue-tsc`, and `tsconfig.json` deliberately has `"types": ["node"]` (VitePress ships its own types; restore `"vite/client"` only if type issues appear).
 - Style: double quotes, Prettier `printWidth: 100`, `trailingComma: all`; ESLint uses airbnb-base + vue3-essential.
 
 ## Deploy
 
-- GitHub Actions (`.github/workflows/deploy.yml`) deploys `.vitepress/dist` to GitHub Pages on push to **master** (Node 22, pnpm 9; `engines` require Node ≥20). Current branch is **`selfuse`** — pushes there deploy nothing; check `git branch` first.
+- GitHub Actions (`.github/workflows/deploy.yml`) deploys `.vitepress/dist` to GitHub Pages on push to **master** (Node 22, pnpm 10; `engines` require Node ≥20 and pnpm ≥10). Current branch is **`selfuse`** — pushes there deploy nothing; check `git branch` first.
 - Also Vercel-ready: `vercel.json` + `pnpm deploy:vercel`.
 - `.env` is tracked in git; see the README's security notes before committing or publishing.
 

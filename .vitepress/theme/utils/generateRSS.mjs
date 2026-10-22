@@ -1,7 +1,8 @@
 import { createContentLoader } from "vitepress";
-import { writeFileSync } from "fs";
+import { writeFileSync, statSync } from "fs";
 import { Feed } from "feed";
 import path from "path";
+import { toUTCMidnightTimestamp } from "./dateAnchor.mjs";
 
 /**
  * 生成 RSS
@@ -11,7 +12,8 @@ import path from "path";
 export const createRssFile = async (config, themeConfig) => {
   // 配置信息
   const siteMeta = themeConfig.siteMeta;
-  const hostLink = siteMeta.site;
+  // 归一化：去掉尾斜杠，避免 hostLink 尾斜杠 + url 前导 / 产生 `//` 分裂 guid
+  const hostLink = siteMeta.site.replace(/\/+$/, "");
   // Feed 实例
   const feed = new Feed({
     title: siteMeta.title,
@@ -44,25 +46,36 @@ export const createRssFile = async (config, themeConfig) => {
       ],
     },
   }).load();
-  // 日期降序排序
-  // frontmatter 的 date 可能缺失或非法，`new Date(undefined)` 会得到 NaN，
-  // 而 NaN 参与比较会让 Array#sort 的结果不可预测（可能把有日期的文章挤下去）。
-  // 这里显式把无法解析的日期排到最后，并用 -Infinity 兜底，保证排序稳定。
+  // 日期降序排序（与 getPostData 同口径：UTC 零点，不随构建机时区漂移）
+  // frontmatter 的 date 可能缺失或非法，NaN 参与比较会让 sort 结果不可预测。
+  // 显式把无法解析的日期排到最后，并用 -Infinity 兜底，保证排序稳定。
   const dateValue = (frontmatter) => {
-    const parsed = new Date(frontmatter?.date ?? NaN).getTime();
+    const parsed = toUTCMidnightTimestamp(frontmatter?.date ?? NaN);
     return Number.isNaN(parsed) ? -Infinity : parsed;
   };
   posts = posts.sort((a, b) => dateValue(b.frontmatter) - dateValue(a.frontmatter));
   for (const { url, frontmatter } of posts) {
     // 仅保留最近 10 篇文章
     if (feed.items.length >= 10) break;
-    // 文章信息
+    // 文章信息（title 兜底对齐 getPostData.mjs）
     let { title, description, date } = frontmatter;
-    // 处理日期：字符串转 Date；缺失/非法时回退到当前时间，
-    // 避免把 Invalid Date 写进 feed（feed 包会输出 "Invalid Date" 字面量）。
-    if (typeof date === "string") date = new Date(date);
+    title = title || "未命名文章";
+    // 处理日期：用 toUTCMidnightTimestamp 统一口径（与 getPostData 一致）；
+    // 缺失/非法时回退到源文件 mtime，避免每次构建 pubDate 漂移。
+    if (date !== undefined && date !== null) {
+      const ts = toUTCMidnightTimestamp(date);
+      if (!Number.isNaN(ts)) date = new Date(ts);
+    }
     if (!(date instanceof Date) || Number.isNaN(date.getTime())) {
-      date = new Date();
+      try {
+        const srcPath = path.resolve(
+          process.cwd(),
+          url.replace(/^\//, "").replace(/\.html$/, "") + ".md",
+        );
+        date = new Date(statSync(srcPath).mtimeMs);
+      } catch {
+        date = new Date(0);
+      }
     }
     // 添加文章
     feed.addItem({

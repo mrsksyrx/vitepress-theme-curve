@@ -11,8 +11,11 @@
       <Countdown v-if="theme.aside.countDown.enable" class="weidgets" />
       <Timing v-if="theme.aside.timing.enable" class="weidgets" />
       <!-- HelloGithub 热榜 -->
-      <HelloGithubHot v-if="theme.aside.HelloGithub.enable && showHot" @fetch-error="onHotError" />
-      <Tags v-if="theme.aside.tags.enable" class="weidgets" />
+      <HelloGithubHot
+        v-if="theme.aside.HelloGithub.enable && store.helloGithubWidgetEnabled && showHot"
+        @fetch-error="onHotError"
+      />
+      <Tags v-if="theme.aside.tags.enable && store.tagsWidgetEnabled" class="weidgets" />
       <SiteData v-if="theme.aside.siteData.enable" class="weidgets" />
     </div>
   </aside>

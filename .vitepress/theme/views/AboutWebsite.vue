@@ -20,6 +20,7 @@
             :href="item.link"
             class="skills-item"
             target="_blank"
+            rel="noopener noreferrer"
           >
             <div class="skills-logo">
               <i :class="`iconfont icon-${item.icon}`"></i>
@@ -46,7 +47,10 @@
           </div>
           <div class="image-desc opacity">
             <span class="left">
-              统计信息来自 <a href="https://busuanzi.ibruce.info/" target="_blank">不蒜子</a>
+              统计信息来自
+              <a href="https://busuanzi.ibruce.info/" target="_blank" rel="noopener noreferrer"
+                >不蒜子</a
+              >
             </span>
           </div>
         </div>
@@ -68,7 +72,7 @@
         >
           <span class="title2" style="white-space: nowrap">
             <span>本站上线了</span>&nbsp;&nbsp;<span style="color: var(--main-accent)">{{
-              daysOnline
+              daysOnline === null ? "--" : daysOnline
             }}</span
             >&nbsp;&nbsp;<span>天</span>
           </span>
@@ -79,7 +83,7 @@
     <div class="about-content" style="display: flex">
       <div class="about-item" style="padding: 1.2rem 2rem">
         <p class="text" style="margin: 0.2rem 0; font-size: 1.6em">
-          <strong style="color: var(--main-color)">本站仍在建设中</strong>
+          <strong style="color: var(--main-color)">站点信息</strong>
         </p>
         <p class="text" style="margin: 0.2rem 0">
           最近一次功能性或质量性更新于
@@ -92,12 +96,74 @@
           定义版本随 <strong style="color: var(--main-color)">release</strong> 推送更新
         </p>
         <p class="text" style="margin: 0.2rem 0">
-          详见本站
+          当前分支内部版本
+          <strong style="color: var(--main-accent)">{{ displayBranchVersion }}</strong>
+        </p>
+        <p class="text" style="margin: 0.2rem 0">
+          内部版本构建时间
+          <strong style="color: var(--main-accent)">{{ displayBranchBuildTime }}</strong>
+        </p>
+        <p class="text" style="margin: 0.2rem 0">
+          本站可用域名
+          <strong style="color: var(--main-accent)"
+            >sgexilq.com / sgexilq.top / mrsksyrx.top</strong
+          >
+        </p>
+        <p class="text" style="margin: 0.2rem 0">
+          服务域名 <strong style="color: var(--main-accent)">20091010.xyz</strong>
+        </p>
+        <p class="text" style="margin: 0.2rem 0">
+          本站的
           <a
-            href="https://github.com/murasakizs/vitepress-theme-curve"
+            href="https://sgexilq.com/pages/privacy"
             target="_blank"
+            rel="noopener noreferrer"
             style="color: var(--main-color)"
-            ><strong>源码 </strong></a
+            ><strong>隐私政策</strong></a
+          >
+          与
+          <a
+            href="https://sgexilq.com/pages/cc"
+            target="_blank"
+            rel="noopener noreferrer"
+            style="color: var(--main-color)"
+            ><strong>版权协议</strong></a
+          >
+        </p>
+        <p class="text" style="margin: 0.2rem 0">
+          订阅本站
+          <a
+            href="https://sgexilq.com/rss.xml"
+            target="_blank"
+            rel="noopener noreferrer"
+            style="color: var(--main-color)"
+            ><strong>https://sgexilq.com/rss.xml</strong></a
+          >
+        </p>
+        <p class="text" style="margin: 0.2rem 0">
+          站点状态提供
+          <a
+            href="https://status.sgexilq.com"
+            target="_blank"
+            rel="noopener noreferrer"
+            style="color: var(--main-color)"
+            ><strong>Better Stack</strong></a
+          >
+        </p>
+        <p class="text" style="margin: 0.2rem 0">
+          反馈建议
+          <a href="mailto:feedback@sgexilq.com" style="color: var(--main-color)"
+            ><strong>feedback@sgexilq.com</strong></a
+          >
+        </p>
+        <p class="text" style="margin: 0.2rem 0">
+          本站开源地址
+          <a
+            href="https://github.com/mrsksyrx/vitepress-theme-curve"
+            target="_blank"
+            rel="noopener noreferrer"
+            style="color: var(--main-color)"
+            ><strong>https://github.com/mrsksyrx/vitepress-theme-curve</strong></a
           >
         </p>
       </div>
@@ -109,26 +175,40 @@
         <span class="title2" style="margin-bottom: 0.8rem">vitepress-theme-curve</span>
         <p class="text">
           本站基于开源项目
-          <a href="https://github.com/kazukokawagawa/vitepress-theme-curve" target="_blank"
+          <a
+            href="https://github.com/kazukokawagawa/vitepress-theme-curve"
+            target="_blank"
+            rel="noopener noreferrer"
             ><strong>vitepress-theme-curve</strong></a
           >
           构建，感谢原作者
-          <a href="https://chiyu.it/" target="_blank"><strong>池鱼</strong></a> 的开源贡献
+          <a href="https://chiyu.it/" target="_blank" rel="noopener noreferrer"
+            ><strong>池鱼</strong></a
+          >
+          的开源贡献
         </p>
         <p class="text">
           本站遵循
-          <a href="https://www.gnu.org/licenses/agpl-3.0.html" target="_blank"
+          <a
+            href="https://www.gnu.org/licenses/agpl-3.0.html"
+            target="_blank"
+            rel="noopener noreferrer"
             ><strong>AGPL v3</strong></a
           >
-          协议<a href="https://github.com/murasakizs/vitepress-theme-curve" target="_blank"
+          协议<a
+            href="https://github.com/mrsksyrx/vitepress-theme-curve"
+            target="_blank"
+            rel="noopener noreferrer"
             ><strong>开源</strong></a
           >
         </p>
         <p class="text" style="opacity: 0.4">
-          技术栈：<a href="https://vitepress.dev/" target="_blank">VitePress</a> ·
-          <a href="https://vuejs.org/" target="_blank">Vue 3</a> ·
-          <a href="https://pinia.vuejs.org/" target="_blank">Pinia</a> ·
-          <a href="https://sass-lang.com/" target="_blank">SCSS</a>
+          技术栈：<a href="https://vitepress.dev/" target="_blank" rel="noopener noreferrer"
+            >VitePress</a
+          >
+          · <a href="https://vuejs.org/" target="_blank" rel="noopener noreferrer">Vue 3</a> ·
+          <a href="https://pinia.vuejs.org/" target="_blank" rel="noopener noreferrer">Pinia</a> ·
+          <a href="https://sass-lang.com/" target="_blank" rel="noopener noreferrer">SCSS</a>
         </p>
         <p class="text" style="color: var(--main-accent); margin-top: 0.4rem">
           本站的诞生离不开上游作者的开源贡献。
@@ -141,20 +221,23 @@
 <script setup>
 import { loadScript } from "@/utils/commonTools";
 import { mainStore } from "@/store";
+import { daysPassedAt, useClientNow } from "@/utils/useClientNow.mjs";
+import { toLocalDayTimestamp } from "@/utils/dateAnchor.mjs";
 
 const { theme } = useData();
 const store = mainStore();
 
 // 站点版本信息（store 优先，fallback 到 themeConfig）
-const displaySiteVersion = computed(() => store.siteVersion || theme.siteVersion);
-const displaySiteVersionDate = computed(() => store.siteVersionDate || theme.siteVersionDate);
+const displaySiteVersion = computed(() => store.siteVersion || theme.value.siteVersion);
+const displaySiteVersionDate = computed(() => store.siteVersionDate || theme.value.siteVersionDate);
+const displayBranchVersion = computed(() => store.branchVersion ?? theme.value.branchVersion);
+const displayBranchBuildTime = computed(
+  () => store.branchBuildTime || theme.value.branchBuildTime || "--",
+);
 
-// 站点上线天数
-const daysOnline = computed(() => {
-  const start = new Date("2026-08-19");
-  const now = new Date();
-  return Math.floor((now - start) / (1000 * 60 * 60 * 24));
-});
+// 站点上线天数：本地日历天口径，客户端时钟实时计算，避免 SSG 固化构建日天数
+const { now } = useClientNow();
+const daysOnline = computed(() => daysPassedAt(toLocalDayTimestamp("2026-08-19"), now.value));
 
 // 技能数据
 
@@ -572,6 +655,13 @@ onMounted(() => {
           font-size: clamp(1.5rem, 8vw, 2rem);
           margin-right: 0;
           overflow-wrap: anywhere;
+        }
+
+        // 桌面端单行的 2 倍行高在小屏折行后间距过大；
+        // 收紧行高后用外边距补回标题与边框、正文之间的呼吸空间
+        &.hello .title2 {
+          line-height: 1.4;
+          margin: 0.6rem 0 1.2rem;
         }
 
         .text {

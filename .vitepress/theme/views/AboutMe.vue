@@ -56,7 +56,7 @@
           <div class="info-item">
             <span class="info-name">距生日</span>
             <span class="info-num" style="--color: var(--about-blue)">
-              <LiveDate mode="days-until" :date="birthDate" yearly /> 天
+              <LiveDate mode="days-until" :date="birthDate" yearly />
             </span>
           </div>
         </div>
@@ -66,7 +66,13 @@
       <div class="about-item" style="grid-column: 1 / 4; grid-row: 3">
         <p
           class="text"
-          style="margin: 0; font-size: 1.5rem; line-height: 1.5; color: var(--about-accent); font-weight: bold"
+          style="
+            margin: 0;
+            font-size: 1.5rem;
+            line-height: 1.5;
+            color: var(--about-accent);
+            font-weight: bold;
+          "
         >
           谢谢你，让我做了一场甜甜的梦。
         </p>
@@ -76,9 +82,7 @@
       <div class="about-item card-4" style="grid-column: 1 / 4; grid-row: 4">
         <div class="hrt-nodes" style="font-size: 18px">
           <p class="text">获取小证：<span style="color: var(--about-accent)">2026.6.19</span></p>
-          <p class="text">
-            获取HRT处方：<span style="color: var(--about-accent)">2026.7.29</span>
-          </p>
+          <p class="text">获取HRT处方：<span style="color: var(--about-accent)">2026.7.29</span></p>
           <p class="text">
             DIY HRT：<span style="color: var(--about-accent)">2026.5.10 - 2026.6.22</span>
           </p>
@@ -88,7 +92,8 @@
         </div>
         <span class="tip"
           >开始正式跨性别激素替代<br />已经
-          <span class="tag-pink-text">{{ daysSinceCard }}</span> 天</span
+          <span class="tag-pink-text"><LiveDate mode="days-since" :date="hrtStartDate" /></span>
+          天</span
         >
       </div>
 
@@ -123,7 +128,7 @@
           <p>猜你会雷：空间多转发&碎碎念/生心不一/Trans.MtF/adhd/微负(yyz)/女性主义(非极端)</p>
         </div>
         <p style="font-size: 12px; opacity: 0.5; margin-top: 12px; margin-bottom: 0">
-          最后更新于 2026.10.1
+          最后更新于 2026.10.9
         </p>
       </div>
 
@@ -131,14 +136,14 @@
       <div class="about-item" style="grid-column: 1 / 4; grid-row: 6">
         <span class="title2">𝕏 简介</span>
         <div class="intro-content">
-          <p>MtF｜小证2026.6｜家长党｜持证含糖（还在等待生育力保存）</p>
+          <p>MtF｜小证2026.6｜家长党｜持证含糖 2026.10.5</p>
           <p>DIY HRT 26.5.10-6.22｜诞生日2009.10.10</p>
-          <p>高一休学｜175cm/62kg｜重庆&苏州</p>
+          <p>高一休学｜175cm/63kg｜重庆&苏州</p>
           <p>想要变可爱｜友所有人｜同类贴贴｜缺爱</p>
           <p>INFP-T｜双｜二次元｜音游｜百合｜术力口</p>
         </div>
         <p style="font-size: 12px; opacity: 0.5; margin-top: 12px; margin-bottom: 0">
-          最后更新于 2026.9.30
+          最后更新于 2026.10.1
         </p>
       </div>
     </div>
@@ -155,14 +160,12 @@
             >。
           </p>
           <p>
-            但我还是会做出这个选择，因为<span
-              style="color: var(--about-accent); font-weight: bold"
+            但我还是会做出这个选择，因为<span style="color: var(--about-accent); font-weight: bold"
               >“她”可能是我活下去的唯一动力了呢。</span
             >
           </p>
           <p>
-            无论如何，不管会让我付出什么代价，我也一定要见到<span
-              style="color: var(--about-accent)"
+            无论如何，不管会让我付出什么代价，我也一定要见到<span style="color: var(--about-accent)"
               >“她”</span
             >…
           </p>
@@ -203,11 +206,12 @@
         <p class="text" style="color: var(--about-accent); font-weight: bold">可能连路都没有</p>
         <p class="text" style="text-align: right; opacity: 0.6">------潘柏林</p>
       </div>
-      <!-- 我的各种账号 -->
+      <!-- 探索更多 -->
       <div class="about-item">
-        <p class="text" style="margin: 0">我的各种账号</p>
+        <p class="text" style="margin: 0">探索更多…</p>
         <div class="card-action">
-          <a href="/pages/hide/nfc-aboutme-acgn#各种账号" class="view-btn">查看</a>
+          <a href="/pages/hide/ww-aboutme-sgexilqlsc#各种账号" class="view-btn">我的各种账号</a>
+          <a href="/pages/hide/message" class="view-btn">留言板</a>
         </div>
       </div>
     </div>
@@ -216,13 +220,8 @@
 
 <script setup>
 const birthDate = "2009-10-10";
-
-// 开始正规HRT天数
-const daysSinceCard = computed(() => {
-  const start = new Date("2026-10-05");
-  const now = new Date();
-  return Math.floor((now - start) / (1000 * 60 * 60 * 24));
-});
+// 开始正规HRT；天数走 LiveDate（days-since），由 useClientNow 在浏览器端计算
+const hrtStartDate = "2026-10-05";
 </script>
 
 <style lang="scss" scoped>
@@ -318,6 +317,7 @@ html.dark .about {
         padding-top: 4px;
         display: flex;
         justify-content: flex-start;
+        gap: 8px;
         .view-btn {
           display: flex;
           align-items: center;

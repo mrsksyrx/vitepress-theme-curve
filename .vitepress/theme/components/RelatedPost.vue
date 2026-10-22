@@ -14,7 +14,6 @@
 </template>
 
 <script setup>
-import { generateId } from "@/utils/commonTools";
 import { shufflePost } from "@/utils/helper";
 import { usePostData } from "@/utils/usePostData.mjs";
 import { normalizeList } from "@/utils/normalizeList.mjs";
@@ -36,7 +35,7 @@ const getRelatedData = () => {
   // 指定分类数据
   const currentPostData = categoriesData.value?.[catName]?.articles || [];
   // 本篇索引
-  const postId = generateId(page.value?.filePath);
+  const postId = page.value?.relativePath;
   // 过滤掉当前文章
   const filteredPosts = currentPostData.filter((post) => post.id !== postId);
   // 取出两篇文章
@@ -53,8 +52,15 @@ watch(
   },
 );
 
+let alive = true;
+onUnmounted(() => {
+  alive = false;
+});
+
 onMounted(() => {
-  loadPostData().then(() => getRelatedData());
+  loadPostData().then(() => {
+    if (alive) getRelatedData();
+  });
 });
 </script>
 

@@ -7,16 +7,13 @@ const ITERATIONS = 100000;
  * 构建期加密文章正文（Node 侧，同步，仅对带 password 的文章调用）
  * @param {string} html 渲染后的正文 HTML
  * @param {string} password 明文密码
+ * @param {string} postId 稳定的文章标识（如 relativePath），用于派生 salt
  * @returns {{v:number, iter:number, salt:string, iv:string, tag:string, data:string}}
  */
-export const encryptPostHtml = (html, password) => {
-  // 确定性 salt：内容与密码不变时跨构建稳定，本地保存的解锁密钥才不会因重新部署失效
-  const salt = createHash("sha256")
-    .update(password)
-    .update("|salt|")
-    .update(html)
-    .digest()
-    .subarray(0, 16);
+export const encryptPostHtml = (html, password, postId) => {
+  // salt 只依赖 postId：跨构建稳定且改正文不失效本地密钥；不掺密码/正文，
+  // 否则已知明文时可用 salt 等式跳过 PBKDF2 廉价验密码
+  const salt = createHash("sha256").update("curve-enc-v1|").update(postId).digest().subarray(0, 16);
   const iv = randomBytes(12);
   const key = pbkdf2Sync(password, salt, ITERATIONS, 32, "sha256");
   const cipher = createCipheriv("aes-256-gcm", key, iv);

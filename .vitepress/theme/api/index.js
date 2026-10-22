@@ -41,7 +41,11 @@ export const getSiteInfo = async (url) => {
     title: null,
     description: null,
   };
+  // 浏览器同源策略下跨域 fetch 必被 CORS 拦截（目标站不返 Access-Control-Allow-Origin 即 TypeError），
+  // 对外链抓取没有意义，直接跳过避免控制台报错。外链请手动传 title/desc/icon。
   try {
+    const resolved = new URL(url, window.location.href);
+    if (resolved.origin !== window.location.origin) return details;
     // 站点数据
     const response = await fetch(url);
     const text = await response.text();
@@ -76,10 +80,19 @@ export const getSiteInfo = async (url) => {
  */
 export const getMusicList = async (url, id, server = "netease", type = "playlist") => {
   const ids = Array.isArray(id) ? id : [id];
-  const results = await Promise.all(
-    ids.map((pid) => fetch(`${url}?server=${server}&type=${type}&id=${pid}`).then((r) => r.json())),
+  // allSettled：单个 id 失败（404/非 JSON）不应拖垮整份歌单，保留成功的条目
+  const results = await Promise.allSettled(
+    ids.map((pid) =>
+      fetch(`${url}?server=${server}&type=${type}&id=${pid}`).then((r) => {
+        if (!r.ok) throw new Error(`HTTP ${r.status}`);
+        return r.json();
+      }),
+    ),
   );
-  const merged = results.flat();
+  const merged = results
+    .filter((r) => r.status === "fulfilled")
+    .map((r) => r.value)
+    .flat();
   // 按 id 去重
   const seen = new Set();
   return merged
@@ -94,33 +107,32 @@ export const getMusicList = async (url, id, server = "netease", type = "playlist
     });
 };
 
-/**
- * 站点统计数据
- */
-export const getStatistics = async (key) => {
-  const result = await fetch(`https://v6-widget.51.la/v6/${key}/quote.js`);
-  const title = [
-    "最近活跃",
-    "今日人数",
-    "今日访问",
-    "昨日人数",
-    "昨日访问",
-    "本月访问",
-    "总访问量",
-  ];
-  const data = await result.text();
-  let num = data.match(/(<\/span><span>).*?(\/span><\/p>)/g);
-  num = num.map((el) => {
-    const val = el.replace(/(<\/span><span>)/g, "");
-    return val.replace(/(<\/span><\/p>)/g, "");
-  });
-  const statistics = {};
-  for (let i = 0; i < num.length; i++) {
-    if (i === num.length - 1) continue;
-    statistics[title[i]] = num[i];
-  }
-  return statistics;
-};
+// 站点统计数据（51.la）——当前未被任何组件调用（站点统计走 busuanzi），保留备用。
+// 注意：data.match 失败时返回 null，下面 num.map 会抛 TypeError；title 7 项与 num 长度无对齐。
+// export const getStatistics = async (key) => {
+//   const result = await fetch(`https://v6-widget.51.la/v6/${key}/quote.js`);
+//   const title = [
+//     "最近活跃",
+//     "今日人数",
+//     "今日访问",
+//     "昨日人数",
+//     "昨日访问",
+//     "本月访问",
+//     "总访问量",
+//   ];
+//   const data = await result.text();
+//   let num = data.match(/(<\/span><span>).*?(\/span><\/p>)/g);
+//   num = num.map((el) => {
+//     const val = el.replace(/(<\/span><span>)/g, "");
+//     return val.replace(/(<\/span><\/p>)/g, "");
+//   });
+//   const statistics = {};
+//   for (let i = 0; i < num.length; i++) {
+//     if (i === num.length - 1) continue;
+//     statistics[title[i]] = num[i];
+//   }
+//   return statistics;
+// };
 
 /**
  * 天气
@@ -154,11 +166,42 @@ export const getWeatherOpenMeteo = async (lat, lon) => {
   return await res.json();
 };
 
-// 根据经纬度获取城市名（Open-Meteo 逆地理编码）
+// 根据经纬度获取城市名（Nominatim 逆地理编码）
+// 注意：Nominatim 要求标识调用方的 User-Agent，并限流 1 req/s（请勿高频轮询）；
+// 浏览器端 fetch 禁止覆盖 User-Agent（forbidden header），此处仅为非浏览器环境/文档意图保留。
+// Open-Meteo 的 /v1/search 不支持按经纬度逆地理（name= 为空时恒返回空 results），
+// 故改用 Nominatim。失败时返回 null，由调用方兜底（如 cityName || "北京"）。
 export const getCityByCoords = async (lat, lon) => {
-  const res = await fetch(
-    `https://geocoding-api.open-meteo.com/v1/search?name=&latitude=${lat}&longitude=${lon}&count=1&language=zh`,
-  );
-  const data = await res.json();
-  return data?.results?.[0]?.name || null;
+  try {
+    const res = await fetch(
+      `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lon}&format=json&accept-language=zh`,
+      {
+        headers: {
+          "User-Agent": "vitepress-theme-curve/1.0 (blog weather widget; 1req/s)",
+        },
+      },
+    );
+    if (!res.ok) return null;
+    const data = await res.json();
+    if (!data || data.error) return null;
+    // 优先取 address 中的城市级字段
+    const address = data.address || {};
+    const city =
+      address.city ||
+      address.town ||
+      address.village ||
+      address.municipality ||
+      address.county ||
+      address.state;
+    if (city) return city;
+    // 回退解析 display_name（形如「区, 市, 省, 国家」），取第一个区段
+    if (data.display_name) {
+      const first = String(data.display_name).split(",")[0]?.trim();
+      return first || null;
+    }
+    return null;
+  } catch (error) {
+    console.warn("逆地理编码失败：", error);
+    return null;
+  }
 };

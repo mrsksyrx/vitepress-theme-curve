@@ -5,6 +5,8 @@
   <Loading />
   <!-- 阅读进度条 -->
   <ReadingProgress />
+  <!-- 正文逐行悬停侧边线 -->
+  <HoverLine />
   <!-- 导航栏 -->
   <Nav />
   <!-- 主内容 -->
@@ -23,6 +25,21 @@
   </main>
   <!-- 页脚 -->
   <FooterLink v-show="!loadingStatus" :showBar="isPostPage && !page.isNotFound" />
+  <!-- 页脚框外致谢 -->
+  <div v-show="!loadingStatus" class="footer-credit">
+    本站的诞生离不开上游作者的开源贡献。在此感谢他（她）们。本站遵循
+    <a href="https://www.gnu.org/licenses/agpl-3.0.html" target="_blank" rel="noopener noreferrer"
+      ><strong>AGPL v3</strong></a
+    >
+    协议
+    <a
+      href="https://github.com/mrsksyrx/vitepress-theme-curve"
+      target="_blank"
+      rel="noopener noreferrer"
+      ><strong>开源</strong></a
+    >
+    。
+  </div>
   <Footer v-show="!loadingStatus" />
   <!-- 悬浮菜单 -->
   <Teleport to="body">
@@ -63,14 +80,14 @@
 
 <script setup>
 import { storeToRefs } from "pinia";
-import { mainStore, initializeCursor } from "@/store";
+import { mainStore, initializeCursor, DEFAULT_FONT_SIZE } from "@/store";
 import { calculateScroll, specialDayGray } from "@/utils/helper";
 import { ensureGlobalFontsLoaded } from "@/utils/fontLoader.mjs";
 
 // const screenWidth = ref(0);
 const route = useRoute();
 const store = mainStore();
-const { frontmatter, page, theme } = useData();
+const { frontmatter, page } = useData();
 const {
   loadingStatus,
   footerIsShow,
@@ -93,6 +110,8 @@ let fontSwitchTaskId = 0;
 const importCheckVisible = ref(false);
 const importCheckCountdown = ref(10);
 let importCheckTimer = null;
+// 保留同一 MediaQueryList 实例，卸载时才能移除 change 监听
+let colorSchemeMql = null;
 
 //2025.06.12更新：在 Next.js 的服务端渲染过程中，应用会在服务器端先进行渲染
 //而在服务器端的 JavaScript 环境中，并没有浏览器提供的 window 对象。
@@ -145,8 +164,9 @@ const startImportCheck = () => {
 // 判断是否为文章页面：路径在 posts/ 下，或 frontmatter 显式声明 layout: post
 // （pages/ 下的独立文章用后者走文章样式，又不进 RSS / 文章列表）
 const isPostPage = computed(() => {
-  const routePath = decodeURIComponent(route.path);
-  return routePath.includes("/posts/") || frontmatter.value.layout === "post";
+  // 不要 decodeURIComponent：文件名含裸 %（如 100%_done）时会抛 URIError 白屏。
+  // pathname 里 "/posts/" 是字面量，直接 includes 即可。
+  return route.path.includes("/posts/") || frontmatter.value.layout === "post";
 });
 
 // 开启右键菜单
@@ -220,7 +240,7 @@ const changeSiteFont = async () => {
 
 // 监听设置变化
 watch(
-  () => [themeType.value, backgroundType.value],
+  () => [themeType.value, backgroundType.value, themeColor.value],
   () => changeSiteThemeType(),
 );
 watch(
@@ -245,7 +265,6 @@ watch(
 
 onMounted(() => {
   initializeCursor();
-  console.log(frontmatter.value, page.value, theme.value);
   // 全站置灰
   specialDayGray();
   // 更改主题类别
@@ -281,9 +300,9 @@ onMounted(() => {
   }
   // 检查字体大小待确认状态
   if (fontSizePending.value) {
-    fontSize.value = 17;
+    fontSize.value = DEFAULT_FONT_SIZE;
     fontSizePending.value = false;
-    document.documentElement.style.fontSize = "17px";
+    document.documentElement.style.fontSize = DEFAULT_FONT_SIZE + "px";
     if (typeof $message !== "undefined") {
       $message.warning("上次的字体大小未确认，已恢复为默认大小");
     }
@@ -308,7 +327,8 @@ onMounted(() => {
   // 复制监听
   window.addEventListener("copy", copyTip);
   // 监听系统颜色
-  window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", changeSiteThemeType);
+  colorSchemeMql = window.matchMedia("(prefers-color-scheme: dark)");
+  colorSchemeMql.addEventListener("change", changeSiteThemeType);
   // 检查是否需要显示导入后检查弹窗
   if (localStorage.getItem("importJustCompleted") === "true") {
     startImportCheck();
@@ -318,6 +338,9 @@ onMounted(() => {
 onBeforeUnmount(() => {
   window.removeEventListener("scroll", calculateScroll);
   window.removeEventListener("contextmenu", openRightMenu);
+  window.removeEventListener("copy", copyTip);
+  colorSchemeMql?.removeEventListener("change", changeSiteThemeType);
+  colorSchemeMql = null;
   clearInterval(importCheckTimer);
 });
 </script>
@@ -342,6 +365,22 @@ onBeforeUnmount(() => {
     }
   }
 }
+.footer-credit {
+  width: 100%;
+  max-width: 1400px;
+  margin: -0.5rem auto 0.8rem;
+  padding: 0 1rem;
+  text-align: center;
+  font-size: 12px;
+  line-height: 1.6;
+  opacity: 0.5;
+  a {
+    color: var(--main-color);
+    &:hover {
+      opacity: 0.8;
+    }
+  }
+}
 .left-menu {
   position: fixed;
   left: 20px;
@@ -356,6 +395,7 @@ onBeforeUnmount(() => {
   &.hidden {
     opacity: 0;
     transform: translateY(100px);
+    pointer-events: none;
   }
 }
 .import-check-overlay {

@@ -16,7 +16,8 @@
   --main-card-border: #f0e4ea;
   --main-border-shadow: #2c2d300c;
   --main-scrollbar-bar: rgba(60, 60, 67, 0.4);
-  --main-mask-background: rgba(255, 255, 255, 0.95);
+  // 遮罩：0.55 可透出背景轮廓，又不至于抢内容
+  --main-mask-background: rgba(255, 255, 255, 0.55);
   --main-mask-Inverse-background: rgba(0, 0, 0, 0.08);
   --main-mask-second-background: rgba(255, 255, 255, 0.45);
   --main-color-opacity: rgba(255, 255, 255, 0.15);
@@ -57,7 +58,8 @@ html.dark {
   --main-card-border: #3d3d3f;
   --main-border-shadow: #00000050;
   --main-scrollbar-bar: rgba(200, 200, 223, 0.4);
-  --main-mask-background: rgba(0, 0, 0, 0.95);
+  // 遮罩：0.55 可透出背景轮廓，又不至于抢内容
+  --main-mask-background: rgba(0, 0, 0, 0.55);
   --main-mask-Inverse-background: rgba(255, 255, 255, 0.08);
   --main-mask-second-background: rgba(0, 0, 0, 0.45);
   --main-color-opacity: rgba(0, 0, 0, 0.15);
@@ -1453,7 +1455,9 @@ html {
       }
     }
 
-    .loading {
+    // 只作用于 Loading.vue 的全屏遮罩（Teleport 到 body 的直接子元素），
+    // 避免误伤 LazyLoader 骨架屏 / ArticleGPT 加载态等其它 .loading
+    body > .loading {
       backdrop-filter: blur(20px);
     }
 
@@ -1585,7 +1589,7 @@ a {
     &::before {
       right: 0;
       left: 4px;
-      background: var(--main-scrolling-bar);
+      background: var(--main-scrollbar-bar);
       transition:
         background 0.3s,
         left 0.3s;
@@ -1883,7 +1887,7 @@ html.force-mobile {
     }
     .nav-center {
       position: absolute !important;
-      top: -80px !important;
+      top: 0 !important;
       left: 0 !important;
       background-color: var(--main-card-background) !important;
       border-bottom: 1px solid var(--main-card-border) !important;

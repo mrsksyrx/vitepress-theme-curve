@@ -10,8 +10,15 @@ import Components from "unplugin-vue-components/vite";
 import path from "path";
 import fs from "fs-extra";
 import { fileURLToPath } from "url";
+import { execSync } from "child_process";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
+
+// 构建时注入的 Git 短哈希，页脚点击标题可查看
+let gitCommit = "unknown";
+try {
+  gitCommit = execSync("git rev-parse --short HEAD").toString().trim();
+} catch {}
 
 // 获取全局数据
 const postData = await getAllPosts();
@@ -79,7 +86,7 @@ export default withPwa(
         "noscript",
         {},
         `<style>
-          .loading {
+          body > .loading {
             display: none !important;
           }
           .main-layout {
@@ -98,6 +105,9 @@ export default withPwa(
     // 主题配置
     themeConfig: {
       ...themeConfig,
+      // 构建期文章索引注入：客户端首次渲染即可出列表，
+      // postData.json 请求慢/失败时首页不再空白（usePostData.mjs 会用它播种）。
+      postData,
       postCount: postData.length,
     },
     // markdown
@@ -117,30 +127,28 @@ export default withPwa(
     // transformPageData
     transformPageData: async (pageData) => {
       // canonical URL
-      const canonicalUrl = `${themeConfig.siteMeta.site}/${pageData.relativePath}`
+      const siteRoot = themeConfig.siteMeta.site.replace(/\/+$/, "");
+      const canonicalUrl = `${siteRoot}/${pageData.relativePath}`
         .replace(/index\.md$/, "")
         .replace(/\.md$/, "");
-      // ⚠️ 这里不能简单 `head.push(...)`：
+      // ⚠️ 这里不能 `head.push(...)`：
       // gray-matter 以「文件内容字符串」为键缓存解析结果，内容完全相同的多个 .md
-      // 会**共享同一个 frontmatter 对象与 head 数组**（实测 `matter(same).data === matter(same).data`
-      // 为 true；内容不同的则返回不同对象），push 会跨页累积，使单个页面带上
-      // 多条指向**别的页面**的 canonical（实测 1→2→3→4 条）。
-      // 触发过：page.md / page/index.md / page/1.md / pages/index.md（当时 4 个文件逐字节全同）。
+      // 会**共享同一个 head 数组**（实测 `matter(same).data.head === matter(same).data.head`
+      // 为 true）。`frontmatterPlugin` 虽给每页新建了 frontmatter 外壳，但 `head`
+      // 属性仍指向同一共享数组——就地 `push` 会跨页累积（实测 1→2→3→4 条 canonical）。
+      // 触发过：page.md / page/index.md / page/1.md / pages/index.md（4 个文件逐字节全同）。
       //
-      // 修法：本页**只保留与"本页是否跳转壳"相关的原创 head 项**，其余一律丢弃后重建。
-      // - 为什么是「只保留白名单」而不是「过滤掉 canonical」：
-      //   共享数组里被前面页面 push 进去的，正是**别的页面**的 canonical，
-      //   过滤法能挡住这一种，但挡不住未来新增的其它就地 push 字段。
-      // - 为什么白名单只放 meta refresh：
-      //   本仓库的 head 来源只有两处 —— 跳转壳 .md 的 `head:`（只有 meta refresh）
-      //   与 config 顶部的 `head` 数组（全局注入，不经过 frontmatter）。
-      //   因此白名单是**真实全量**的，不会误删任何原本要输出的项。
-      //   （实证：修复后 4 个跳转页的 meta refresh 全部保留、每页 canonical 恰好 1 条。）
+      // 修法（两条约束，不丢用户项）：
+      // 1. **绝不就地修改 `pageData.frontmatter.head`**，只用新数组替换本页引用；
+      // 2. 重建时**保留 frontmatter 里用户自定义的全部 head 项**（og:image、自定义
+      //    meta/link/script 等），仅剔除 canonical 后补上本页自己的那一条——
+      //    canonical 必须唯一且指向本页，用户手写的或共享数组里残留的都不该留下。
       //
-      // 注意：这里不修改共享数组本身（改它会污染其它页面），只替换本页的引用。
+      // （曾用「白名单只留 meta refresh」的写法，会静默丢掉主题使用者写在
+      //   frontmatter.head 里的任何自定义项；共享数组问题其实只需上面两条约束。）
       const existingHead = Array.isArray(pageData.frontmatter.head)
         ? pageData.frontmatter.head.filter(
-            ([tag, attrs]) => tag === "meta" && attrs?.["http-equiv"] === "refresh",
+            ([tag, attrs]) => !(tag === "link" && attrs?.rel === "canonical"),
           )
         : [];
       pageData.frontmatter.head = [
@@ -167,6 +175,9 @@ export default withPwa(
     },
     // vite
     vite: {
+      define: {
+        __GIT_COMMIT__: JSON.stringify(gitCommit),
+      },
       plugins: [
         AutoImport({
           imports: ["vue", "vitepress"],
@@ -194,7 +205,8 @@ export default withPwa(
               req.on("end", () => {
                 try {
                   const data = JSON.parse(body);
-                  // 输入格式白名单：只校验请求里出现过的键，不合规直接 400
+                  // 输入格式白名单：只允许已注册 validator 的键，不合规直接 400。
+                  // 新增写入字段必须在此注册白名单 validator，禁止跳过校验直接拼接进文件。
                   const validators = {
                     siteVersion: (v) => /^V?\d+(\.\d+)*$/.test(v),
                     siteVersionDate: (v) =>
@@ -208,7 +220,13 @@ export default withPwa(
                   };
                   for (const key of Object.keys(data)) {
                     const validate = validators[key];
-                    if (validate && !validate(data[key])) {
+                    if (!validate) {
+                      res.statusCode = 400;
+                      res.setHeader("Content-Type", "application/json");
+                      res.end(JSON.stringify({ ok: false, error: `未知字段 ${key}` }));
+                      return;
+                    }
+                    if (!validate(data[key])) {
                       res.statusCode = 400;
                       res.setHeader("Content-Type", "application/json");
                       res.end(JSON.stringify({ ok: false, error: `字段 ${key} 格式不合法` }));
@@ -270,6 +288,71 @@ export default withPwa(
             });
           },
         },
+        {
+          // 本地 dev 没有 Vercel/CF Functions，补一个与 api/music-url.ts 同口径的解析端点
+          name: "music-url-api",
+          configureServer(server) {
+            server.middlewares.use("/api/music-url", async (req, res) => {
+              if (req.method !== "GET") {
+                res.statusCode = 405;
+                res.end("Method Not Allowed");
+                return;
+              }
+              const reqUrl = new URL(req.url || "", "http://localhost");
+              const raw = reqUrl.searchParams.get("url") || "";
+              const ALLOWED_HOSTS = new Set([
+                "meting.20091010.xyz",
+                "meting.20100907.xyz",
+                "music.163.com",
+              ]);
+              const ALLOWED_SUFFIXES = [".music.126.net", ".music.163.com"];
+              const isAllowedUrl = (value) => {
+                try {
+                  const u = new URL(value);
+                  if (u.protocol !== "http:" && u.protocol !== "https:") return null;
+                  const host = u.hostname.toLowerCase();
+                  return ALLOWED_HOSTS.has(host) || ALLOWED_SUFFIXES.some((s) => host.endsWith(s))
+                    ? u
+                    : null;
+                } catch {
+                  return null;
+                }
+              };
+              res.setHeader("Content-Type", "application/json");
+              if (!raw) {
+                res.statusCode = 400;
+                res.end(JSON.stringify({ error: "missing url" }));
+                return;
+              }
+              try {
+                let current = isAllowedUrl(raw);
+                if (!current) throw new Error("URL not allowed");
+                for (let i = 0; i < 5; i++) {
+                  const hop = await fetch(current.toString(), {
+                    method: "GET",
+                    redirect: "manual",
+                    signal: AbortSignal.timeout(5000),
+                    headers: { "User-Agent": "Mozilla/5.0" },
+                  });
+                  if (hop.status >= 300 && hop.status < 400) {
+                    const loc = hop.headers.get("location");
+                    if (!loc) break;
+                    const next = isAllowedUrl(new URL(loc, current).toString());
+                    if (!next) throw new Error("redirect target not allowed");
+                    current = next;
+                    continue;
+                  }
+                  break;
+                }
+                const url = current.toString().replace(/^http:\/\//i, "https://");
+                res.end(JSON.stringify({ url }));
+              } catch (e) {
+                res.statusCode = 502;
+                res.end(JSON.stringify({ error: e.message || "resolve failed" }));
+              }
+            });
+          },
+        },
       ],
       resolve: {
         // 配置路径别名
@@ -309,9 +392,10 @@ export default withPwa(
         cleanupOutdatedCaches: true,
         // 运行时缓存策略
         runtimeCaching: [
-          // API 请求 - 网络优先
+          // API 请求 - 网络优先（仅同源；跨域 Meting 等不得被拦截，
+          // 其 pathname 也是 /api/，且 type=url 为 302 跳转链，进 SW 会 no-response）
           {
-            urlPattern: ({ url }) => url.pathname.startsWith("/api/"),
+            urlPattern: ({ url, sameOrigin }) => sameOrigin && url.pathname.startsWith("/api/"),
             handler: "NetworkFirst",
             options: {
               cacheName: "api-cache",
@@ -323,8 +407,10 @@ export default withPwa(
             },
           },
           // 文章页面 - 网络优先，离线回退缓存
+          // cleanUrls 模式下永不命中（URL 不带 .html 后缀），保留供 cleanUrls 关闭时使用
+          /*
           {
-            urlPattern: /\.html$/i,
+            urlPattern: ({ url, sameOrigin }) => sameOrigin && /\.html$/i.test(url.pathname),
             handler: "NetworkFirst",
             options: {
               cacheName: "html-cache",
@@ -335,9 +421,11 @@ export default withPwa(
               },
             },
           },
+          */
           // VitePress 生成的页面路由（cleanUrls 模式，排除根级带点文件）
           {
-            urlPattern: ({ url }) =>
+            urlPattern: ({ url, sameOrigin }) =>
+              sameOrigin &&
               /^\/[^/]+\/?$/.test(url.pathname) &&
               !/\.(?:js|mjs|css|map|json|txt|xml|ico|png|jpe?g|gif|svg|webp|avif|woff2?|ttf|otf|webmanifest)$/i.test(
                 url.pathname,
@@ -354,7 +442,8 @@ export default withPwa(
           },
           // 文章详情页路由（排除静态资源后缀）
           {
-            urlPattern: ({ url }) =>
+            urlPattern: ({ url, sameOrigin }) =>
+              sameOrigin &&
               /^\/[^/]+\/.+/.test(url.pathname) &&
               !/\.(?:js|mjs|css|map|json|txt|xml|ico|png|jpe?g|gif|svg|webp|avif|woff2?|ttf|otf|webmanifest)$/i.test(
                 url.pathname,
@@ -393,10 +482,10 @@ export default withPwa(
               },
             },
           },
-          // JS 资源 - 缓存优先
+          // JS 资源 - 第三方无 hash JS 需要后台更新
           {
             urlPattern: /\.js$/i,
-            handler: "CacheFirst",
+            handler: "StaleWhileRevalidate",
             options: {
               cacheName: "js-cache",
               expiration: {
@@ -407,7 +496,7 @@ export default withPwa(
           },
         ],
         // 预缓存构建产物
-        globPatterns: ["**/*.{js,css,html,ico,png,jpg,jpeg,gif,svg,woff2,ttf}"],
+        globPatterns: ["**/*.{js,css,html,ico,png,jpg,jpeg,gif,svg,woff2,ttf,json}"],
         globIgnores: ["**/vp-icons.css", "**/sitemap.xml", "**/rss.xml"],
         // 排除路径
         navigateFallbackDenylist: [

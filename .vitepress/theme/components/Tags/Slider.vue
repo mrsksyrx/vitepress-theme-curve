@@ -16,9 +16,14 @@
 const VueSlider = defineAsyncComponent(() => import("vue-slider-component"));
 
 const props = defineProps({
+  // 兼容旧用法 :value + @update，以及标准 v-model（modelValue）
   value: {
     type: Number,
     default: 0.7,
+  },
+  modelValue: {
+    type: Number,
+    default: undefined,
   },
   min: {
     type: Number,
@@ -34,18 +39,17 @@ const props = defineProps({
   },
 });
 
-const sliderValue = ref(props.value);
+const current = computed(() => (props.modelValue === undefined ? props.value : props.modelValue));
+const sliderValue = ref(current.value);
 
-const emits = defineEmits(["update"]);
+const emits = defineEmits(["update", "update:modelValue"]);
 
 const handleChange = (newValue) => {
   emits("update", newValue);
+  emits("update:modelValue", newValue);
 };
 
-watch(
-  () => props.value,
-  (val) => (sliderValue.value = val),
-);
+watch(current, (val) => (sliderValue.value = val));
 </script>
 
 <style lang="scss" scoped>

@@ -110,14 +110,18 @@ const markdownConfig = (md, themeConfig) => {
     // src / alt 来自作者书写的 markdown，必须转义后再拼进 HTML 属性：
     // 本仓库的 image 规则是自己拼字符串的（不是走默认 token 渲染器），
     // 不转义时 `![a" onerror="alert(1)](x.png)` 会撑开 alt 属性并注入事件。
-    const src = md.utils.escapeHtml(token.attrs[token.attrIndex("src")][1]);
+    const src = md.utils.escapeHtml(token.attrs?.[token.attrIndex("src")]?.[1] ?? "");
     const alt = md.utils.escapeHtml(token.content);
 
-    // 生成 WebP 路径（将扩展名替换为 .webp）
-    const webpSrc = src.replace(/\.(png|jpe?g|bmp|tiff)$/i, ".webp");
+    // 只为站内图片生成 WebP 探测属性：外链图床常忽略扩展名直接返回原图，
+    // 探测会被 initImageLazy 当成"webp 加载成功"，等于同一张图拉两次。
+    const isExternal = /^(?:[a-z][a-z0-9+.-]*:|\/\/)/i.test(src);
+    const webpAttr = isExternal
+      ? ""
+      : ` data-webp="${src.replace(/\.(png|jpe?g|bmp|tiff)$/i, ".webp")}"`;
 
     if (!themeConfig.fancybox.enable) {
-      return `<img src="${src}" alt="${alt}" loading="lazy" data-webp="${webpSrc}">`;
+      return `<img src="${src}" alt="${alt}" loading="lazy"${webpAttr}>`;
     }
     // 作者已用 [![img](src)](href) 指明图片的点击目标时，不能再包一层 <a>：
     // 嵌套 <a> 会让外层作者链接变成空壳，点击图片会进灯箱而不是作者写的 href。
@@ -127,7 +131,7 @@ const markdownConfig = (md, themeConfig) => {
       return `<span class="img-fancybox"><img class="post-img" src="${src}" alt="${alt}" loading="lazy" data-fancybox="gallery" data-caption="${alt}" /><span class="post-img-tip">${alt}</span></span>`;
     }
     return `<a class="img-fancybox" href="${src}" data-fancybox="gallery" data-caption="${alt}">
-                <img class="post-img" src="${src}" alt="${alt}" loading="lazy" data-webp="${webpSrc}" />
+                <img class="post-img" src="${src}" alt="${alt}" loading="lazy"${webpAttr} />
                 <span class="post-img-tip">${alt}</span>
               </a>`;
   };
@@ -173,15 +177,19 @@ const markdownConfig = (md, themeConfig) => {
     return fence(...args);
   };
 
-  // 构建期正文加密：posts 下带 password 的文章，渲染后的 HTML 转为密文写入 frontmatter.enc
+  // 构建期正文加密：带 password 的文章/页面，渲染后的 HTML 转为密文写入 frontmatter.enc
+  // 注意：不再限定 posts/ —— pages/ 下 layout:post 的密码文同样必须加密，
+  // 否则明文密码与全文会进客户端包（PasswordProtect 只是 UI 遮挡）。
   const originalRender = md.renderer.render.bind(md.renderer);
   md.renderer.render = (tokens, options, env) => {
     const fm = env.frontmatter;
-    const isPost = (env.relativePath || "").startsWith("posts/");
-    if (!isPost || !fm?.password) return originalRender(tokens, options, env);
+    if (!fm?.password) return originalRender(tokens, options, env);
     // 先完整渲染一次：title/headers/links 等副作用在渲染过程中收集，密文只替换最终输出
     const html = originalRender(tokens, options, env);
-    env.frontmatter = { ...fm, enc: encryptPostHtml(html, String(fm.password)) };
+    env.frontmatter = {
+      ...fm,
+      enc: encryptPostHtml(html, String(fm.password), env.relativePath || ""),
+    };
     delete env.frontmatter.password;
     // 正文里的 <script>/<style>/自定义块不进构建产物，避免绕过加密
     if (env.sfcBlocks) {

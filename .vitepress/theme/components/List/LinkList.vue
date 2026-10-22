@@ -22,7 +22,9 @@
             ]"
             :key="index"
             :href="type?.type !== 'loss' ? link.url : null"
-            target="_blank"
+            :target="type?.type !== 'loss' ? '_blank' : null"
+            :rel="type?.type !== 'loss' ? 'noopener noreferrer' : null"
+            :aria-disabled="type?.type === 'loss' ? 'true' : null"
           >
             <div class="cover">
               <LazyLoader :useFriendsLink="link.avatar || link.ico">

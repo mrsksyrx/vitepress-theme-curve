@@ -1,7 +1,7 @@
 <!-- 评论 -->
 <template>
   <div
-    v-if="theme.comment.enable"
+    v-if="theme.comment?.enable"
     :key="router.route.path"
     ref="mainCommentRef"
     id="main-comment"
@@ -17,6 +17,7 @@
     <!-- 区分评论系统 -->
     <Artalk v-if="theme.comment.type === 'artalk'" :fill="fill" />
     <Twikoo v-else-if="theme.comment.type === 'twikoo'" :fill="fill" />
+    <div v-else class="comment-error">评论服务配置有误</div>
   </div>
 </template>
 
@@ -32,12 +33,12 @@ const props = defineProps({
 });
 const mainCommentRef = ref(null);
 
-// 滚动至评论
+// 滚动至评论（elementTop 为文档绝对坐标，须用 scrollTo 而非 scrollBy）
 const scrollToComments = () => {
   if (!mainCommentRef.value) return false;
   const elementRect = mainCommentRef.value.getBoundingClientRect();
   const elementTop = elementRect.top + window.scrollY;
-  window.scrollBy({ top: elementTop - 80, behavior: "smooth" });
+  window.scrollTo({ top: elementTop - 80, behavior: "smooth" });
 };
 
 defineExpose({ scrollToComments });
@@ -46,6 +47,13 @@ defineExpose({ scrollToComments });
 <style lang="scss" scoped>
 .comment {
   margin-top: 2rem;
+  .comment-error {
+    padding: 16px 0;
+    text-align: center;
+    font-size: 14px;
+    color: var(--main-font-second-color);
+    opacity: 0.75;
+  }
   .title {
     display: flex;
     flex-direction: row;

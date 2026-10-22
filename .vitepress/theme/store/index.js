@@ -1,11 +1,17 @@
 import { defineStore } from "pinia";
 import cursorInit from "@/utils/cursor.js";
+import { PERSIST_PATHS } from "@/utils/configKeys.mjs";
+import { lockBodyScroll, unlockBodyScroll } from "@/utils/commonTools.mjs";
 
 let appCursorInstance;
+// 定时切换明暗外观的 interval 句柄（不可序列化，不能放进 state，见下方注释）
+let scheduledThemeTimer = null;
 const isMobile =
   typeof navigator !== "undefined" && /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+// 全站字号默认值：移动端 16，桌面 17。恢复默认/超时回滚必须用它，不要写死 17。
+export const DEFAULT_FONT_SIZE = isMobile ? 16 : 17;
 // 开发用版本号，每次改默认值时 +1，自动清除旧缓存
-const PERSIST_VERSION = 29;
+const PERSIST_VERSION = 1;
 // 开发模式开关（1 = 未开启，2 = 开启）
 const DEFAULT_DEV_MODE = 1;
 
@@ -13,13 +19,9 @@ const DEFAULT_DEV_MODE = 1;
 if (typeof localStorage !== "undefined") {
   const storedVersion = parseInt(localStorage.getItem("siteDataVersion") || "0", 10);
   if (storedVersion !== PERSIST_VERSION) {
-    const old = JSON.parse(localStorage.getItem("siteData") || "{}");
-    const keep = {
-      siteVersion: old.siteVersion,
-      siteVersionDate: old.siteVersionDate,
-    };
+    // 版本迁移：清空旧持久化数据。站点版本/构建信息是构建期常量，
+    // 不在 PERSIST_PATHS，无需保留——直接取当前构建的初始值即可。
     localStorage.removeItem("siteData");
-    localStorage.setItem("siteData", JSON.stringify(keep));
     localStorage.setItem("siteDataVersion", String(PERSIST_VERSION));
   }
 }
@@ -97,6 +99,8 @@ export const mainStore = defineStore("main", {
       islandStyle: "extended",
       // 移动端菜单显示
       mobileMenuShow: false,
+      // 移动端小组件浮层显示
+      mobileWidgetsShow: false,
       // 使用自定义右键菜单
       useRightMenu: true,
       // 使用自定义鼠标样式
@@ -106,7 +110,7 @@ export const mainStore = defineStore("main", {
       // 全站字体
       fontFamily: "misans",
       // 全站字体大小
-      fontSize: isMobile ? 16 : 17,
+      fontSize: DEFAULT_FONT_SIZE,
       fontSizePending: false,
       // 信息显示位置
       infoPosition: "fixed",
@@ -114,10 +118,8 @@ export const mainStore = defineStore("main", {
       lastScrollY: 0,
       // 站点背景
       backgroundType: "patterns",
+      // 第三方图片接口（非本站源），无 SRI 校验，内容与可用性由第三方控制，风险自担
       backgroundUrl: "https://api.miaomc.cn/image/get",
-      // 显示更多设置
-      showMoreSettings: false,
-      showMoreSettingsConfirmed: false,
       // 开发中的功能展开状态
       devFeaturesExpanded: false,
       // 分支策略展开状态
@@ -154,15 +156,24 @@ export const mainStore = defineStore("main", {
       customThemeBeforeHighContrast: false,
       // 移除动画
       removeAnimations: false,
-      // PWA 缓存增强
+      // PWA 缓存增强（预留；SW 缓存策略构建期写死，此开关当前不改变行为）
       pwaCacheEnabled: true,
-      pwaCacheLimit: 100,
+      // 阅读历史条目上限（超出时按 lastVisit 裁剪 localStorage.readingData）
+      readingHistoryLimit: 100,
       // 阅读进度条
       readingProgressEnabled: true,
+      // 正文逐行悬停侧边线（移动端默认关闭）
+      hoverLineEnabled: !isMobile,
       // 图片功能开关
       imageWebpEnabled: false,
       // 天气小组件开关
       weatherWidgetEnabled: true,
+      // HelloGithub 热榜开关
+      helloGithubWidgetEnabled: true,
+      // 标签列表开关
+      tagsWidgetEnabled: true,
+      // 移动端小组件面板入口开关（关闭后隐藏首页左上角入口）
+      mobileWidgetsEnabled: true,
       // 天气小组件折叠状态
       weatherSectionExpanded: false,
       // 天气数据源（amap = 高德，wttr = wttr.in，openmeteo = Open-Meteo）
@@ -177,13 +188,13 @@ export const mainStore = defineStore("main", {
       scheduledThemeEnabled: false,
       scheduledLightTime: "07:00",
       scheduledDarkTime: "19:00",
-      scheduledThemeTimer: null,
+      // scheduledThemeTimer: null, // 句柄不可序列化，已移至模块级变量
       // 站点版本信息（运行时覆盖，用于关于本站页面）
-      siteVersion: "V1.4",
-      siteVersionDate: "2026.10.5",
+      siteVersion: "V1.5",
+      siteVersionDate: "2026.10.22",
       // 分支版本（自动递增）
-      branchVersion: 151,
-      branchBuildTime: "2026.10.05 13:10:34",
+      branchVersion: 224,
+      branchBuildTime: "2026.10.22 13:24:09",
     };
   },
   actions: {
@@ -192,8 +203,9 @@ export const mainStore = defineStore("main", {
       if (typeof document === "undefined") return; // 确保在客户端
 
       this[value] = !this[value];
-      // 阻止滚动
-      document.body.style.overflowY = this[value] ? "hidden" : "";
+      // 阻止滚动（引用计数，多弹窗并发时不会互相踩踏）
+      if (this[value]) lockBodyScroll();
+      else unlockBodyScroll();
       // 背景层模糊（弹窗/导航保持清晰；close 模式下无背景层，开关无效）
       const backgroundEl = document.querySelector(".background");
       if (backgroundEl) {
@@ -240,7 +252,7 @@ export const mainStore = defineStore("main", {
 
       // 弹窗提示
       if (typeof $message !== "undefined") {
-        const typeNames = { auto: "跟随系统", dark: "深色", light: "浅色" };
+        const typeNames = { auto: "系统", dark: "深色", light: "浅色" };
         $message.success(`显示外观已切换为${typeNames[this.themeType]}`);
       }
 
@@ -413,78 +425,21 @@ export const mainStore = defineStore("main", {
       checkAndSwitch();
 
       // 每分钟检查一次
-      this.scheduledThemeTimer = setInterval(checkAndSwitch, 60000);
+      scheduledThemeTimer = setInterval(checkAndSwitch, 60000);
     },
 
     stopScheduledTheme() {
-      if (this.scheduledThemeTimer) {
-        clearInterval(this.scheduledThemeTimer);
-        this.scheduledThemeTimer = null;
+      if (scheduledThemeTimer) {
+        clearInterval(scheduledThemeTimer);
+        scheduledThemeTimer = null;
       }
     },
   },
-  // 数据持久化
+  // 数据持久化（键列表见 utils/configKeys.mjs，与配置导入/导出共用）
   persist: [
     {
       key: "siteData",
-      paths: [
-        "themeType",
-        "themeColor",
-        "bannerType",
-        "useRightMenu",
-        "useCustomCursor",
-        "playerShow",
-        "playerAutoPlay",
-        "playerPlayMode",
-        "playerMusicSource",
-        "playerCustomIds",
-        "playerVolume",
-        "islandPlayerSupport",
-        "islandStyle",
-        "backgroundBlur",
-        "backgroundType",
-        "fontFamily",
-        "fontSize",
-        "fontSizePending",
-        "infoPosition",
-        "backgroundUrl",
-        "showMoreSettings",
-        "showMoreSettingsConfirmed",
-        "highContrast",
-        "siteLayout",
-        "siteLayoutPending",
-        "lastSiteLayout",
-        "messageStyle",
-        "messagePosition",
-        "progressDirection",
-        "messageDuration",
-        "islandMode",
-        "islandUseThemeColor",
-        "islandShowSeconds",
-        "islandShowDate",
-        "customThemeEnabled",
-        "customPrimaryColor",
-        "customSecondaryColor",
-        "lastCustomPrimaryColor",
-        "lastCustomSecondaryColor",
-        "customThemeBeforeHighContrast",
-        "removeAnimations",
-        "pwaCacheEnabled",
-        "pwaCacheLimit",
-        "readingProgressEnabled",
-        "imageWebpEnabled",
-        "weatherProvider",
-        "weatherLocationMode",
-        "weatherManualCity",
-        "weatherWidgetEnabled",
-        "scheduledThemeEnabled",
-        "scheduledLightTime",
-        "scheduledDarkTime",
-        "siteVersion",
-        "siteVersionDate",
-        "branchVersion",
-        "branchBuildTime",
-      ],
+      paths: PERSIST_PATHS,
     },
   ],
 });

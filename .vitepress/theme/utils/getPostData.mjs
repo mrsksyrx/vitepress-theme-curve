@@ -1,8 +1,7 @@
-import { generateId } from "./commonTools.mjs";
 import { globby } from "globby";
 import matter from "gray-matter";
 import fs from "fs-extra";
-import { toLocalDayTimestamp } from "./dateAnchor.mjs";
+import { toLocalDayTimestamp, toUTCMidnightTimestamp, toDateString } from "./dateAnchor.mjs";
 import { normalizeList } from "./normalizeList.mjs";
 
 // 重新导出，保持既有引用（如 `.dsh_baseline` 探针、外部脚本）不失效。
@@ -82,7 +81,10 @@ const getPostMDFilePaths = async () => {
  * @returns {number} - 比较结果
  */
 const compareDate = (obj1, obj2) => {
-  return obj1.date < obj2.date ? 1 : -1;
+  // 降序（新在前）。并列必须返回 0：date 归一到本地零点后，同日文章时间戳相同，
+  // 若写成 `? 1 : -1` 会对并列双向返回 -1，违反比较器全序，TimSort 的稳定性失效，
+  // 同日文章的相对顺序会随输入排列漂移。
+  return obj2.date - obj1.date;
 };
 const getTopValue = (top) => {
   if (typeof top === "number") {
@@ -133,10 +135,23 @@ export const getAllPosts = async () => {
           // 统计字数和阅读时间
           const wordCount = countWords(markdownBody);
           const readTime = calcReadTime(wordCount);
-          // 计算文章的过期天数
-          const expired = Math.floor(
-            (new Date().getTime() - new Date(date).getTime()) / (1000 * 60 * 60 * 24),
-          );
+          // date 解析：缺失或非法都回退到文件创建时间。
+          // NaN 会一路污染排序比较器、归档分组和日期展示，必须在源头消掉。
+          // dateYMD 存作者书写的日历日（与构建机时区无关）；date 存 UTC 零点
+          // 时间戳（确定性，可排序）。客户端展示/归档一律优先用 dateYMD。
+          const parsedDate = date ? toUTCMidnightTimestamp(date) : NaN;
+          const dateValue = Number.isNaN(parsedDate) ? birthtimeMs : parsedDate;
+          // date 缺失或解析失败时统一从 dateValue 取日历日，保证 dateYMD 与 date 一致
+          const dateYMD = toDateString(Number.isNaN(parsedDate) ? new Date(birthtimeMs) : date);
+          if (date && Number.isNaN(parsedDate)) {
+            console.warn(
+              `文章 '${item}' 的 date 无法解析（${JSON.stringify(date)}），已回退到文件创建时间`,
+            );
+          }
+          // 计算文章的过期天数（基于上面解析出的 dateValue，避免二次解析再得 NaN）
+          // 注意：此值在构建期算死并写入 postData.json，部署后不再增长。
+          // 实际展示走 Post.vue 的 daysPassedAt（客户端实时计算），此字段当前无消费点。
+          // const expired = Math.floor((new Date().getTime() - dateValue) / (1000 * 60 * 60 * 24));
           // tags / categories 在 frontmatter 里可能是数组，也可能是「裸写」字符串
           // （README「写文章」承诺两种写法都支持）。这里统一归一化成数组：
           //   - 字符串若原样透传，模板里的 v-for 会**逐字符**渲染出 404 链接；
@@ -144,16 +159,17 @@ export const getAllPosts = async () => {
           // 未设置时保持 undefined（而不是空数组），以免模板里 `v-if="item?.tags"`
           // 由「隐藏」变成「渲染空容器」。
           const toListOrUndefined = (value) =>
-            (value === undefined || value === null || value === ""
+            value === undefined || value === null || value === ""
               ? undefined
-              : normalizeList(value));
+              : normalizeList(value);
           // 返回文章对象
           return {
-            id: generateId(item),
+            id: item,
             title: title || "未命名文章",
-            date: date ? toLocalDayTimestamp(date) : birthtimeMs,
+            date: dateValue,
+            dateYMD,
             lastModified: mtimeMs,
-            expired,
+            // expired, // 构建期冻结，无消费点，见上方说明
             tags: toListOrUndefined(tags),
             categories: toListOrUndefined(categories),
             description,

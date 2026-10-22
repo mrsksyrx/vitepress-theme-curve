@@ -120,6 +120,7 @@ const currentLyrics = ref([]);
 const activeLyricIndex = ref(-1);
 const userScrolling = ref(false);
 let followResumeTimer = null;
+let disposed = false;
 
 // 随机轮播
 const rotatePhase = ref("");
@@ -189,6 +190,8 @@ const playSong = (idx) => {
 // 获取播放列表
 const getMusicListData = async () => {
   if (!enable) return false;
+  // url 缺失时 new URL(url) 会抛 TypeError，直接跳过
+  if (!url) return false;
 
   try {
     // 根据歌单来源决定使用哪个 ID
@@ -204,7 +207,7 @@ const getMusicListData = async () => {
     const fullList = musicList.map((song) => ({
       ...song,
       pic: song.cover,
-      url: new URL(song.url, apiOrigin).href,
+      url: song.url ? new URL(song.url, apiOrigin).href : undefined,
       lrc: song.lrc ? new URL(song.lrc, apiOrigin).href : undefined,
     }));
     allSongs.value = fullList;
@@ -225,14 +228,40 @@ const safePlay = () => {
   }
 };
 
+// Meting type=url 是 302 链，最终落到 http:// 网易 CDN，HTTPS 页面会按混合内容
+// 拦截导致 net::ERR_FAILED。浏览器读不到跳转 Location（跨域无 CORS），
+// 走同源 /api/music-url 在服务端解析成 https 直链再交给 <audio>。
+const resolveCache = new Map();
+const resolveAudioUrl = async (rawUrl) => {
+  if (!rawUrl) return rawUrl;
+  if (resolveCache.has(rawUrl)) return resolveCache.get(rawUrl);
+  let resolved = String(rawUrl).replace(/^http:\/\//i, "https://");
+  try {
+    const res = await fetch(`/api/music-url?url=${encodeURIComponent(rawUrl)}`, {
+      signal: AbortSignal.timeout(8000),
+    });
+    if (res.ok) {
+      const data = await res.json();
+      if (data?.url) resolved = data.url;
+    }
+  } catch (e) {
+    console.warn("解析音频直链失败，回退原始地址：", e);
+  }
+  resolveCache.set(rawUrl, resolved);
+  return resolved;
+};
+
 // 用户交互后备：浏览器阻止自动播放时，等待用户首次交互后播放
+let autoPlayInteractionHandler = null;
 const tryAutoPlayOnInteraction = () => {
   if (!playerAutoPlay.value || hasPlayed.value) return;
   const handler = () => {
     safePlay();
     document.removeEventListener("click", handler);
     document.removeEventListener("keydown", handler);
+    autoPlayInteractionHandler = null;
   };
+  autoPlayInteractionHandler = handler;
   document.addEventListener("click", handler, { once: true });
   document.addEventListener("keydown", handler, { once: true });
 };
@@ -244,14 +273,44 @@ const initAPlayer = async (list) => {
     if (!playlistData?.length) return false;
     const module = await import("aplayer");
     const APlayer = module.default;
+    // 先解析首曲，避免 APlayer 挂载后 audio.src 仍为空
+    if (playlistData[0]?.url) await resolveAudioUrl(playlistData[0].url);
+    // 卸载后 import/解析可能才完成，避免往空容器挂播放器
+    if (disposed || !playerDom.value) return false;
     player.value = new APlayer({
       container: playerDom.value,
       volume: playerVolume.value,
       listFolded: true,
       order: playerPlayMode.value === "shuffle" ? "random" : "list",
       loop: playerPlayMode.value === "single" ? "one" : "all",
-      audio: playlistData,
+      // type: meting → customAudioType 异步解析出 https 直链后再挂到 audio 上
+      audio: playlistData.map((song) => ({ ...song, type: "meting" })),
+      customAudioType: {
+        meting: (media, song) => {
+          const targetUrl = song.url;
+          resolveAudioUrl(targetUrl).then((resolved) => {
+            // 解析期间可能已切歌，别把旧地址盖到当前 audio 上
+            const nowUrl = player.value?.list?.audios?.[player.value.list.index]?.url;
+            if (nowUrl !== targetUrl) return;
+            const shouldPlay = !player.value?.paused;
+            media.src = resolved;
+            if (shouldPlay) {
+              const p = media.play();
+              if (p && typeof p.catch === "function") p.catch(() => {});
+            }
+          });
+        },
+      },
     });
+    // APlayer setAudio 会在 customAudioType 异步设好 src 之前调 audio.play()，
+    // 那次 play() 必然 reject，吞掉以免 unhandledrejection 刷屏
+    if (player.value?.audio?.play) {
+      const rawPlay = player.value.audio.play.bind(player.value.audio);
+      player.value.audio.play = () => {
+        const p = rawPlay();
+        return p && typeof p.catch === "function" ? p.catch(() => {}) : p;
+      };
+    }
     // 同步单曲循环到底层 audio 元素
     if (playerPlayMode.value === "single" && player.value.audio) {
       player.value.audio.loop = true;
@@ -282,6 +341,22 @@ const initAPlayer = async (list) => {
     player.value?.on("pause", () => {
       playState.value = false;
     });
+    // APlayer 内置 error 处理器会在 2 秒后 skipForward + play，
+    // 音频连续加载失败时会变成“整本歌单不停轮换”的死循环。这里做熔断。
+    let consecutiveAudioErrors = 0;
+    const originalSkipForward = player.value?.skipForward?.bind(player.value);
+    player.value?.on("error", () => {
+      consecutiveAudioErrors += 1;
+      if (consecutiveAudioErrors >= 3 && originalSkipForward) {
+        player.value.skipForward = () => {};
+        player.value.pause?.();
+        console.error("音频连续加载失败，已停止自动切歌");
+      }
+    });
+    player.value?.on("playing", () => {
+      consecutiveAudioErrors = 0;
+      if (originalSkipForward) player.value.skipForward = originalSkipForward;
+    });
     getMusicData();
     if (!playerAutoPlay.value) {
       startRotate();
@@ -297,9 +372,14 @@ const getMusicData = () => {
   try {
     if (!playerDom.value) return false;
     const songInfo = playerDom.value.querySelector(".aplayer-info");
-    const songName = songInfo.querySelector(".aplayer-title").innerText;
-    const songArtist = songInfo.querySelector(".aplayer-author").innerText.replace(" - ", "");
     const audio = player.value?.list?.audios?.[player.value.list.index];
+    // songInfo 可能为 null（播放器 DOM 未就绪/已销毁），回退到 list.audios 元数据
+    const songName = songInfo?.querySelector(".aplayer-title")?.innerText || audio?.name || "";
+    const songArtist = (
+      songInfo?.querySelector(".aplayer-author")?.innerText ||
+      audio?.artist ||
+      ""
+    ).replace(" - ", "");
     const songCover = allSongs.value[currentIdx.value]?.cover || "";
     const songLrc = allSongs.value[currentIdx.value]?.lrc || "";
     playerData.value = {
@@ -438,6 +518,9 @@ watch(
     currentLyrics.value = [];
     activeLyricIndex.value = -1;
     player.value?.destroy();
+    // 清理：destroy 后置空 player 并停止轮播定时器，避免悬空引用与残留 interval
+    player.value = null;
+    stopRotate();
     getMusicListData();
   },
 );
@@ -489,6 +572,9 @@ watch(
     musicSourceTimer = setTimeout(() => {
       if (playerMusicSource.value === "custom" && !playerCustomIds.value) return;
       player.value?.destroy();
+      // 清理：destroy 后置空 player 并停止轮播定时器，避免悬空引用与残留 interval
+      player.value = null;
+      stopRotate();
       allSongs.value = [];
       hasPlayed.value = false;
       playState.value = false;
@@ -505,6 +591,9 @@ watch(
     clearTimeout(musicSourceTimer);
     musicSourceTimer = setTimeout(() => {
       player.value?.destroy();
+      // 清理：destroy 后置空 player 并停止轮播定时器，避免悬空引用与残留 interval
+      player.value = null;
+      stopRotate();
       allSongs.value = [];
       hasPlayed.value = false;
       playState.value = false;
@@ -534,9 +623,18 @@ onMounted(() => {
 });
 
 onBeforeUnmount(() => {
+  disposed = true;
   stopRotate();
   clearTimeout(followResumeTimer);
+  clearTimeout(musicSourceTimer);
+  if (autoPlayInteractionHandler) {
+    document.removeEventListener("click", autoPlayInteractionHandler);
+    document.removeEventListener("keydown", autoPlayInteractionHandler);
+    autoPlayInteractionHandler = null;
+  }
   player.value?.destroy();
+  // 清理：destroy 后置空 player（stopRotate 已在上方调用）
+  player.value = null;
 });
 </script>
 

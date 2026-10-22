@@ -7,7 +7,7 @@
           <a
             v-for="(item, index) in asArray(postMetaData.categories)"
             :key="index"
-            :href="`/pages/categories/${item}`"
+            :href="`/pages/categories/${encodeURIComponent(item)}`"
             class="cat-item"
           >
             <i class="iconfont icon-folder" />
@@ -18,7 +18,7 @@
           <a
             v-for="(item, index) in asArray(postMetaData.tags)"
             :key="index"
-            :href="`/pages/tags/${item}`"
+            :href="`/pages/tags/${encodeURIComponent(item)}`"
             class="tag-item"
           >
             <i class="iconfont icon-hashtag" />
@@ -33,7 +33,7 @@
         <div class="meta-row">
           <span class="meta date">
             <i class="iconfont icon-date" />
-            {{ formatTimestampAt(postMetaData.date, now) }}
+            {{ formatTimestampAt(postMetaData.dateYMD || postMetaData.date, now) }}
           </span>
           <span class="update meta">
             <i class="iconfont icon-time" />
@@ -109,23 +109,18 @@
             <a
               v-for="(item, index) in asArray(postMetaData.tags)"
               :key="index"
-              :href="`/pages/tags/${item}`"
+              :href="`/pages/tags/${encodeURIComponent(item)}`"
               class="tag-item"
             >
               <i class="iconfont icon-hashtag" />
               <span class="name">{{ item }}</span>
             </a>
           </div>
-          <!--
-          <a
-            href="https://eqnxweimkr5.feishu.cn/share/base/form/shrcnCXCPmxCKKJYI3RKUfefJre"
-            class="report"
-            target="_blank"
-          >
+          <a href="mailto:feedback@sgexilq.com" class="report">
             <i class="iconfont icon-report" />
             反馈与投诉
           </a>
-        --></div>
+        </div>
         <RewardBtn />
         <!-- 下一篇 -->
         <NextPost />
@@ -140,7 +135,6 @@
 </template>
 
 <script setup>
-import { generateId } from "@/utils/commonTools";
 import { daysPassedAt, formatTimestampAt, useClientNow } from "@/utils/useClientNow.mjs";
 import initFancybox from "@/utils/initFancybox";
 import { ensureCodeFontLoaded } from "@/utils/fontLoader.mjs";
@@ -150,26 +144,17 @@ import { usePostData } from "@/utils/usePostData.mjs";
 // 后者顶部 import 了 globby / fs-extra（Node-only），引入会把它们打进浏览器
 // 产物（globby@14 → @sindresorhus/merge-streams → node:stream），导致构建失败：
 //   "PassThrough" is not exported by "__vite-browser-external"
-import { toLocalDayTimestamp } from "@/utils/dateAnchor.mjs";
+import { toUTCMidnightTimestamp, toDateString } from "@/utils/dateAnchor.mjs";
 // 同样必须从零依赖模块引入，理由同 dateAnchor.mjs
 import { normalizeList } from "@/utils/normalizeList.mjs";
 import PasswordProtect from "@/components/PasswordProtect.vue";
+import DOMPurify from "dompurify";
 const { page, theme, frontmatter } = useData();
 const { isDesktopAsideVisible } = useDesktopAside();
 const { postData, loadPostData } = usePostData();
 
-// 标签/分类归一化：字符串转数组
-const asArray = (val) => {
-  if (!val) return [];
-  if (Array.isArray(val)) return val;
-  if (typeof val === "string") {
-    return val
-      .split(",")
-      .map((s) => s.trim())
-      .filter(Boolean);
-  }
-  return [];
-};
+// 标签/分类归一化：统一走 normalizeList（唯一实现），避免与构建期口径分叉
+const asArray = normalizeList;
 
 // 评论元素
 const commentRef = ref(null);
@@ -179,7 +164,7 @@ const { now } = useClientNow();
 
 // 文章 ID
 
-const postId = computed(() => generateId(page.value.relativePath));
+const postId = computed(() => page.value.relativePath);
 
 // 获取对应文章数据
 const postMetaData = computed(() => {
@@ -187,29 +172,29 @@ const postMetaData = computed(() => {
   if (loadedPost) return loadedPost;
 
   // 兜底路径：postData 尚未加载或查不到该文章时，直接由 frontmatter 构造。
-  // date 必须与 getPostData.mjs 用同一口径（本地零点），否则同一篇文章
-  // 在两条路径下会得到不同的 epoch，负时区访客会错一天。
-  const date = frontmatter.value.date
-    ? toLocalDayTimestamp(frontmatter.value.date)
-    : page.value.lastUpdated;
+  // dateYMD 与 getPostData.mjs 同口径（作者日历日）；date 用 UTC 零点锚定，
+  // 与 postData.json 一致。展示/归档优先读 dateYMD，彻底避开时区偏移。
+  const parsedDate = frontmatter.value.date ? toUTCMidnightTimestamp(frontmatter.value.date) : NaN;
+  const date = Number.isNaN(parsedDate) ? page.value.lastUpdated : parsedDate;
   return {
     id: postId.value,
     title: frontmatter.value.title || page.value.title,
     date,
+    dateYMD: frontmatter.value.date ? toDateString(frontmatter.value.date) : toDateString(date),
     lastModified: page.value.lastUpdated,
     tags: normalizeList(frontmatter.value.tags),
     categories: normalizeList(frontmatter.value.categories),
     description: frontmatter.value.description,
-    regularPath: page.value.relativePath
-      ? `/${page.value.relativePath.replace(".md", ".html")}`
-      : "",
+    regularPath: page.value.relativePath ? `/${page.value.relativePath.replace(/\.md$/, "")}` : "",
     top: frontmatter.value.top,
     cover: frontmatter.value.cover,
   };
 });
 
 // 文章发表至今的天数（仅客户端计算）
-const expiredDays = computed(() => daysPassedAt(postMetaData.value?.date, now.value));
+const expiredDays = computed(() =>
+  daysPassedAt(postMetaData.value?.dateYMD || postMetaData.value?.date, now.value),
+);
 
 // 密码保护相关
 const hasPassword = computed(() => !!(frontmatter.value.password || frontmatter.value.enc));
@@ -217,9 +202,28 @@ const isUnlocked = ref(false);
 // 加密文章解密后的正文 HTML
 const decryptedHtml = ref(null);
 
+// post→post SPA 路由复用同一实例，切换文章时清空解密态，
+// 否则上一篇已解锁的正文会串到下一篇，密码框也不再出现
+watch(
+  () => page.value.relativePath,
+  () => {
+    isUnlocked.value = false;
+    decryptedHtml.value = null;
+    // SPA 复用实例时 onMounted 不再触发，切文章需重检代码字体
+    loadCodeFontIfNeeded();
+  },
+);
+
 // 处理解锁事件（加密文章传入解密 HTML，旧版明文密码无参数）
 const handleUnlocked = async (html) => {
-  if (html) decryptedHtml.value = html;
+  // 纵深防御：解密 HTML 仍走 v-html，先过一遍 DOMPurify
+  // （默认已放行 data-* / class / style，此处补齐任务清单复选框）
+  if (html) {
+    decryptedHtml.value = DOMPurify.sanitize(html, {
+      ADD_TAGS: ["input"],
+      ADD_ATTR: ["checked", "disabled"],
+    });
+  }
   isUnlocked.value = true;
   // 解密内容晚于首次挂载插入，代码高亮需要补一次
   await nextTick();

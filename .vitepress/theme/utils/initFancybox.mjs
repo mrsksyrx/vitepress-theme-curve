@@ -16,6 +16,12 @@ const initFancybox = (themeConfig) => {
           console.error("图片灯箱初始化失败", error);
           return false;
         }
+        // 脚本 200 成功但未挂 Fancybox 全局（AMD loader 劫持 / CDN 返回占位脚本）时，
+        // 此回调抛错发生在 promise.then 里，外层 try/catch 罩不到，只会变成 unhandled rejection
+        if (typeof Fancybox === "undefined") {
+          console.error("图片灯箱初始化失败：Fancybox 全局未就绪");
+          return false;
+        }
         Fancybox.bind("[data-fancybox]", {
           hideScrollbar: true,
           Carousel: {

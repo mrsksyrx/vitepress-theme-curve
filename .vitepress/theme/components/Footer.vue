@@ -2,15 +2,21 @@
   <footer id="main-footer" class="main-footer">
     <div class="footer-content">
       <div class="copyright">
-        <span class="time">@ 2026 - {{ thisYear }} By </span>
-        <a :href="theme.siteMeta.author.link" class="author link" target="_blank">
+        <span class="time">@ {{ startYear }} - {{ thisYear }} By </span>
+        <a
+          :href="theme.siteMeta.author.link"
+          class="author link"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
           {{ theme.siteMeta.author.name }}
         </a>
         <a
           v-if="theme.icp"
           class="icp link"
-          href="https://icp.gov.moe/?keyword=20262118"
+          :href="icpLink"
           target="_blank"
+          rel="noopener noreferrer"
         >
           <i class="iconfont icon-safe" />
           {{ theme.icp }}
@@ -27,7 +33,7 @@
           <span class="name">主题</span>
         </a>
         -->
-        <a class="rss link" href="/rss.xml" target="_blank">
+        <a class="rss link" href="/rss.xml" target="_blank" rel="noopener noreferrer">
           <i class="iconfont icon-rss" />
           <span class="name">订阅</span>
         </a>
@@ -35,13 +41,19 @@
           class="cc link"
           href="https://creativecommons.org/licenses/by-nc-sa/4.0/deed.zh-hans"
           target="_blank"
+          rel="noopener noreferrer"
         >
           <i class="iconfont icon-line" />
           <i class="iconfont icon-by-line" />
           <i class="iconfont icon-nc-line" />
           <i class="iconfont icon-nd-line" />
         </a>
-        <a class="notbyai link" href="https://notbyai.fyi/" target="_blank">
+        <a
+          class="notbyai link"
+          href="https://notbyai.fyi/"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
           <img
             class="light-badge"
             src="/notbyai/Written-By-Human-Not-By-AI-Badge-white.svg"
@@ -53,20 +65,6 @@
             alt="Written By Human"
           />
         </a>
-      </div>
-      <div class="credit">
-        本站的诞生离不开上游作者的开源贡献。在此感谢他（她）们。本站遵循
-        <a href="https://www.gnu.org/licenses/agpl-3.0.html" target="_blank"
-          ><strong>AGPL v3</strong></a
-        >
-        协议
-        <a
-          href="https://github.com/murasakizs/vitepress-theme-curve"
-          target="_blank"
-          style="color: var(--main-color)"
-          ><strong>开源</strong></a
-        >
-        。
       </div>
     </div>
   </footer>
@@ -84,8 +82,18 @@ const { footerIsShow } = storeToRefs(store);
 // 视窗监听器
 const observer = ref(null);
 
-// Keep the SSR output stable; update it only after the client has hydrated.
-const thisYear = ref(2025);
+// 版权起止年：起点读 theme.since，终点为当前年（SSR 取构建年，避免倒置区间）
+const startYear = computed(() => {
+  const y = String(theme.value.since ?? "").match(/(\d{4})/)?.[1];
+  return y ?? String(new Date().getFullYear());
+});
+const thisYear = ref(new Date().getFullYear());
+
+// 备案链接 keyword 从 theme.icp 提取，避免与显示文本漂移
+const icpLink = computed(() => {
+  const keyword = String(theme.value.icp ?? "").match(/\d+/)?.[0];
+  return keyword ? `https://icp.gov.moe/?keyword=${keyword}` : "https://icp.gov.moe/";
+});
 
 // 监听页脚视窗
 const isShowFooter = () => {
@@ -250,19 +258,6 @@ onBeforeUnmount(() => {
           .iconfont {
             display: none;
           }
-        }
-      }
-    }
-    .credit {
-      width: 100%;
-      text-align: center;
-      font-size: 12px;
-      opacity: 0.5;
-      margin-top: 8px;
-      a {
-        color: var(--main-color);
-        &:hover {
-          opacity: 0.8;
         }
       }
     }

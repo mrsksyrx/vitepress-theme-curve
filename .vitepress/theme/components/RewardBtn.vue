@@ -1,7 +1,7 @@
 <!-- 打赏按钮 -->
 
 <template>
-  <div v-if="rewardData.enable" class="reward">
+  <div v-if="rewardData?.enable" class="reward">
     <div class="reward-btn" @click="rewardShow = true">
       <i class="iconfont icon-reward" />
       <span class="text">赞赏博主</span>
@@ -18,14 +18,26 @@
       <div class="reward-card">
         <span class="thank">🙏 感谢您赐予我前进的力量</span>
         <div class="qr">
-          <a v-if="rewardData?.wechat" :href="rewardData.wechat" class="qr-img" target="_blank">
+          <a
+            v-if="rewardData?.wechat"
+            :href="rewardData.wechat"
+            class="qr-img"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
             <img v-if="rewardData?.wechat" :src="rewardData.wechat" alt="微信" />
             <span class="tip">
               <i class="iconfont icon-wechat-pay" />
               微信
             </span>
           </a>
-          <a v-if="rewardData?.alipay" :href="rewardData.alipay" class="qr-img" target="_blank">
+          <a
+            v-if="rewardData?.alipay"
+            :href="rewardData.alipay"
+            class="qr-img"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
             <img v-if="rewardData?.alipay" :src="rewardData.alipay" alt="支付宝" />
             <span class="tip">
               <i class="iconfont icon-alipay" />
@@ -33,7 +45,7 @@
             </span>
           </a>
         </div>
-        <div v-if="showJump" class="all-list s-card hover" @click="toRewardList">
+        <div v-if="showJump" class="all-list s-card">
           <span class="title">关于赞赏费用</span>
           <span class="tip">
             赞赏金额将全部用于开源项目维护，以及服务器、域名及各类作者生活的开销
@@ -45,11 +57,10 @@
 </template>
 
 <script setup>
-const router = useRouter();
 const { theme } = useData();
 const { rewardData } = theme.value;
 
-const props = defineProps({
+defineProps({
   showJump: {
     type: Boolean,
     default: true,
@@ -57,12 +68,6 @@ const props = defineProps({
 });
 // 赞赏显示
 const rewardShow = ref(false);
-
-//跳转至赞赏名单
-const toRewardList = () => {
-  rewardShow.value = false;
-  // router.go("/pages/thanks");
-};
 </script>
 
 <style lang="scss" scoped>
@@ -152,25 +157,20 @@ const toRewardList = () => {
     align-items: center;
     flex-direction: column;
     background-color: var(--main-card-second-background);
+    // 纯说明卡，覆盖全局 .s-card 的 pointer/hover 可点观感
+    cursor: default;
+    &:hover {
+      border-color: var(--main-card-border);
+    }
     .title {
       font-size: 18px;
       font-weight: bold;
       margin-bottom: 8px;
-      transition: color 0.3s;
     }
     .tip {
       text-align: center;
       font-size: 12px;
       opacity: 0.6;
-    }
-    &:hover {
-      .title {
-        color: var(--main-color);
-      }
-    }
-    &:active {
-      transform: scale(0.98);
-      transition-duration: var(--press-in);
     }
   }
 }

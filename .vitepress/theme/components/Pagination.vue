@@ -138,18 +138,24 @@ const jumpPage = (url, page) => {
   currentPage.value = page;
   // 使用参数跳转
   if (props.useParams) {
-    if (page === 1) {
-      router.go(`${props.routePath}`);
-    } else {
-      router.go(`${props.routePath}?page=${page}`);
-    }
-    setTimeout(() => {
+    const target = page === 1 ? `${props.routePath}` : `${props.routePath}?page=${page}`;
+    // [B22-旧] setTimeout 在 router.go 的 Promise 兑现前就派发，可能读到旧 URL
+    // setTimeout(() => {
+    //   window.dispatchEvent(new CustomEvent("pagination-change"));
+    // });
+    // [B21/B22] 等 router.go 完成后再派发；两个分支统一派发，
+    // 让 Home 以 URL 为唯一信源刷新 currentPage，避免高亮与列表分叉
+    Promise.resolve(router.go(target)).then(() => {
       window.dispatchEvent(new CustomEvent("pagination-change"));
     });
   }
-  // 正常跳转
+  // 正常跳转（路径分页 /page/N）
   else {
-    router.go(url);
+    // [B21-旧] 此分支原先不派发事件，Home 只能等 props.page 更新
+    // router.go(url);
+    Promise.resolve(router.go(url)).then(() => {
+      window.dispatchEvent(new CustomEvent("pagination-change"));
+    });
   }
 };
 

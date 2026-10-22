@@ -49,7 +49,10 @@ export const themeConfig = {
     },
     {
       text: "友链",
-      items: [{ text: "友情链接", link: "/pages/link", icon: "people" }],
+      items: [
+        { text: "友情链接", link: "/pages/link", icon: "people" },
+        { text: "畅所欲言", link: "/pages/hide/message", icon: "chat" },
+      ],
     },
     {
       text: "我的",
@@ -90,11 +93,11 @@ export const themeConfig = {
   footer: {
     social: [
       { icon: "email", link: "mailto:sgexilq@qq.com" },
-      { icon: "qq", link: "https://myat-q.sgexilq.com" },
-      { icon: "telegram", link: "https://myat-t.sgexilq.com" },
-      { icon: "twitter-x", link: "https://myat-x.sgexilq.com" },
-      { icon: "github", link: "https://myat-g.sgexilq.com" },
-      { icon: "bilibili", link: "https://myat-b.sgexilq.com" },
+      { icon: "qq", link: "https://myat-qq.20091010.xyz" },
+      { icon: "telegram", link: "https://myat-telegram.20091010.xyz" },
+      { icon: "twitter-x", link: "https://myat-twitter.20091010.xyz" },
+      { icon: "github", link: "https://myat-github.20091010.xyz" },
+      { icon: "bilibili", link: "https://myat-bilibili.20091010.xyz" },
     ],
     sitemap: [
       {
@@ -109,29 +112,29 @@ export const themeConfig = {
       {
         text: "项目",
         items: [
-          {
-            text: "本站源码",
-            link: "https://github.com/murasakizs/vitepress-theme-curve",
-            newTab: true,
-          },
+          { text: "关于本站", link: "/pages/about-website" },
           { text: "精神状态", link: "https://whendie.sgexilq.com", newTab: true },
+          { text: "音乐下载", link: "https://ncmmdp.mrsksyrx.top", newTab: true },
+          { text: "友情链接", link: "/pages/link" },
         ],
       },
       {
         text: "页面",
         items: [
-          { text: "关于泠酱", link: "/pages/about-me" },
-          { text: "关于本站", link: "/pages/about-website" },
-          { text: "友情链接", link: "/pages/link" },
-          { text: "TO DO", link: "/pages/todo" },
+          { text: "畅所欲言", link: "/pages/hide/message" },
+          { text: "关于泠泠", link: "/pages/hide/ww-aboutme-sgexilqlsc" },
+          { text: "隐私政策", link: "/pages/privacy" },
+          { text: "版权协议", link: "/pages/cc" },
+          // { text: "TO DO", link: "/pages/todo" },
         ],
       },
       {
         text: "服务",
         items: [
           { text: "站点状态", link: "https://status.sgexilq.com", newTab: true },
-          { text: "隐私政策", link: "/pages/privacy" },
-          { text: "版权协议", link: "/pages/cc" },
+          { text: "资源下载", link: "https://download.sgexilq.com", newTab: true },
+          { text: "站点订阅", link: "/rss.xml" },
+          { text: "反馈建议", link: "mailto:feedback@sgexilq.com" },
         ],
       },
     ],
@@ -143,7 +146,7 @@ export const themeConfig = {
     type: "twikoo",
     twikoo: {
       js: "https://cdn.jsdelivr.net/npm/twikoo@1.6.42/dist/twikoo.all.min.js",
-      envId: "https://mytwikooapi.sgexilq.com",
+      envId: "https://twikoo.20091010.xyz",
       region: "",
       lang: "zh-CN",
     },
@@ -171,18 +174,26 @@ export const themeConfig = {
         },
       ],
     },
+    HelloGithub: {
+      enable: true,
+    },
   },
 
   // ===== 功能开关 =====
   rewardData: { enable: false },
   music: {
     enable: true,
-    url: "https://metingapi.sgexilq.com/api/meting",
+    url: "https://meting.20091010.xyz/api/meting",
     id: ["18348521365", "18351552429", "18351506618"],
     server: "netease",
     type: "playlist",
   },
-  search: { enable: false, appId: "", apiKey: "" }, // TODO: 获取 Algolia appId 和 apiKey 后启用
+  search: {
+    enable: true,
+    appId: "WX8NR2C69E",
+    apiKey: "df2ea8c284a52afd157afa7f16adbca9",
+    index: "sgexilq_com_wx8nr2c69e_pages",
+  },
   // 显式空串覆盖上游 51la 统计凭据，防止进包（defu 空对象不删键，必须空串）
   tongji: { "51la": "" },
   // 图片灯箱（点击放大查看）
@@ -190,6 +201,10 @@ export const themeConfig = {
     enable: true,
     js: "https://mirrors.sustech.edu.cn/cdnjs/ajax/libs/fancyapps-ui/5.0.36/fancybox/fancybox.umd.min.js",
     css: "https://mirrors.sustech.edu.cn/cdnjs/ajax/libs/fancyapps-ui/5.0.36/fancybox/fancybox.min.css",
+  },
+  // 外链中转（跳转前显示安全提示页）
+  jumpRedirect: {
+    enable: true,
   },
 };
 

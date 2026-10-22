@@ -11,7 +11,9 @@ export const calculateScroll = throttle(
       const store = mainStore();
       const scrollY = window.scrollY || window.pageYOffset;
       const totalHeight = document.documentElement.scrollHeight - window.innerHeight;
-      const scrollPercentage = ((scrollY / totalHeight) * 100).toFixed(0);
+      // 无滚动空间时（内容不足一屏）视为 0%，避免除以 0 得到 NaN/Infinity
+      const raw = totalHeight > 0 ? (scrollY / totalHeight) * 100 : 0;
+      const scrollPercentage = Math.min(Math.max(raw, 0), 100).toFixed(0);
       // 判断滚动方向
       const scrollDirection = scrollY > store.scrollData.height ? "down" : "up";
       // 储存计算结果
@@ -55,43 +57,6 @@ export const smoothScrolling = (target = 0) => {
     }
   } catch (error) {
     console.error("平滑滚动出错：", error);
-  }
-};
-
-/**
- * 格式化时间戳为相应的日期格式
- * 如果时间戳表示的时间为7天内，则返回 'n天内'
- * 如果时间戳表示的时间为7天之后但在当年，则返回 '月/日'
- * 如果时间戳表示的时间在当年之前，则返回 '年/月/日'
- * @param {number} timestamp - 时间戳（以毫秒为单位）
- * @return {string} 返回日期格式的字符串
- */
-export const formatTimestamp = (timestamp) => {
-  let now = new Date();
-  // 获取今天0点
-  let today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-  // 获取昨天0点
-  let yesterday = new Date(today.getTime() - 1000 * 60 * 60 * 24);
-  let targetDate = new Date(timestamp);
-  // 是否为昨天
-  if (targetDate >= yesterday && targetDate < today) {
-    return "1天前";
-  } else {
-    let difference = Math.floor((today - targetDate) / (1000 * 60 * 60 * 24));
-    if (difference <= 0) {
-      return "今日内";
-    } else if (difference < 7) {
-      return `${difference}天前`;
-    } else {
-      let year = targetDate.getFullYear();
-      let month = targetDate.getMonth() + 1;
-      let day = targetDate.getDate();
-      if (year === now.getFullYear()) {
-        return `${month}/${day}`;
-      } else {
-        return `${year}/${month}/${day}`;
-      }
-    }
   }
 };
 
@@ -179,10 +144,14 @@ export const copyImage = async (imageURL) => {
         [blob.type]: blob,
       }),
     ]);
-    $message.success("图片已复制到剪贴板");
+    if (typeof $message !== "undefined") {
+      $message.success("图片已复制到剪贴板");
+    }
   } catch (error) {
     console.error("复制图片出错：", error);
-    $message.error("复制图片错误，请重试");
+    if (typeof $message !== "undefined") {
+      $message.error("复制图片错误，请重试");
+    }
   }
 };
 
@@ -195,7 +164,9 @@ export const downloadImage = (imageUrl) => {
     // 获取当前日期并转换为字符串形式，作为文件名
     const date = new Date();
     const timestamp = date.toISOString().replace(/[:.]/g, "-");
-    const imageName = `image-${timestamp}.jpg`;
+    const extMatch = /\.([a-zA-Z0-9]+)(?:[?#]|$)/.exec(imageUrl);
+    const ext = extMatch ? extMatch[1].toLowerCase() : "jpg";
+    const imageName = `image-${timestamp}.${ext}`;
     const anchor = document.createElement("a");
     anchor.download = imageName;
     anchor.href = imageUrl;
@@ -206,7 +177,9 @@ export const downloadImage = (imageUrl) => {
     document.body.removeChild(anchor);
   } catch (error) {
     console.error("下载图片出错：", error);
-    $message.error("下载图片错误，请重试");
+    if (typeof $message !== "undefined") {
+      $message.error("下载图片错误，请重试");
+    }
   }
 };
 

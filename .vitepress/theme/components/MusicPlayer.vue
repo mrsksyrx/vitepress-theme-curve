@@ -311,7 +311,8 @@ const parseLrc = (text) => {
   const lines = text.split("\n");
   const result = [];
   const timeMap = new Map();
-  const timeExp = /\[(\d{2,}):(\d{2})(?:\.(\d{2,3}))?\]/g;
+  // 分钟 1–3 位（兼容 [0:23.45]），秒保持 2 位，降低正文 [1:2] 类误匹配
+  const timeExp = /\[(\d{1,3}):(\d{2})(?:\.(\d{2,3}))?\]/g;
 
   for (const line of lines) {
     const matches = [...line.matchAll(timeExp)];
@@ -371,19 +372,25 @@ const loadEmbeddedCover = async (src) => {
     const jsmediatags = jsmediatagsMod.default || jsmediatagsMod || window.jsmediatags;
     if (!jsmediatags || !jsmediatags.read) return;
 
-    jsmediatags.read(src, {
+    // jsmediatags 的 FileReader 匹配不到相对路径，统一转绝对路径再解析
+    const abs = new URL(src, location.href).href;
+    jsmediatags.read(abs, {
       onSuccess: (tag) => {
-        const picture = tag.tags.picture;
-        if (picture) {
-          let base64String = "";
-          for (let i = 0; i < picture.data.length; i++) {
-            base64String += String.fromCharCode(picture.data[i]);
+        try {
+          const picture = tag.tags?.picture;
+          if (picture) {
+            let base64String = "";
+            for (let i = 0; i < picture.data.length; i++) {
+              base64String += String.fromCharCode(picture.data[i]);
+            }
+            embeddedCover.value = "data:" + picture.format + ";base64," + window.btoa(base64String);
           }
-          embeddedCover.value = "data:" + picture.format + ";base64," + window.btoa(base64String);
+        } catch (error) {
+          console.warn("Failed to parse embedded cover", error);
         }
       },
       onError: (error) => {
-        // ignore errors
+        console.warn("Failed to read embedded cover tags", error);
       },
     });
   } catch (err) {
@@ -540,30 +547,42 @@ const seekTo = (clientX) => {
   currentTime.value = audioRef.value.currentTime;
 };
 
+let cleanupDrag = null;
+
+const endDrag = () => {
+  isDragging.value = false;
+  if (cleanupDrag) {
+    cleanupDrag();
+    cleanupDrag = null;
+  }
+};
+
 const onProgressMouseDown = (e) => {
+  endDrag();
   isDragging.value = true;
   seekTo(e.clientX);
-  const onMouseMove = (e) => seekTo(e.clientX);
-  const onMouseUp = () => {
-    isDragging.value = false;
+  const onMouseMove = (ev) => seekTo(ev.clientX);
+  const onMouseUp = () => endDrag();
+  document.addEventListener("mousemove", onMouseMove);
+  document.addEventListener("mouseup", onMouseUp);
+  cleanupDrag = () => {
     document.removeEventListener("mousemove", onMouseMove);
     document.removeEventListener("mouseup", onMouseUp);
   };
-  document.addEventListener("mousemove", onMouseMove);
-  document.addEventListener("mouseup", onMouseUp);
 };
 
 const onProgressTouchStart = (e) => {
+  endDrag();
   isDragging.value = true;
   seekTo(e.touches[0].clientX);
-  const onTouchMove = (e) => seekTo(e.touches[0].clientX);
-  const onTouchEnd = () => {
-    isDragging.value = false;
+  const onTouchMove = (ev) => seekTo(ev.touches[0].clientX);
+  const onTouchEnd = () => endDrag();
+  document.addEventListener("touchmove", onTouchMove);
+  document.addEventListener("touchend", onTouchEnd);
+  cleanupDrag = () => {
     document.removeEventListener("touchmove", onTouchMove);
     document.removeEventListener("touchend", onTouchEnd);
   };
-  document.addEventListener("touchmove", onTouchMove);
-  document.addEventListener("touchend", onTouchEnd);
 };
 
 // Audio 事件
@@ -619,9 +638,10 @@ const onEnded = () => {
 };
 
 const onProgress = () => {
-  if (audioRef.value && audioRef.value.buffered.length > 0) {
+  if (!audioRef.value || !duration.value) return;
+  if (audioRef.value.buffered.length > 0) {
     const buffered = audioRef.value.buffered.end(audioRef.value.buffered.length - 1);
-    bufferedPercent.value = (buffered / duration.value) * 100;
+    bufferedPercent.value = Math.min(100, Math.max(0, (buffered / duration.value) * 100));
   }
 };
 
@@ -648,6 +668,7 @@ onMounted(() => {
 });
 
 onBeforeUnmount(() => {
+  endDrag();
   if (observer) observer.disconnect();
   if (audioRef.value) {
     audioRef.value.pause();

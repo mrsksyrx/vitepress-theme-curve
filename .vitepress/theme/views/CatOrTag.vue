@@ -12,7 +12,7 @@
       <a
         v-for="(item, key, index) in categoriesData"
         :key="index"
-        :href="`/pages/categories/${key}`"
+        :href="`/pages/categories/${encodeURIComponent(key)}`"
         class="type-item s-card"
       >
         <i class="iconfont icon-folder" />
@@ -24,7 +24,7 @@
       <a
         v-for="(item, key, index) in tagsData"
         :key="index"
-        :href="`/pages/tags/${key}`"
+        :href="`/pages/tags/${encodeURIComponent(key)}`"
         class="type-item s-card"
       >
         <i class="iconfont icon-hashtag" />

@@ -1,6 +1,6 @@
 <script setup>
 import dayjs from "dayjs";
-import { useClientNow } from "@/utils/useClientNow.mjs";
+import { addYearsClamped, parseEventDate, useClientNow } from "@/utils/useClientNow.mjs";
 
 const props = defineProps({
   mode: {
@@ -35,33 +35,9 @@ const { theme } = useData();
 const { now } = useClientNow();
 
 /**
- * 解析日期字符串。
- * 支持两种写法：
- *  - 完整日期：`2025-03-24`
- *  - 无年份的每年循环项：`09-07`（生日这类每年重复的事件）
- * 无年份写法用 date 面板构造，保证落在**本地**那一天；
- * 也能避免 `dayjs("09-07")` 被解析成 2001 年这种意外。
+ * 解析日期字符串（完整日期或无年份 `MM-DD`），与 Timing.vue 共用 parseEventDate。
  */
-const parseLiveDate = (value) => {
-  const str = String(value ?? "").trim();
-  const monthDay = /^(\d{1,2})-(\d{1,2})$/.exec(str);
-  if (monthDay) {
-    const month = Number(monthDay[1]);
-    const day = Number(monthDay[2]);
-    if (month < 1 || month > 12 || day < 1 || day > 31) return null;
-    // 基准年只影响"今年之前"的部分，yearly 循环会把它加回到不早于今天，
-    // 所以取当前年份可读性最好，也不影响最终结果。
-    const base = now.value || dayjs();
-    const parsed = base
-      .startOf("day")
-      .month(month - 1)
-      .date(day)
-      .startOf("day");
-    return parsed.isValid() ? parsed : null;
-  }
-  const parsed = dayjs(str);
-  return parsed.isValid() ? parsed : null;
-};
+const parseLiveDate = (value) => parseEventDate(value, now.value || dayjs());
 
 const resolvedDate = computed(() => {
   if (props.date) return props.date;
@@ -88,7 +64,7 @@ const displayDate = computed(() => {
   const today = now.value.startOf("day");
   let nextDate = target.startOf("day");
   while (nextDate.isBefore(today)) {
-    nextDate = nextDate.add(1, "year");
+    nextDate = addYearsClamped(nextDate);
   }
   return nextDate;
 });
@@ -110,6 +86,8 @@ const text = computed(() => {
   }
 
   if (props.mode === "days-since") {
+    // days-since 语义固定为包含起点日（diff + 1），不随 includeStart 变化；
+    // includeStart 仅作用于 days-gap。调用方（如 AboutMe.vue）依赖此 +1 语义。
     const diff = current.startOf("day").diff(target.startOf("day"), "day");
     return diff >= 0 ? String(diff + 1) : "0";
   }

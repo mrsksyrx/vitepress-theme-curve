@@ -76,11 +76,11 @@ const manualSlogan = "所以，回去吧，回到我们，所有「奇迹」开�
 
 // 计算展示的文字：若当前为“一言”状态则显示一言，否则显示默认标语
 const displayText = computed(() =>
-  (isHitokotoDisplayed.value && hitokotoData.value.hitokoto
+  isHitokotoDisplayed.value && hitokotoData.value.hitokoto
     ? hitokotoData.value.hitokoto
     : isManualSloganDisplayed.value
       ? manualSlogan
-      : defaultSlogan),
+      : defaultSlogan,
 );
 
 // 点击处理：

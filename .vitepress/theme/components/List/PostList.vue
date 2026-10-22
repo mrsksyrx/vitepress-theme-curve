@@ -12,7 +12,11 @@
         'post-item',
         's-card',
         'hover',
-        { simple, cover: showCover(item), [`cover-${layoutType}`]: showCover(item) },
+        {
+          simple,
+          cover: showCover(item) && !!getCover(item),
+          [`cover-${layoutType}`]: showCover(item) && !!getCover(item),
+        },
       ]"
       :style="{ animationDelay: `${0.4 + index / 10}s` }"
     >
@@ -22,7 +26,7 @@
         :aria-label="`打开文章：${item.title}`"
         @click="toPost($event, item.regularPath)"
       ></a>
-      <div v-if="!simple && showCover(item)" class="post-cover">
+      <div v-if="!simple && showCover(item) && getCover(item)" class="post-cover">
         <img :src="getCover(item)" :alt="item.title" />
       </div>
       <div class="post-content">
@@ -47,7 +51,7 @@
               v-for="tag in asArray(item?.tags)"
               :key="tag"
               class="tags-name"
-              :href="`/pages/tags/${tag}`"
+              :href="`/pages/tags/${encodeURIComponent(tag)}`"
             >
               <i class="iconfont icon-hashtag" />
               {{ tag }}
@@ -60,7 +64,7 @@
             <span v-if="item?.readTime" class="post-stat read-time">
               阅读需约 {{ item.readTime }} 分钟
             </span>
-            <span class="post-time">{{ formatTimestampAt(item?.date, now) }}</span>
+            <span class="post-time">{{ formatTimestampAt(item?.dateYMD || item?.date, now) }}</span>
           </div>
         </div>
       </div>
@@ -71,6 +75,7 @@
 <script setup>
 import { mainStore } from "@/store";
 import { formatTimestampAt, useClientNow } from "@/utils/useClientNow.mjs";
+import { normalizeList } from "@/utils/normalizeList.mjs";
 
 const store = mainStore();
 const router = useRouter();
@@ -93,49 +98,48 @@ const props = defineProps({
 
 const { theme: themeConfig } = useData();
 
-// 标签/分类归一化：字符串转数组
-const asArray = (val) => {
-  if (!val) return [];
-  if (Array.isArray(val)) return val;
-  if (typeof val === "string") {
-    return val
-      .split(",")
-      .map((s) => s.trim())
-      .filter(Boolean);
-  }
-  return [];
-};
+// 标签/分类归一化：统一走 normalizeList（唯一实现），避免与构建期口径分叉
+const asArray = normalizeList;
 
 // 计算布局类型
 const layoutType = computed(() =>
-  (themeConfig.value?.cover?.twoColumns
+  themeConfig.value?.cover?.twoColumns
     ? "twoColumns"
-    : (themeConfig.value?.cover?.showCover?.coverLayout ?? "left")),
+    : (themeConfig.value?.cover?.showCover?.coverLayout ?? "left"),
 );
 
 // 计算网格样式
 const gridStyle = computed(() =>
-  (layoutType.value === "twoColumns"
+  layoutType.value === "twoColumns"
     ? {
         "--grid-columns": 2,
         "--grid-gap": "1rem",
       }
-    : {}),
+    : {},
 );
 
 // 判断是否显示封面
 const showCover = () => themeConfig.value?.cover?.showCover?.enable;
 
-// 获取封面图片 按优先级获取：cover > defaultCover > false
-const getCover = ({ cover: itemCover }) => {
+// 按文章固化默认封面随机结果，避免 useClientNow 每秒重渲染导致封面跳变
+const coverCache = new Map();
+
+// 获取封面图片 按优先级获取：cover > defaultCover > null
+const getCover = (item) => {
+  const { cover: itemCover, regularPath, title } = item ?? {};
   const { cover } = themeConfig.value ?? {};
 
-  if (!cover?.showCover?.enable) return false;
+  if (!cover?.showCover?.enable) return null;
   if (itemCover) return itemCover;
 
-  return Array.isArray(cover.showCover.defaultCover)
-    ? cover.showCover.defaultCover[Math.floor(Math.random() * cover.showCover.defaultCover.length)]
-    : false;
+  const defaults = cover.showCover.defaultCover;
+  if (!Array.isArray(defaults) || defaults.length === 0) return null;
+
+  const cacheKey = regularPath ?? title ?? "";
+  if (!coverCache.has(cacheKey)) {
+    coverCache.set(cacheKey, defaults[Math.floor(Math.random() * defaults.length)]);
+  }
+  return coverCache.get(cacheKey);
 };
 
 // 前往文章

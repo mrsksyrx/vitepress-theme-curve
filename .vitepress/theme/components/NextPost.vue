@@ -24,7 +24,6 @@
 <script setup>
 import { storeToRefs } from "pinia";
 import { mainStore } from "@/store";
-import { generateId } from "@/utils/commonTools";
 import { usePostData } from "@/utils/usePostData.mjs";
 
 const router = useRouter();
@@ -38,13 +37,15 @@ const observer = ref(null);
 const isNextPost = ref(true);
 const nextPostShow = ref(false);
 const nextPostData = ref(null);
+// loadPostData 的 then 期间组件可能已卸载，置位以中止写状态 / 创建观察器
+let unmounted = false;
 
 // 获取文章
 const getNextPostData = () => {
-  const { filePath } = page.value;
-  if (!postData.value.length || !filePath) return false;
+  const { relativePath } = page.value;
+  if (!postData.value.length || !relativePath) return false;
   // 本篇索引
-  const postId = generateId(filePath);
+  const postId = relativePath;
   const postIndex = postData.value.findIndex((post) => post.id === postId);
   // 是否有下一篇
   if (postIndex >= 0 && postIndex < postData.value.length - 1) {
@@ -87,12 +88,14 @@ watch(
 
 onMounted(() => {
   loadPostData().then(() => {
+    if (unmounted) return;
     getNextPostData();
     isShowNext();
   });
 });
 
 onBeforeUnmount(() => {
+  unmounted = true;
   if (observer.value) observer.value?.disconnect();
 });
 </script>

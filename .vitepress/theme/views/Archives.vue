@@ -19,8 +19,9 @@
               <a
                 v-for="(tags, tagsIndex) in post.tags"
                 :key="tagsIndex"
-                :href="`/pages/tags/${tags}`"
+                :href="`/pages/tags/${encodeURIComponent(tags)}`"
                 class="type-item"
+                @click.stop
               >
                 <i class="iconfont icon-hashtag" />
                 <span class="name">{{ tags }}</span>

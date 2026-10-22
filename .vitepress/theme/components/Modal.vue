@@ -1,10 +1,20 @@
 <!-- 弹窗组件 -->
 <template>
   <Teleport to="body">
-    <Transition name="fade" mode="out-in">
-      <div v-if="show" :class="['modal', { 'modal-wrapper-mobile': isMobileLayout }]">
-        <div class="modal-mask" @click.stop="maskClick" />
+    <!-- gestureClosing：手势已手动滑出，用 CSS 跳过 leave，避免再从原位播一次闪现 -->
+    <!-- persistent：内容常驻（v-show），避免每次打开重新挂载重依赖（如搜索 InstantSearch） -->
+    <Transition name="fade">
+      <div
+        v-if="persistent || show"
+        v-show="persistent ? show : true"
+        :class="[
+          'modal',
+          { 'modal-wrapper-mobile': isMobileLayout, 'gesture-closing': gestureClosing },
+        ]"
+      >
+        <div ref="modalMaskEl" class="modal-mask" @click.stop="maskClick" />
         <div
+          ref="modalMainEl"
           :style="{
             maxWidth: typeof maxWidth === 'string' ? maxWidth : `${maxWidth}px`,
           }"
@@ -30,7 +40,7 @@
             <i class="iconfont icon-left back" @click="modalClose" />
           </div>
           <!-- 弹窗内容 -->
-          <div class="modal-content" :style="{ '--height': maxHeight + 'vh' }">
+          <div ref="modalContentEl" class="modal-content" :style="{ '--height': maxHeight + 'vh' }">
             <slot />
           </div>
         </div>
@@ -41,6 +51,7 @@
 
 <script setup>
 import { useIsMobileLayout } from "@/utils/layout.js";
+import { lockBodyScroll, unlockBodyScroll } from "@/utils/commonTools.mjs";
 
 const isMobileLayout = useIsMobileLayout();
 
@@ -75,10 +86,20 @@ const props = defineProps({
     type: Number,
     default: 80,
   },
+  // 内容常驻：关闭时只隐藏不卸载，适合搜索等重依赖，避免每次打开卡一下
+  persistent: {
+    type: Boolean,
+    default: false,
+  },
 });
 
 // 发射事件
 const emit = defineEmits(["mask-click", "modal-close"]);
+
+// 模板 ref（多 Modal 并存时手势只作用于本实例）
+const modalContentEl = ref(null);
+const modalMainEl = ref(null);
+const modalMaskEl = ref(null);
 
 // 遮罩层事件
 const maskClick = () => emit("mask-click");
@@ -89,9 +110,33 @@ let touchStartY = 0;
 let touchCurrentY = 0;
 let isDragging = false;
 let startTime = 0;
+// 手势关闭中：CSS 跳过 leave 动画（面板已被手动滑出）
+const gestureClosing = ref(false);
+
+const clearDragStyles = () => {
+  if (modalMainEl.value) {
+    modalMainEl.value.style.transform = "";
+    modalMainEl.value.style.transition = "";
+    modalMainEl.value.style.opacity = "";
+  }
+  if (modalMaskEl.value) {
+    modalMaskEl.value.style.opacity = "";
+    modalMaskEl.value.style.transition = "";
+  }
+};
+
+// 重新打开时复位：清掉手势 inline 样式，保证下次进场动画正常
+watch(
+  () => props.show,
+  (val) => {
+    if (!val) return;
+    gestureClosing.value = false;
+    clearDragStyles();
+  },
+);
 
 const onTouchStart = (e) => {
-  const modalContent = document.querySelector(".modal-content");
+  const modalContent = modalContentEl.value;
   if (modalContent && modalContent.scrollTop > 0) {
     isDragging = false;
     return;
@@ -105,7 +150,7 @@ const onTouchMove = (e) => {
   if (!isDragging) return;
   touchCurrentY = e.touches[0].clientY;
   const diff = Math.max(0, touchCurrentY - touchStartY);
-  const modalMain = document.querySelector(".modal-main");
+  const modalMain = modalMainEl.value;
   if (modalMain) {
     const progress = Math.min(diff / 300, 1);
     const scale = 1 - progress * 0.05;
@@ -113,7 +158,7 @@ const onTouchMove = (e) => {
     modalMain.style.transform = `translateY(${diff}px) scale(${scale})`;
     modalMain.style.transition = "none";
     modalMain.style.opacity = opacity;
-    const mask = document.querySelector(".modal-mask");
+    const mask = modalMaskEl.value;
     if (mask) {
       mask.style.opacity = opacity;
     }
@@ -125,11 +170,13 @@ const onTouchEnd = () => {
   const diff = touchCurrentY - touchStartY;
   const elapsed = Date.now() - startTime;
   const velocity = diff / elapsed;
-  const modalMain = document.querySelector(".modal-main");
-  const mask = document.querySelector(".modal-mask");
+  const modalMain = modalMainEl.value;
+  const mask = modalMaskEl.value;
   const shouldClose = diff > 80 || velocity > 0.5;
 
   if (shouldClose) {
+    // 标记后关闭：leave 阶段不再叠加 slide-down
+    gestureClosing.value = true;
     if (modalMain) {
       modalMain.style.transition = "transform 0.3s ease-out, opacity 0.3s ease-out";
       modalMain.style.transform = "translateY(100vh) scale(0.95)";
@@ -140,15 +187,6 @@ const onTouchEnd = () => {
       mask.style.opacity = "0";
     }
     setTimeout(() => {
-      if (modalMain) {
-        modalMain.style.transform = "";
-        modalMain.style.transition = "";
-        modalMain.style.opacity = "";
-      }
-      if (mask) {
-        mask.style.opacity = "";
-        mask.style.transition = "";
-      }
       modalClose();
     }, 300);
   } else {
@@ -162,12 +200,8 @@ const onTouchEnd = () => {
       mask.style.opacity = "";
     }
     setTimeout(() => {
-      if (modalMain) {
-        modalMain.style.transition = "";
-      }
-      if (mask) {
-        mask.style.transition = "";
-      }
+      if (modalMain) modalMain.style.transition = "";
+      if (mask) mask.style.transition = "";
     }, 250);
   }
   touchStartY = 0;
@@ -175,13 +209,19 @@ const onTouchEnd = () => {
   isDragging = false;
 };
 
-// 监听开启
+// 监听开启（引用计数，多弹窗并发时不会互相踩踏）
 watch(
   () => props.show,
-  (val) => {
-    document.body.style.overflowY = val ? "hidden" : "";
+  (val, oldVal) => {
+    if (val === oldVal) return;
+    if (val) lockBodyScroll();
+    else if (oldVal) unlockBodyScroll();
   },
+  { immediate: true },
 );
+onUnmounted(() => {
+  if (props.show) unlockBodyScroll();
+});
 </script>
 
 <style lang="scss" scoped>
@@ -194,6 +234,7 @@ watch(
   justify-content: center;
   width: 100vw;
   height: 100vh;
+  // 常规弹层：高于导航（1000），低于消息（3000）与 BottomPills（9999）
   z-index: 2000;
   .modal-mask {
     position: absolute;
@@ -271,6 +312,8 @@ watch(
     max-height: calc(100dvh - 48px);
     border-radius: 20px 20px 0 0;
     overflow: hidden;
+    // 关掉桌面端 fade-up，只走下方滑入滑出
+    animation: none;
     .modal-drag-handle {
       display: flex;
       justify-content: center;
@@ -339,11 +382,22 @@ watch(
   height: 100vh;
   height: 100dvh;
 }
-.modal-mobile.fade-enter-active {
+// Transition 类加在 .modal 上，面板动画用后代选择器（与 MobileWidgets 一致）
+.modal.fade-enter-active .modal-mobile {
   animation: slide-up 0.3s ease-out forwards;
 }
-.modal-mobile.fade-leave-active {
+.modal.fade-leave-active .modal-mobile {
   animation: slide-down 0.3s ease-in forwards;
+}
+// 手势关闭：面板已被手动滑出，leave 立即结束，避免卡住导致打不开
+.modal.gesture-closing.fade-leave-active {
+  transition: none;
+  opacity: 0;
+}
+.modal.gesture-closing.fade-leave-active .modal-mobile {
+  animation: none;
+  transform: translateY(100%);
+  opacity: 0;
 }
 @keyframes slide-up {
   from {
