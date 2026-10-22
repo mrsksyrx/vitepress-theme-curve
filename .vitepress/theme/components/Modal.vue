@@ -234,8 +234,8 @@ onUnmounted(() => {
   justify-content: center;
   width: 100vw;
   height: 100vh;
-  // 高于 BottomPills（9999），避免播放器胶囊压住搜索/设置弹层
-  z-index: 10000;
+  // 常规弹层：高于导航（1000），低于消息（3000）与 BottomPills（9999）
+  z-index: 2000;
   .modal-mask {
     position: absolute;
     top: 0;

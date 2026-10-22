@@ -132,6 +132,7 @@ export const themeConfig = {
         text: "服务",
         items: [
           { text: "站点状态", link: "https://status.sgexilq.com", newTab: true },
+          { text: "资源下载", link: "https://download.sgexilq.com", newTab: true },
           { text: "站点订阅", link: "/rss.xml" },
           { text: "反馈建议", link: "mailto:feedback@sgexilq.com" },
         ],
