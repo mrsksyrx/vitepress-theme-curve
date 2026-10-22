@@ -2,6 +2,7 @@ import { defineConfig } from "vitepress";
 import { createRssFile } from "./theme/utils/generateRSS.mjs";
 import { withPwa } from "@vite-pwa/vitepress";
 import { getAllPosts } from "./theme/utils/getPostData.mjs";
+import { generateSearchIndex } from "./theme/utils/generateSearchIndex.mjs";
 import { jumpRedirect } from "./theme/utils/commonTools.mjs";
 import { getThemeConfig } from "./init.mjs";
 import markdownConfig from "./theme/utils/markdownConfig.mjs";
@@ -26,6 +27,12 @@ await fs.outputJson("public/data/postData.json", postData);
 
 // 获取主题配置
 const themeConfig = await getThemeConfig();
+
+// 本地全文搜索索引（search.enable 关闭时跳过，避免无谓产物）
+// public/data/*.json 会被 Workbox globPatterns 含 json 的规则自动 precache
+if (themeConfig.search?.enable) {
+  await fs.outputJson("public/data/localSearch.json", await generateSearchIndex());
+}
 
 // 固定跳转页（meta refresh → 首页）的 URL 集合，用于从 sitemap 中剔除。
 // 这些都是 page.md / page/index.md / page/1.md / pages/index.md 生成的跳转壳；

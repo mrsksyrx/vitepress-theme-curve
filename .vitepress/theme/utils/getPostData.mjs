@@ -52,7 +52,7 @@ const calcReadTime = (wordCount) => {
  * 获取 posts 目录下所有 Markdown 文件的路径
  * @returns {Promise<string[]>} - 文件路径数组
  */
-const getPostMDFilePaths = async () => {
+export const getPostMDFilePaths = async () => {
   try {
     // 获取所有 md 文件路径
     let paths = await globby(["**.md"], {

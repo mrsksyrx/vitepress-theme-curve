@@ -158,6 +158,8 @@ export const mainStore = defineStore("main", {
       removeAnimations: false,
       // PWA 缓存增强（预留；SW 缓存策略构建期写死，此开关当前不改变行为）
       pwaCacheEnabled: true,
+      // 本地搜索模式：off 不启用 / on 仅离线或 Algolia 失败时降级 / always 始终本地
+      localSearchMode: "on",
       // 阅读历史条目上限（超出时按 lastVisit 裁剪 localStorage.readingData）
       readingHistoryLimit: 100,
       // 阅读进度条

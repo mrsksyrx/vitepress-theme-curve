@@ -374,6 +374,8 @@ export const themeConfig = {
     enable: false,
     appId: "0F1DUC8MAX",
     apiKey: "1f97c9169943484cfb9a05c825851ca4",
+    // 本地全文搜索：离线、Algolia 请求失败、或未配置 Algolia 时自动启用
+    local: { enable: true },
   },
   // 天气 Key
   // 请前往 高德开放平台注册 Web服务 Key

@@ -1361,6 +1361,29 @@
               </div>
             </div>
           </Transition>
+          <div class="set-item">
+            <span class="set-label">搜索数据来源</span>
+            <div class="set-options">
+              <span
+                :class="['options', { choose: localSearchMode === 'off' }]"
+                @click="localSearchMode = 'off'"
+              >
+                云端
+              </span>
+              <span
+                :class="['options', { choose: localSearchMode === 'on' }]"
+                @click="localSearchMode = 'on'"
+              >
+                自动
+              </span>
+              <span
+                :class="['options', { choose: localSearchMode === 'always' }]"
+                @click="localSearchMode = 'always'"
+              >
+                仅本地
+              </span>
+            </div>
+          </div>
           <!-- 开发中的功能（开发模式） -->
           <template v-if="store.devMode === 2">
             <div class="set-item">
@@ -1752,6 +1775,7 @@ const {
   scheduledLightTime,
   scheduledDarkTime,
   pwaCacheEnabled,
+  localSearchMode,
   readingHistoryLimit,
   readingProgressEnabled,
   hoverLineEnabled,
