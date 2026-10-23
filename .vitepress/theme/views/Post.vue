@@ -422,7 +422,8 @@ onMounted(() => {
         &.hover {
           transition:
             color 0.3s,
-            background-color 0.3s;
+            background-color 0.3s,
+            transform var(--press-out) var(--press-ease);
           cursor: pointer;
           &:hover {
             color: var(--main-color);
@@ -430,6 +431,10 @@ onMounted(() => {
             .iconfont {
               color: var(--main-color);
             }
+          }
+          &:active {
+            transform: scale(0.95);
+            transition-duration: var(--press-in);
           }
         }
       }
@@ -541,6 +546,10 @@ onMounted(() => {
           background-color: var(--main-card-border);
           white-space: nowrap;
           cursor: pointer;
+          transition:
+            color 0.3s,
+            background-color 0.3s,
+            transform var(--press-out) var(--press-ease);
           .share-icon {
             width: 16px;
             height: 16px;
@@ -549,6 +558,10 @@ onMounted(() => {
           &:hover {
             color: var(--main-color);
             background-color: var(--main-color-bg);
+          }
+          &:active {
+            transform: scale(0.95);
+            transition-duration: var(--press-in);
           }
         }
         .report {

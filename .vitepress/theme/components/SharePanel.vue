@@ -31,10 +31,14 @@
         <i class="iconfont icon-copy" />
         <span class="name">复制链接</span>
       </div>
-      <div v-if="qrVisible" class="share-qr">
-        <div v-if="qrLoading" class="qr-loading">生成中...</div>
-        <div v-else-if="qrSvg" class="qr-svg" v-html="qrSvg" />
-      </div>
+      <Transition name="fade-up">
+        <div v-if="qrVisible" class="share-qr">
+          <Transition name="fade" mode="out-in">
+            <div v-if="qrLoading" key="loading" class="qr-loading">生成中...</div>
+            <div v-else-if="qrSvg" key="qr" class="qr-svg" v-html="qrSvg" />
+          </Transition>
+        </div>
+      </Transition>
     </div>
   </Modal>
 </template>
@@ -82,7 +86,7 @@ const openShare = (kind) => {
   const t = encodeURIComponent(shareTitle.value);
   const urls = {
     twitter: `https://twitter.com/intent/tweet?url=${u}&text=${t}`,
-    qq: `https://share.v.qq.com/share?u=${u}&title=${t}`,
+    qq: `https://connect.qq.com/widget/shareqq/index.html?url=${u}&title=${t}`,
     telegram: `https://t.me/share/url?url=${u}&text=${t}`,
   };
   if (urls[kind]) window.open(urls[kind], "_blank", "noopener,noreferrer");
@@ -150,7 +154,10 @@ watch(show, (visible) => {
     border-radius: 12px;
     background: var(--main-card-background, rgba(0, 0, 0, 0.03));
     cursor: pointer;
-    transition: color 0.2s, background 0.2s;
+    transition:
+      color 0.3s,
+      background-color 0.3s,
+      transform var(--press-out) var(--press-ease);
     user-select: none;
 
     .iconfont {
@@ -165,6 +172,15 @@ watch(show, (visible) => {
     &:hover,
     &.active {
       color: var(--main-color);
+      background-color: var(--main-color-bg);
+      .iconfont {
+        color: var(--main-color);
+      }
+    }
+
+    &:active {
+      transform: scale(0.94);
+      transition-duration: var(--press-in);
     }
   }
 
@@ -177,7 +193,10 @@ watch(show, (visible) => {
     border-radius: 12px;
     background: var(--main-card-background, rgba(0, 0, 0, 0.03));
     cursor: pointer;
-    transition: color 0.2s;
+    transition:
+      color 0.3s,
+      background-color 0.3s,
+      transform var(--press-out) var(--press-ease);
     user-select: none;
 
     .name {
@@ -186,6 +205,15 @@ watch(show, (visible) => {
 
     &:hover {
       color: var(--main-color);
+      background-color: var(--main-color-bg);
+      .iconfont {
+        color: var(--main-color);
+      }
+    }
+
+    &:active {
+      transform: scale(0.97);
+      transition-duration: var(--press-in);
     }
   }
 
@@ -203,11 +231,13 @@ watch(show, (visible) => {
       display: flex;
       align-items: center;
       justify-content: center;
-      width: 180px;
-      height: 180px;
-      padding: 8px;
-      border-radius: 12px;
+      width: 196px;
+      height: 196px;
+      padding: 14px;
+      border-radius: 16px;
       background: #fff;
+      border: 1px solid var(--main-card-border);
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
 
       :deep(svg) {
         display: block;
