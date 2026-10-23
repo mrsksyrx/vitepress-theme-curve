@@ -2,7 +2,7 @@
 <template>
   <Modal
     :show="show"
-    title="分享本页"
+    title="分享此页"
     titleIcon="link"
     :maxWidth="380"
     @mask-click="show = false"
