@@ -161,7 +161,15 @@
             </div>
             <!-- 分享本页 -->
             <div class="btn" @click="rightMenuFunc('share-page')">
-              <svg class="share-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <svg
+                class="share-icon"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
                 <circle cx="18" cy="5" r="3" />
                 <circle cx="6" cy="12" r="3" />
                 <circle cx="18" cy="19" r="3" />
@@ -384,7 +392,9 @@ const rightMenuFunc = async (type) => {
         const pageLink =
           (theme.value?.siteMeta?.site || "").replace(/\/+$/, "") + router.route.path;
         if (!pageLink) {
-          $message.error("复制失败：无法获取页面地址");
+          if (typeof $message !== "undefined") {
+            $message.error("复制失败：无法获取页面地址");
+          }
           return;
         }
         copyText(pageLink);
@@ -418,7 +428,9 @@ const rightMenuFunc = async (type) => {
         return false;
     }
   } catch (error) {
-    $message.error("右键菜单发生错误，请重试");
+    if (typeof $message !== "undefined") {
+      $message.error("右键菜单发生错误，请重试");
+    }
     console.error("右键菜单出错：", error);
   }
 };
@@ -490,7 +502,7 @@ defineExpose({ openRightMenu });
   left: 0;
   width: 100vw;
   height: 100vh;
-  z-index: 9999;
+  z-index: var(--z-message);
   transition: opacity 0.2s;
   .menu-content {
     position: absolute;

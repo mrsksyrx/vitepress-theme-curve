@@ -367,11 +367,13 @@ export default withPwa(
           name: "like-api",
           configureServer(server) {
             const counts = new Map();
+            // 与 api/like.ts 的 isValidId 同口径：仅拒控制字符 + 长度
             const isValidId = (v) =>
               typeof v === "string" &&
               v.length > 0 &&
               v.length <= 300 &&
-              /^[A-Za-z0-9_\-./一-鿿]+$/.test(v);
+              // eslint-disable-next-line no-control-regex
+              !/[\u0000-\u001f\u007f]/.test(v);
             server.middlewares.use("/api/like", (req, res) => {
               res.setHeader("Content-Type", "application/json");
               res.setHeader("Cache-Control", "no-store");
@@ -392,25 +394,28 @@ export default withPwa(
                   body += chunk;
                 });
                 req.on("end", () => {
+                  let parsed;
                   try {
-                    const { id, action } = JSON.parse(body);
-                    if (!isValidId(id)) {
-                      res.statusCode = 400;
-                      res.end(JSON.stringify({ error: "invalid id" }));
-                      return;
-                    }
-                    if (action !== "inc" && action !== "dec") {
-                      res.statusCode = 400;
-                      res.end(JSON.stringify({ error: "invalid action" }));
-                      return;
-                    }
-                    const next = Math.max(0, (counts.get(id) || 0) + (action === "inc" ? 1 : -1));
-                    counts.set(id, next);
-                    res.end(JSON.stringify({ count: next }));
-                  } catch (e) {
-                    res.statusCode = 500;
-                    res.end(JSON.stringify({ error: e.message }));
+                    parsed = JSON.parse(body);
+                  } catch {
+                    res.statusCode = 400;
+                    res.end(JSON.stringify({ error: "invalid body" }));
+                    return;
                   }
+                  const { id, action } = parsed || {};
+                  if (!isValidId(id)) {
+                    res.statusCode = 400;
+                    res.end(JSON.stringify({ error: "invalid id" }));
+                    return;
+                  }
+                  if (action !== "inc" && action !== "dec") {
+                    res.statusCode = 400;
+                    res.end(JSON.stringify({ error: "invalid action" }));
+                    return;
+                  }
+                  const next = Math.max(0, (counts.get(id) || 0) + (action === "inc" ? 1 : -1));
+                  counts.set(id, next);
+                  res.end(JSON.stringify({ count: next }));
                 });
                 return;
               }

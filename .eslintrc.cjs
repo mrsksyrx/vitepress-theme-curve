@@ -67,6 +67,9 @@ module.exports = {
         "no-await-in-loop": "off",
         "no-continue": "off",
         "import/prefer-default-export": "off",
+        // 与 Prettier 冲突的纯格式规则
+        "operator-linebreak": "off",
+        "no-restricted-syntax": "off",
       },
     },
     {
@@ -210,6 +213,9 @@ module.exports = {
         "prefer-exponentiation-operator": "off",
         "prefer-regex-literals": "off",
         yoda: "off",
+        // —— 与 Prettier 冲突的纯格式规则（Prettier 已统一格式） ——
+        "no-confusing-arrow": "off",
+        "newline-per-chained-call": "off",
         // —— 剩余 error 级规则 ——
         "brace-style": "off",
         "no-unsafe-optional-chaining": "off",

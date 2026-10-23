@@ -56,7 +56,7 @@ onBeforeUnmount(() => {
   width: 100vw;
   height: 100vh;
   background-color: var(--main-card-background);
-  z-index: 9999;
+  z-index: var(--z-message);
   .logo {
     width: 100px;
     height: 100px;

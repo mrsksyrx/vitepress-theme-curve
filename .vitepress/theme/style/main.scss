@@ -1764,7 +1764,7 @@ a {
   background: var(--cursor-bg-color, #e8558e); // 默认值为粉色
   border-radius: 25px;
   opacity: 0.25;
-  z-index: 10086;
+  z-index: var(--z-message);
   pointer-events: none;
   transition: 0.2s ease-in-out;
   transition-property: background, opacity, transform;

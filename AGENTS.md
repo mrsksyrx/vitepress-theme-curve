@@ -19,7 +19,7 @@ VitePress blog theme (Vue 3 + Pinia + SCSS). Single package, no monorepo (`pnpm-
 - **Components**: auto-registered from `.vitepress/theme/components/` **and** `.vitepress/theme/views/` (`.vue` and `.md`); Vue/VitePress APIs auto-imported (`.vitepress/auto-imports.d.ts`)
 - **Alias**: `@` → `.vitepress/theme/`
 - **Styles**: `.vitepress/theme/style/` (SCSS)
-- **Serverless**: `api/status.ts` (Vercel) and `functions/api/status.ts` (Cloudflare Pages) are near-duplicate status endpoints — keep them in sync if you edit either.
+- **Serverless**: `api/*.ts` (Vercel) and `functions/api/*.ts` (Cloudflare Pages) are near-duplicate endpoints (`status`, `music-url`, `like`) — keep them in sync if you edit either side.
 
 ## Config override rules
 
@@ -57,14 +57,12 @@ VitePress blog theme (Vue 3 + Pinia + SCSS). Single package, no monorepo (`pnpm-
 - **ESLint 8 ignores dot-directories** — `.vitepress/` (the bulk of the code) is **not** linted unless passed explicitly (the scripts do pass it). `--ext` now includes `.ts` (TypeScript via `@typescript-eslint/parser` override); `**/*.d.ts` is ignored via `.eslintignore`.
 - **`linebreak-style` is off** on purpose: the repo checks out with `core.autocrlf=true` (CRLF). Don't enable it or mass-convert line endings.
 - `npx tsc --noEmit` typechecks only a handful of `.ts` files — no `vue-tsc`, and `tsconfig.json` deliberately has `"types": ["node"]` (VitePress ships its own types; restore `"vite/client"` only if type issues appear).
-- Style: double quotes, Prettier `printWidth: 100`, `trailingComma: all`; ESLint uses airbnb-base + vue3-essential.
+- Style: double quotes, Prettier `printWidth: 100`, `trailingComma: all`; ESLint uses airbnb-base + vue3-essential. Pure-format rules that conflict with Prettier (`no-confusing-arrow`, `newline-per-chained-call`, `operator-linebreak`, `brace-style` 等) are off in overrides — Prettier owns formatting.
+- 背景模糊：blur 类加在 `.background` 背景层（`store/index.js` + `Background.vue` scoped 规则），弹窗/导航保持清晰；`backgroundType: "close"` 时无背景层、开关无效（已知行为）。
+- 全局浮层层级用 CSS 变量（`main.scss`）：`--z-player` 10000（播放器/普通弹窗）→ `--z-elevated` 11000（分享面板/侧边栏）→ `--z-message` 12000（消息/右键菜单/加载屏）。新浮层请用变量，勿写死数字。
 
 ## Deploy
 
-- GitHub Actions (`.github/workflows/deploy.yml`) deploys `.vitepress/dist` to GitHub Pages on push to **master** (Node 22, pnpm 10; `engines` require Node ≥20 and pnpm ≥10). Current branch is **`selfuse`** — pushes there deploy nothing; check `git branch` first.
+- GitHub Actions (`.github/workflows/deploy.yml`) deploys `.vitepress/dist` to GitHub Pages on push to **master** (Node 22, pnpm 10; `engines` require Node ≥20 and pnpm ≥10). Current branch is **`dev`** — pushes there deploy nothing; check `git branch` first.
 - Also Vercel-ready: `vercel.json` + `pnpm deploy:vercel`.
 - `.env` is tracked in git; see the README's security notes before committing or publishing.
-
-## TODO
-
-- [ ] 修复背景模糊功能：`filter: blur(20px)` 加在 `#app` 上会导致整个页面（含弹窗）被模糊，需改为只模糊背景层，弹窗和导航栏保持清晰

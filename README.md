@@ -64,9 +64,9 @@ pnpm build
 
 通常在未修改配置文件的情况下，打包后的文件会处于根目录下的 `.vitepress\dist` 目录中，您可以将其中的文件上传至任意服务器以访问。
 
-#### 全局点赞（可选，Vercel）
+#### 全局点赞（可选，Vercel / Cloudflare Pages）
 
-文章底部的点赞按钮（`LikeButton.vue`）通过 `api/like.ts` 读写全局计数，存储需要 Redis：在 Vercel 项目的 Dashboard → Storage 中创建 Upstash for Redis 并连接到项目，集成会自动注入 REST 环境变量（`api/like.ts` 兼容 `KV_REST_API_URL`/`TOKEN`、`UPSTASH_REDIS_REST_URL`/`TOKEN` 以及 Marketplace 自定义前缀生成的 `UPSTASH_REDIS_REST_KV_REST_API_URL`/`TOKEN` 三组命名），重新部署一次即可生效。未配置时按钮仍会渲染，计数显示 `-`，不影响构建与静态部署（纯静态托管下点击不会计入全局计数）。
+文章底部的点赞按钮（`LikeButton.vue`）通过 `api/like.ts`（Vercel）或 `functions/api/like.ts`（Cloudflare Pages）读写全局计数，存储需要 Redis：在 Vercel 项目的 Dashboard → Storage 中创建 Upstash for Redis 并连接到项目，集成会自动注入 REST 环境变量（两端均兼容 `KV_REST_API_URL`/`TOKEN`、`UPSTASH_REDIS_REST_URL`/`TOKEN` 以及 Marketplace 自定义前缀生成的 `UPSTASH_REDIS_REST_KV_REST_API_URL`/`TOKEN` 三组命名；Cloudflare Pages 在项目的 Environment Variables 中手动配置同名变量），重新部署一次即可生效。未配置时按钮仍会渲染，计数显示 `-`，不影响构建与静态部署（纯静态托管下点击不会计入全局计数）。
 
 ## 更多
 
@@ -76,21 +76,21 @@ pnpm build
 
 [![Netlify Status](https://api.netlify.com/api/v1/badges/31ebe949-6ce7-46b7-a5fb-a73da20412d6/deploy-status)](https://app.netlify.com/sites/imsyy-blog/deploys)
 
-| 命令                 | 说明                                                                                |
-| -------------------- | ----------------------------------------------------------------------------------- |
-| `pnpm dev`           | 启动开发服务器（`vitepress dev --host`）                                            |
-| `pnpm build`         | 构建静态站点（产出 `sitemap.xml`、`rss.xml` 与 PWA 资源）                           |
-| `pnpm preview`       | 预览构建产物                                                                        |
-| `pnpm lint`          | ESLint 检查并自动修复（`.js/.jsx/.cjs/.mjs/.vue`，**不含点目录**）                  |
-| `pnpm format`        | Prettier 格式化当前目录（`.prettierignore` 已排除 `dist`、锁文件与生成的 `*.d.ts`） |
-| `pnpm deploy:vercel` | 通过 Vercel CLI 部署                                                                |
-| `npx tsc --noEmit`   | TypeScript 类型检查（**不覆盖 `.vue`**，见下）                                      |
+| 命令                 | 说明                                                                                      |
+| -------------------- | ----------------------------------------------------------------------------------------- |
+| `pnpm dev`           | 启动开发服务器（`vitepress dev --host`）                                                  |
+| `pnpm build`         | 构建静态站点（产出 `sitemap.xml`、`rss.xml` 与 PWA 资源）                                 |
+| `pnpm preview`       | 预览构建产物                                                                              |
+| `pnpm lint`          | ESLint 检查（`.js/.jsx/.cjs/.mjs/.vue/.ts`，含 `.vitepress`；自动修复用 `pnpm lint:fix`） |
+| `pnpm format`        | Prettier 格式化当前目录（`.prettierignore` 已排除 `dist`、锁文件与生成的 `*.d.ts`）       |
+| `pnpm deploy:vercel` | 通过 Vercel CLI 部署                                                                      |
+| `npx tsc --noEmit`   | TypeScript 类型检查（**不覆盖 `.vue`**，见下）                                            |
 
 ## 已知问题
 
 这些问题在仓库中**真实存在**，在此如实记录，避免使用者踩坑：
 
-- **质量链覆盖不全**：裸 `tsc` 不解析 `.vue` 单文件组件，实际参与类型检查的只有 2 个 `.ts` 与 2 个生成的 `.d.ts`，57 个 `.vue` 全部未被覆盖（完整覆盖需要 `vue-tsc`，本项目未安装也没有 `typecheck` 脚本）。ESLint 现已覆盖 `.vitepress/`（`pnpm lint` 显式传入），但 `.ts` 仍不在 `--ext` 列表中，`api/`、`functions/` 的 `.ts` 仍漏。
+- **质量链覆盖不全**：裸 `tsc` 不解析 `.vue` 单文件组件，实际参与类型检查的只有 2 个 `.ts` 与 2 个生成的 `.d.ts`，57 个 `.vue` 全部未被覆盖（完整覆盖需要 `vue-tsc`，本项目未安装也没有 `typecheck` 脚本）。ESLint 已覆盖 `.vitepress/` 与 `api/`、`functions/` 的 `.ts`（`pnpm lint` 显式传入 `.vitepress`，`--ext` 含 `.ts`）。
 - **仓库没有测试套件**：`package.json` 中没有 test 脚本，也没有任何单测框架；`timeTools`、`getPostData`、分页数学等纯函数建议后续补齐单元测试。
 - **密钥仍在版本控制中**：`.env` 至今仍被 Git 跟踪，其内容与 `HEAD` 完全一致，且 `.gitignore` **没有**忽略它（见下方[安全提示](#安全提示)）。
 - **`.eslintignore` 残留**：其中仍列有已删除的临时目录（`_fix2`、`_fix3`、`.dsh_baseline`、`_fix_t1`、`_t4_*`）等历史条目。

@@ -1820,10 +1820,14 @@ const clearPwaCache = async () => {
         cleared++;
       }
     }
-    $message.success(`已清除 ${cleared} 个运行时缓存`, { duration: 2000 });
+    if (typeof $message !== "undefined") {
+      $message.success(`已清除 ${cleared} 个运行时缓存`, { duration: 2000 });
+    }
   } catch (e) {
     console.error("Clear PWA cache failed:", e);
-    $message.error("清除缓存失败", { duration: 2000 });
+    if (typeof $message !== "undefined") {
+      $message.error("清除缓存失败", { duration: 2000 });
+    }
   } finally {
     pwaCacheClearing.value = false;
   }
@@ -2150,7 +2154,9 @@ const saveStoreDefaults = async (data) => {
     const json = await res.json();
     if (!json.ok) {
       console.error("Save failed:", json.error);
-      $message.warning(`保存失败：${json.error || "格式不合法"}`);
+      if (typeof $message !== "undefined") {
+        $message.warning(`保存失败：${json.error || "格式不合法"}`);
+      }
       return false;
     }
     return true;

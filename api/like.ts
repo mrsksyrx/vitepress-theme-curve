@@ -7,8 +7,7 @@ type KvConfig = { url: string; token: string };
 
 type LikeAction = "inc" | "dec";
 
-// 文章 id（page.relativePath）白名单：允许中文文件名，拒绝其余字符
-const ID_PATTERN = /^[A-Za-z0-9_\-./一-鿿]+$/;
+// 文章 id（page.relativePath）：仅拒绝控制字符（KV 键任意字符串皆可，限流已兜住滥用）
 const MAX_ID_LENGTH = 300;
 // 每 IP 每分钟最多写操作次数，超限 429
 const RATE_LIMIT_PER_MINUTE = 30;
@@ -37,7 +36,11 @@ function getKvConfig(): KvConfig | null {
 
 function isValidId(id: unknown): id is string {
   return (
-    typeof id === "string" && id.length > 0 && id.length <= MAX_ID_LENGTH && ID_PATTERN.test(id)
+    typeof id === "string" &&
+    id.length > 0 &&
+    id.length <= MAX_ID_LENGTH &&
+    // eslint-disable-next-line no-control-regex
+    !/[\u0000-\u001f\u007f]/.test(id)
   );
 }
 
@@ -69,14 +72,12 @@ function getClientIp(req: VercelRequest): string {
   return ip || "unknown";
 }
 
-// 每 IP 每分钟限流；桶键 2 分钟过期，无需清理逻辑
+// 每 IP 每分钟限流；桶键 2 分钟过期（每次续期，避免首次 EXPIRE 失败后永不过期）
 async function checkRateLimit(kv: KvConfig, req: VercelRequest): Promise<boolean> {
   const bucket = Math.floor(Date.now() / 60000);
   const key = `rl:${getClientIp(req)}:${bucket}`;
   const count = Number(await kvCommand(kv, ["INCR", key]));
-  if (count === 1) {
-    await kvCommand(kv, ["EXPIRE", key, 120]);
-  }
+  await kvCommand(kv, ["EXPIRE", key, 120]);
   return count <= RATE_LIMIT_PER_MINUTE;
 }
 
@@ -96,11 +97,16 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       }
       const result = await kvCommand(kv, ["GET", `like:${id}`]);
       res.setHeader("Cache-Control", "public, s-maxage=15, stale-while-revalidate=30");
-      return res.status(200).json({ count: result === null ? 0 : Number(result) });
+      const n = Number(result);
+      return res.status(200).json({ count: result === null || !Number.isFinite(n) ? 0 : n });
     }
 
     if (req.method === "POST") {
-      const { id, action } = req.body as { id?: unknown; action?: unknown };
+      const body = req.body as { id?: unknown; action?: unknown } | undefined;
+      if (!body || typeof body !== "object") {
+        return res.status(400).json({ error: "invalid body" });
+      }
+      const { id, action } = body;
       if (!isValidId(id)) {
         return res.status(400).json({ error: "invalid id" });
       }
@@ -126,7 +132,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       }
 
       res.setHeader("Cache-Control", "no-store");
-      return res.status(200).json({ count });
+      return res.status(200).json({ count: Number.isFinite(count) ? count : 0 });
     }
 
     res.setHeader("Allow", "GET, POST");

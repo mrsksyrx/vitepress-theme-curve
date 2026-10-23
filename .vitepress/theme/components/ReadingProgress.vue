@@ -251,7 +251,8 @@ onBeforeUnmount(() => {
   left: 0;
   width: 100%;
   height: 3px;
-  z-index: 9999;
+  // 页面内浮层：高于导航（1000），低于弹窗/播放器（--z-player）
+  z-index: 2000;
   background: transparent;
 
   .progress-bar {

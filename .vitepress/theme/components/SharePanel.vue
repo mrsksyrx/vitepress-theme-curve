@@ -66,8 +66,9 @@ const shareTitle = computed(
 );
 
 // 打开面板（供 window.$share 调用）
+// 无参调用（右键「分享本页」）必须清空 override，否则 SPA 切篇后仍分享旧标题
 const open = (title) => {
-  if (title) titleOverride.value = title;
+  titleOverride.value = title || "";
   show.value = true;
 };
 
@@ -95,7 +96,9 @@ const openShare = (kind) => {
 
 const copyLink = () => {
   if (!shareUrl.value) {
-    $message.error("复制失败：无法获取页面地址");
+    if (typeof $message !== "undefined") {
+      $message.error("复制失败：无法获取页面地址");
+    }
     return;
   }
   copyText(shareUrl.value);
@@ -103,18 +106,27 @@ const copyLink = () => {
 
 const genQr = async () => {
   if (qrLoading.value) return;
-  if (qrSvg.value && qrUrlCache.value === shareUrl.value) return;
+  // 固定本次生成用的 URL：await 期间路由可能已变，完成时不能再读 shareUrl
+  const url = shareUrl.value;
+  if (qrSvg.value && qrUrlCache.value === url) return;
   qrLoading.value = true;
   try {
     const { toString } = await import("qrcode");
-    qrSvg.value = await toString(shareUrl.value, { type: "svg", margin: 1, width: 180 });
-    qrUrlCache.value = shareUrl.value;
+    const svg = await toString(url, { type: "svg", margin: 1, width: 180 });
+    // 期间路由已变：丢弃过期结果，由 finally 的补生成逻辑重跑
+    if (shareUrl.value !== url) return;
+    qrSvg.value = svg;
+    qrUrlCache.value = url;
   } catch (error) {
     console.error("二维码生成失败：", error);
-    $message.error("二维码生成失败");
+    if (typeof $message !== "undefined") {
+      $message.error("二维码生成失败");
+    }
     qrVisible.value = false;
   } finally {
     qrLoading.value = false;
+    // 被丢弃的过期结果会留下空 qrSvg，而面板仍开着 → 为当前 URL 补一次
+    if (qrVisible.value && !qrSvg.value) genQr();
   }
 };
 
@@ -123,9 +135,20 @@ const toggleQr = () => {
   if (qrVisible.value) genQr();
 };
 
-// 关闭面板时收起二维码
+// 关闭面板时收起并清空二维码（缓存按 URL 校验，清空避免占位）
 watch(show, (visible) => {
-  if (!visible) qrVisible.value = false;
+  if (!visible) {
+    qrVisible.value = false;
+    qrSvg.value = "";
+    qrUrlCache.value = "";
+  }
+});
+
+// 路由变化时二维码失效：面板开着按前进/后退，shareUrl 变了但面板还开着
+watch(shareUrl, () => {
+  qrSvg.value = "";
+  qrUrlCache.value = "";
+  if (qrVisible.value) genQr();
 });
 </script>
 
@@ -248,5 +271,4 @@ watch(show, (visible) => {
     }
   }
 }
-
 </style>

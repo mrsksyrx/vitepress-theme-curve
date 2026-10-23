@@ -58,11 +58,15 @@ const writeLikes = (store) => {
 
 const displayCount = computed(() => (count.value === null ? "-" : count.value));
 
-const fetchCount = async (id) => {
+// 切篇令牌：postId 变化时自增，在途请求的响应据此作废，避免旧响应污染新文章状态
+let reqToken = 0;
+
+const fetchCount = async (id, token) => {
   try {
     const res = await fetch(`/api/like?id=${encodeURIComponent(id)}`);
     if (!res.ok) return;
     const data = await res.json();
+    if (token !== reqToken) return;
     count.value = typeof data.count === "number" ? data.count : null;
   } catch {
     // 纯静态托管（无 /api）或网络失败：保持 "-"
@@ -73,9 +77,11 @@ const fetchCount = async (id) => {
 watch(
   postId,
   (id) => {
+    reqToken += 1;
+    pending.value = false;
     count.value = null;
     liked.value = !!readLikes()[id];
-    fetchCount(id);
+    fetchCount(id, reqToken);
   },
   { immediate: true },
 );
@@ -83,6 +89,7 @@ watch(
 const toggleLike = async () => {
   if (pending.value) return;
   const id = postId.value;
+  const token = reqToken;
   const willLike = !liked.value;
   const prevCount = count.value;
   pending.value = true;
@@ -100,6 +107,7 @@ const toggleLike = async () => {
   writeLikes(store);
 
   let failed = false;
+  let serverCount = null;
   try {
     const res = await fetch("/api/like", {
       method: "POST",
@@ -108,7 +116,7 @@ const toggleLike = async () => {
     });
     if (res.ok) {
       const data = await res.json();
-      count.value = typeof data.count === "number" ? data.count : null;
+      serverCount = typeof data.count === "number" ? data.count : null;
     } else {
       failed = true;
       if (res.status === 429 && typeof $message !== "undefined") {
@@ -119,16 +127,30 @@ const toggleLike = async () => {
     failed = true;
   }
 
+  // localStorage 始终按 id 恢复（不受切篇影响）
   if (failed) {
-    // 回滚乐观更新
-    liked.value = !willLike;
-    count.value = prevCount;
     const restored = readLikes();
     if (willLike) delete restored[id];
     else restored[id] = true;
     writeLikes(restored);
   }
-  pending.value = false;
+  // UI 只在「仍是同一篇」时回写：挡住写到新文章；
+  // 含离开再切回同一篇的窗口（watch 已按乐观 localStorage 恢复过，失败时须再对齐）
+  if (postId.value === id) {
+    if (failed) {
+      liked.value = !!readLikes()[id];
+      // 同轮失败才回滚 count；切回后的旧响应 count 已过期，交由在途 fetchCount 对齐
+      if (token === reqToken) {
+        count.value = prevCount;
+      }
+    } else {
+      count.value = serverCount;
+    }
+  }
+  // pending 仅本轮请求释放：切走时 watch 已重置，避免旧响应解锁新一篇的按钮
+  if (token === reqToken) {
+    pending.value = false;
+  }
 };
 </script>
 
