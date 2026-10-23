@@ -471,7 +471,7 @@ onUnmounted(() => {
 <style lang="scss" scoped>
 .message-wrapper {
   position: fixed;
-  z-index: 3000;
+  z-index: var(--z-message);
   display: inline-flex;
   flex-direction: column;
   align-items: flex-start;
@@ -560,7 +560,7 @@ onUnmounted(() => {
   width: 100%;
   width: 100vw;
   background-color: var(--main-color);
-  z-index: 3000;
+  z-index: var(--z-message);
   transition: opacity var(--press-out) var(--press-ease);
   .message-content {
     display: flex;
@@ -1006,7 +1006,7 @@ onUnmounted(() => {
   top: 16px;
   left: 50%;
   transform: translateX(-50%);
-  z-index: 3000;
+  z-index: var(--z-message);
   display: flex;
   flex-direction: column;
   align-items: center;

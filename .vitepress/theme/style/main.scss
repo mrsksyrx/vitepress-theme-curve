@@ -39,6 +39,10 @@
   --press-in: 80ms;
   --press-out: 160ms;
   --press-ease: cubic-bezier(0.4, 0, 0.2, 1);
+  // 全局浮层层级（低 → 高）：nav 1000 → … → player/普通弹窗 → elevated（分享/侧边栏）→ message
+  --z-player: 10000;
+  --z-elevated: 11000;
+  --z-message: 12000;
   --main-font-family:
     -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen-Sans, Ubuntu, Cantarell,
     "Helvetica Neue", sans-serif;

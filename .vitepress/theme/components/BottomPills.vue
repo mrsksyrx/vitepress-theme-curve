@@ -446,7 +446,7 @@ onBeforeUnmount(() => {
   flex-direction: column;
   align-items: center;
   gap: 10px;
-  z-index: 9999;
+  z-index: var(--z-player);
   opacity: 1;
   transform: translateX(-50%) translateY(0);
   transition:

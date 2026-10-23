@@ -5,6 +5,7 @@
     title="分享此页"
     titleIcon="link"
     :maxWidth="380"
+    elevated
     @mask-click="show = false"
     @modal-close="show = false"
   >
