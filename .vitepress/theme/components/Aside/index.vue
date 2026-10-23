@@ -25,7 +25,7 @@
 import { mainStore } from "@/store";
 const { theme } = useData();
 const store = mainStore();
-const props = defineProps({
+defineProps({
   // 显示目录
   showToc: {
     type: Boolean,

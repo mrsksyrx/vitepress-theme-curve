@@ -205,12 +205,8 @@
 
 <script setup>
 import { mainStore } from "@/store";
-import { useIsMobileLayout } from "@/utils/layout.js";
 
 const store = mainStore();
-
-// 根据页面布局决定默认消息样式
-const isMobileLayout = useIsMobileLayout();
 
 const useCardStyle = computed(() => {
   return store.messageStyle === "card";
@@ -269,11 +265,6 @@ const progressUpdateKey = ref(0);
 const bottomMessageType = computed(() => {
   if (islandMessages.value.length === 0) return "info";
   return islandMessages.value[0].type;
-});
-const bottomMessageKey = computed(() => {
-  if (islandMessages.value.length === 0) return 0;
-  progressUpdateKey.value; // 触发重新计算
-  return islandMessages.value[0].key;
 });
 const bottomMessageDuration = computed(() => {
   if (islandMessages.value.length === 0) return 0;

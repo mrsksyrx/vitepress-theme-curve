@@ -19,7 +19,7 @@ const route = useRoute();
 const { frontmatter } = useData();
 
 // 配置
-const props = defineProps({
+defineProps({
   showInfo: {
     type: Boolean,
     default: false,
@@ -163,20 +163,6 @@ const schedulePersist = () => {
       flushReadingData();
     }
   }, wait);
-};
-
-// 加载阅读数据
-const loadReadingData = () => {
-  const postId = route.path;
-  if (!postId) return null;
-
-  let readingData = {};
-  try {
-    readingData = JSON.parse(localStorage.getItem("readingData") || "{}") || {};
-  } catch {
-    readingData = {};
-  }
-  return readingData[postId] || null;
 };
 
 // 检查是否为文章页面（posts/ 路径，或 frontmatter 声明 layout: post）

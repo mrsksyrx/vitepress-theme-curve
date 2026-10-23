@@ -24,7 +24,7 @@
 <script setup>
 const { theme } = useData();
 const router = useRouter();
-const props = defineProps({
+defineProps({
   // 填充评论区
   fill: {
     type: [Boolean, String],

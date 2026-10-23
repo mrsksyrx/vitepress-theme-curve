@@ -28,10 +28,8 @@
 </template>
 
 <script setup>
-import { mainStore } from "@/store";
 import { useIsMobileLayout } from "@/utils/layout.js";
 
-const store = mainStore();
 const isMobile = useIsMobileLayout();
 
 const props = defineProps({

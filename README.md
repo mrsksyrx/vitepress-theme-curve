@@ -50,7 +50,7 @@ Docs: 📖 [主题文档](https://blog.imsyy.top/pages/categories/%E4%B8%BB%E9%A
 
 ```bash
 # 安装依赖
-npm run install
+npm install
 # 构建
 npm run build
 ```
@@ -90,10 +90,9 @@ pnpm build
 
 这些问题在仓库中**真实存在**，在此如实记录，避免使用者踩坑：
 
-- **质量链覆盖不全**：裸 `tsc` 不解析 `.vue` 单文件组件，实际参与类型检查的只有 2 个 `.ts` 与 2 个生成的 `.d.ts`，57 个 `.vue` 全部未被覆盖（完整覆盖需要 `vue-tsc`，本项目未安装也没有 `typecheck` 脚本）。ESLint 已覆盖 `.vitepress/` 与 `api/`、`functions/` 的 `.ts`（`pnpm lint` 显式传入 `.vitepress`，`--ext` 含 `.ts`）。
+- **质量链覆盖不全**：裸 `tsc` 不解析 `.vue` 单文件组件，实际参与类型检查的只有 `api/` 与 `functions/api/` 下的 6 个 `.ts`、`env.d.ts` 与 2 个生成的 `*.d.ts`，全仓 60+ 个 `.vue` 全部未被覆盖（完整覆盖需要 `vue-tsc`，本项目未安装也没有 `typecheck` 脚本）。ESLint 已覆盖 `.vitepress/` 与 `api/`、`functions/` 的 `.ts`（`pnpm lint` 显式传入 `.vitepress`，`--ext` 含 `.ts`）。
 - **仓库没有测试套件**：`package.json` 中没有 test 脚本，也没有任何单测框架；`timeTools`、`getPostData`、分页数学等纯函数建议后续补齐单元测试。
 - **密钥仍在版本控制中**：`.env` 至今仍被 Git 跟踪，其内容与 `HEAD` 完全一致，且 `.gitignore` **没有**忽略它（见下方[安全提示](#安全提示)）。
-- **`.eslintignore` 残留**：其中仍列有已删除的临时目录（`_fix2`、`_fix3`、`.dsh_baseline`、`_fix_t1`、`_t4_*`）等历史条目。
 - **跳转壳的重复内容**：`page.md`、`page/index.md`、`page/1.md`、`pages/index.md` 内容逐字节相同。`gray-matter` 以文件内容为键缓存解析结果，相同内容的文件会共享同一个 `head` 数组，历史上曾导致 canonical 标签跨页累积。构建配置现已在 `transformPageData` 中按页重建 `head`（替换引用、不就地 `push`，并保留 frontmatter 里用户自定义的 head 项，仅剔除 canonical 后补本页那条），但**共享 `head` 数组的根因仍在**，日后若在 `transformPageData` 里就地 `push` 新的 head 字段，同类问题会复现。
 - **构建期会写入工作区**：加载 `.vitepress/config.mjs` 时会重新生成 `public/data/postData.json`，因此运行 `dev`/`build` 后 `git status` 必然出现该文件的变动。该文件**未被跟踪且已被 `.gitignore` 忽略**，不会污染提交。
 - **`jumpRedirect` 默认关闭、本站已启用**：相关实现与 `/redirect.html` 已就位，主题默认 `jumpRedirect.enable: false`，但根目录 `themeConfig.mjs` 覆盖为 `true`。代码层缺陷（`text()` 丢嵌套元素、缺同源检查、非 http(s) 协议被包进中转页、Base64 非 UTF-8 对称）已修复。
@@ -106,7 +105,7 @@ pnpm build
 ## 安全提示
 
 - **`.env` 仍在版本控制中**：该文件已被提交，内容与 `HEAD` 一致，且 `.gitignore` 未忽略它（`git ls-files .env` 可复现）。处理顺序应当是：**先吊销/轮换其中所有凭据**，再把它移出跟踪（`git rm --cached .env` 并补进 `.gitignore`），最后按需用 `git filter-repo` 重写历史——顺序颠倒会让旧密钥在历史中继续有效。注意 `git rm --cached .env` **并不会**清掉仓库里其它位置的同一凭据。
-- **同一个高德 Key 还有第二处明文**：除了 `.env:1`，`.vitepress/theme/assets/themeConfig.mjs` 的 `weatherkey` 注释块里也留了一份明文（`git grep -n "1d65cc630df1f212e1d2e928643e3974"` 可复现两处）。该字段已废弃（天气挂件现在读 `import.meta.env.VITE_WEATHER_KEY`），但注释里的明文会随仓库公开。轮换 Key 时两处都要处理，且因为 `VITE_` 变量会被打包进前端产物、天气请求由**访客浏览器**直连 `restapi.amap.com`，这个 Key 本质上是公开的、无法用域名/IP 白名单保护——实际风险是**当日 5000 次配额被烧掉导致天气挂件失效**，不涉及账户接管。
+- **同一个高德 Key 还有第二处明文**：除了 `.env:1`，`.vitepress/theme/assets/themeConfig.mjs` 的 `weatherkey` 注释块里也留了一份明文（在源码中搜索该 Key 的前 8 位即可定位两处）。该字段已废弃（天气挂件现在读 `import.meta.env.VITE_WEATHER_KEY`），但注释里的明文会随仓库公开。轮换 Key 时两处都要处理，且因为 `VITE_` 变量会被打包进前端产物、天气请求由**访客浏览器**直连 `restapi.amap.com`，这个 Key 本质上是公开的、无法用域名/IP 白名单保护——实际风险是**当日 5000 次配额被烧掉导致天气挂件失效**，不涉及账户接管。
 - 站点内含个人化配置与统计、评论等服务凭据，公开部署前请逐项检查 `themeConfig.mjs`、`.env` 与 `api/`、`functions/` 下的环境变量读取。
 - 所有 `VITE_` 前缀的变量都会被**打包进前端产物**，对其调用方可见，只应放可公开的值；`BETTER_STACK_API_TOKEN` 只在服务端使用，切勿加 `VITE_` 前缀或写入前端代码。
 

@@ -131,11 +131,9 @@
 </template>
 
 <script setup>
-import { storeToRefs } from "pinia";
 import { mainStore } from "@/store";
 
 const store = mainStore();
-const { playerData, playState } = storeToRefs(store);
 
 const visible = computed(() => store.islandStyle === "extended" && store.playerShow);
 const pillStackHidden = ref(false);
@@ -235,7 +233,9 @@ const loadLyrics = async () => {
     if (res.ok) {
       pillLyrics.value = parseLrc(await res.text());
     }
-  } catch {}
+  } catch (e) {
+    console.warn("歌词加载失败", e);
+  }
 };
 
 // 封面切换：交叉淡入淡出

@@ -2023,7 +2023,6 @@ const themeColorList = [
 const fontSizeEditing = ref(false);
 const fontSizeWarnVisible = ref(false);
 const removeAnimationsWarnVisible = ref(false);
-const advancedSettingsExpanded = ref(false);
 
 // 开发模式入口方法
 // 10 秒内点击 10 次「更多字体」按钮展示开发模式入口（入口显示在分支策略合并菜单内）

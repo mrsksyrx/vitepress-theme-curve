@@ -185,32 +185,6 @@ const fetchWeather = async (showMsg = false) => {
         const data = await getWeatherOpenMeteo(queryLat, queryLon);
         const c = data?.current;
         if (c) {
-          // WMO 天气代码转描述
-          const WMO_DESC = {
-            0: "晴",
-            1: "大部晴",
-            2: "多云",
-            3: "阴",
-            45: "雾",
-            48: "雾凇",
-            51: "小毛毛雨",
-            53: "毛毛雨",
-            55: "大毛毛雨",
-            61: "小雨",
-            63: "中雨",
-            65: "大雨",
-            71: "小雪",
-            73: "中雪",
-            75: "大雪",
-            80: "小阵雨",
-            81: "阵雨",
-            82: "大阵雨",
-            85: "小阵雪",
-            86: "大阵雪",
-            95: "雷暴",
-            96: "雷暴+小冰雹",
-            99: "雷暴+大冰雹",
-          };
           weatherData.value = {
             city: city,
             temperature: c.temperature_2m,
