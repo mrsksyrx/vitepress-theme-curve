@@ -393,6 +393,10 @@ export const themeConfig = {
     // 支付宝二维码
     alipay: "https://raw.20100907.xyz/pic/pay/zfb.webp",
   },
+  // 全局点赞（Vercel KV，见 api/like.ts；未配置 KV 时按钮计数显示 "-"）
+  likeData: {
+    enable: true,
+  },
   // 「编辑此页」链接（文章底部，链到 GitHub 源文件编辑页）
   editLink: {
     enable: false,

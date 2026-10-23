@@ -161,6 +161,7 @@
             </a>
           </div>
         </div>
+        <LikeButton />
         <RewardBtn />
         <!-- 下一篇 -->
         <NextPost />

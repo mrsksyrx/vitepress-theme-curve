@@ -64,6 +64,10 @@ pnpm build
 
 通常在未修改配置文件的情况下，打包后的文件会处于根目录下的 `.vitepress\dist` 目录中，您可以将其中的文件上传至任意服务器以访问。
 
+#### 全局点赞（可选，Vercel）
+
+文章底部的点赞按钮（`LikeButton.vue`）通过 `api/like.ts` 读写全局计数，存储需要 Redis：在 Vercel 项目的 Dashboard → Storage 中创建 Upstash for Redis 并连接到项目，集成会自动注入 REST 环境变量（`api/like.ts` 兼容 `KV_REST_API_URL`/`TOKEN`、`UPSTASH_REDIS_REST_URL`/`TOKEN` 以及 Marketplace 自定义前缀生成的 `UPSTASH_REDIS_REST_KV_REST_API_URL`/`TOKEN` 三组命名），重新部署一次即可生效。未配置时按钮仍会渲染，计数显示 `-`，不影响构建与静态部署（纯静态托管下点击不会计入全局计数）。
+
 ## 更多
 
 更多信息请参考：[主题文档](https://blog.imsyy.top/pages/categories/%E4%B8%BB%E9%A2%98%E6%96%87%E6%A1%A3)

@@ -360,6 +360,65 @@ export default withPwa(
             });
           },
         },
+        {
+          // 本地 dev 没有 Vercel Functions，补一个与 api/like.ts 同口径的点赞端点。
+          // 必须拦截在 Vite 转译之前，否则 /api/like 会被当模块转译 api/like.ts 触发红色遮罩。
+          // 计数存内存，仅本次 dev server 生命周期有效（重启清零）。
+          name: "like-api",
+          configureServer(server) {
+            const counts = new Map();
+            const isValidId = (v) =>
+              typeof v === "string" &&
+              v.length > 0 &&
+              v.length <= 300 &&
+              /^[A-Za-z0-9_\-./一-鿿]+$/.test(v);
+            server.middlewares.use("/api/like", (req, res) => {
+              res.setHeader("Content-Type", "application/json");
+              res.setHeader("Cache-Control", "no-store");
+              const url = new URL(req.url || "", "http://localhost");
+              if (req.method === "GET") {
+                const id = url.searchParams.get("id");
+                if (!isValidId(id)) {
+                  res.statusCode = 400;
+                  res.end(JSON.stringify({ error: "invalid id" }));
+                  return;
+                }
+                res.end(JSON.stringify({ count: counts.get(id) || 0 }));
+                return;
+              }
+              if (req.method === "POST") {
+                let body = "";
+                req.on("data", (chunk) => {
+                  body += chunk;
+                });
+                req.on("end", () => {
+                  try {
+                    const { id, action } = JSON.parse(body);
+                    if (!isValidId(id)) {
+                      res.statusCode = 400;
+                      res.end(JSON.stringify({ error: "invalid id" }));
+                      return;
+                    }
+                    if (action !== "inc" && action !== "dec") {
+                      res.statusCode = 400;
+                      res.end(JSON.stringify({ error: "invalid action" }));
+                      return;
+                    }
+                    const next = Math.max(0, (counts.get(id) || 0) + (action === "inc" ? 1 : -1));
+                    counts.set(id, next);
+                    res.end(JSON.stringify({ count: next }));
+                  } catch (e) {
+                    res.statusCode = 500;
+                    res.end(JSON.stringify({ error: e.message }));
+                  }
+                });
+                return;
+              }
+              res.statusCode = 405;
+              res.end(JSON.stringify({ error: "method not allowed" }));
+            });
+          },
+        },
       ],
       resolve: {
         // 配置路径别名
