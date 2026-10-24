@@ -39,6 +39,10 @@
   --press-in: 80ms;
   --press-out: 160ms;
   --press-ease: cubic-bezier(0.4, 0, 0.2, 1);
+  // 全局浮层层级（低 → 高）：nav 1000 → … → player/普通弹窗 → elevated（分享/侧边栏）→ message
+  --z-player: 10000;
+  --z-elevated: 11000;
+  --z-message: 12000;
   --main-font-family:
     -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen-Sans, Ubuntu, Cantarell,
     "Helvetica Neue", sans-serif;
@@ -1504,11 +1508,16 @@ html {
   }
 }
 
-// 无 JS 时隐藏依赖交互和客户端数据的区域，避免 SSR 占位内容误导用户
+// 无 JS 时保留已静态生成的文章内容，隐藏仅供交互使用的控件
 html:not(.js-enabled) {
   .main-header,
   .main-aside,
   .left-menu {
+    display: none !important;
+  }
+
+  // 分页页码是真实链接可直接点，只有快速跳转输入框依赖 JS
+  .pagination .fast-jump {
     display: none !important;
   }
 
@@ -1755,7 +1764,7 @@ a {
   background: var(--cursor-bg-color, #e8558e); // 默认值为粉色
   border-radius: 25px;
   opacity: 0.25;
-  z-index: 10086;
+  z-index: var(--z-message);
   pointer-events: none;
   transition: 0.2s ease-in-out;
   transition-property: background, opacity, transform;

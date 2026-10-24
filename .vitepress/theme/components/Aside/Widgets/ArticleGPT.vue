@@ -60,7 +60,9 @@ const typeWriter = (text = null) => {
   } catch (error) {
     loading.value = false;
     abstractData.value = "摘要生成失败";
-    $message.error("摘要生成失败，请重试");
+    if (typeof $message !== "undefined") {
+      $message.error("摘要生成失败，请重试");
+    }
     console.error("摘要生成失败：", error);
   }
 };

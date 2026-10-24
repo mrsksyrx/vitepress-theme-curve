@@ -83,7 +83,7 @@ const router = useRouter();
 // 相对时间基于浏览器本地时钟实时计算
 const { now } = useClientNow();
 
-const props = defineProps({
+defineProps({
   // 列表数据
   listData: {
     type: [Array, String],

@@ -40,6 +40,7 @@ export const PERSIST_PATHS = [
   "customThemeBeforeHighContrast",
   "removeAnimations",
   "pwaCacheEnabled",
+  "localSearchMode",
   "readingHistoryLimit",
   "readingProgressEnabled",
   "hoverLineEnabled",

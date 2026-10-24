@@ -11,9 +11,8 @@
         <!-- 分页 -->
         <Pagination
           :total="allListTotal"
-          :page="Number(page)"
+          :page="currentPage"
           :limit="postSize"
-          :useParams="showCategories || showTags ? true : false"
           :routePath="
             showCategories
               ? `/pages/categories/${encodeURIComponent(showCategories)}`
@@ -72,7 +71,7 @@ const props = defineProps({
 // 每页文章数（钳制下界与 page/[num].paths.mjs 一致：0 会让 totalPages 变 Infinity，NaN 会让分页失效）
 const postSize = Math.max(1, Number(theme.value.postSize) || 1);
 
-// 当前页数（分类 / 标签页使用 query 参数控制，需要手动保持响应式）
+// 当前页数（分类 / 标签页的静态 /page/N 与旧 ?page= 链接都需要手动保持响应式）
 const currentPage = ref(props.page || 1);
 
 // 列表总数量
@@ -105,18 +104,18 @@ const clampPage = (page) => {
 
 // 获得当前页数
 const getCurrentPage = () => {
-  if (props.showCategories || props.showTags) {
-    if (typeof window === "undefined") return 1;
-    const routePath = route.path;
-    const search = routePath.includes("?") ? routePath.split("?")[1] : window.location.search;
-    const params = new URLSearchParams(search);
-    return clampPage(Number(params.get("page")));
-  }
-  // [B21] 路径分页（/page/N）也从 URL 解析，统一以 URL 为唯一信源，
-  // 避免 props.page 未及时变化时列表与 Pagination 高亮分叉
+  // [B21] 路径分页（/page/N，含分类/标签的静态分页页）从 URL 解析，
+  // 统一以 URL 为唯一信源，避免 props.page 未及时变化时列表与 Pagination 高亮分叉
   if (typeof window !== "undefined") {
     const match = window.location.pathname.match(/\/page\/(\d+)\/?$/);
     if (match) return clampPage(Number(match[1]));
+  }
+  // 旧版分类/标签分页曾用 ?page= 查询参数，链接可能已被收藏，仍兼容读取
+  if ((props.showCategories || props.showTags) && typeof window !== "undefined") {
+    const routePath = route.path;
+    const search = routePath.includes("?") ? routePath.split("?")[1] : window.location.search;
+    const params = new URLSearchParams(search);
+    if (params.has("page")) return clampPage(Number(params.get("page")));
   }
   return clampPage(props.page || 1);
 };

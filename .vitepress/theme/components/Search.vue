@@ -1,7 +1,7 @@
-<!-- 全局搜索内容（Modal 壳在 Nav 同步渲染，这里只放重依赖的 Algolia 部分） -->
+<!-- 全局搜索内容（Modal 壳在 Nav 同步渲染；在线走 Algolia，离线/失败/未配置走本地 MiniSearch） -->
 <template>
   <ais-instant-search
-    v-if="hasSearchConfig"
+    v-if="mode === 'algolia'"
     ref="instantSearchRef"
     :search-client="searchClient"
     :future="{
@@ -43,24 +43,71 @@
         <div class="information">
           <span v-if="hasSearchValue" class="text"> 本次用时 {{ processingTimeMS }} 毫秒 </span>
         </div>
-        <a
-          class="power"
-          href="https://www.algolia.com/"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
+        <a class="power" href="https://www.algolia.com/" target="_blank" rel="noopener noreferrer">
           <i class="iconfont icon-algolia" />
           <span class="name">Algolia</span>
         </a>
       </template>
     </ais-stats>
   </ais-instant-search>
+  <div v-else-if="mode === 'local'" class="local-search">
+    <input
+      :key="localInputKey"
+      v-model="localQuery"
+      class="local-input"
+      placeholder="想要搜点什么"
+      autofocus
+    />
+    <div class="local-hits">
+      <Transition name="fade" mode="out-in">
+        <div v-if="localLoading" class="no-result">
+          <span class="text">索引加载中…</span>
+        </div>
+        <div v-else-if="localLoadFailed" class="no-result">
+          <span class="text">本地索引加载失败</span>
+          <button class="retry-btn" type="button" @click="retryLocal">重试</button>
+        </div>
+        <div v-else-if="localQuery && !localResults.length" class="no-result">
+          <i class="iconfont icon-search-empty" />
+          <span class="text">搜索结果为空</span>
+        </div>
+        <div v-else-if="localResults.length" class="search-list">
+          <div
+            v-for="item in pagedLocalResults"
+            :key="item.url"
+            class="search-item s-card hover"
+            @click="jumpSearch(item.url)"
+          >
+            <p class="title" v-html="item.title" />
+            <p v-if="item?.anchor" class="anchor" v-html="item.anchor" />
+            <p v-if="item?.content" class="content s-card" v-html="item.content" />
+          </div>
+          <button
+            v-if="localResults.length > localLimit"
+            class="load-more-btn"
+            type="button"
+            @click="localLimit += 8"
+          >
+            加载更多（剩余 {{ localResults.length - localLimit }} 条）
+          </button>
+        </div>
+      </Transition>
+    </div>
+    <div class="local-footer">
+      <span v-if="localQuery && localResults.length" class="text">
+        共 {{ localResults.length }} 条结果
+      </span>
+      <span class="local-brand">本地搜索</span>
+    </div>
+  </div>
   <div v-else class="no-config">搜索未配置</div>
 </template>
 
 <script setup>
 import { mainStore } from "@/store";
+import { debounce } from "lodash-es";
 import { liteClient } from "algoliasearch/lite";
+import { useLocalSearch } from "@/utils/useLocalSearch.mjs";
 // 显式导入，避免依赖 app.use 全局注册（Nav 里注册时机不可靠会导致组件不渲染）
 import {
   AisInstantSearch,
@@ -75,14 +122,51 @@ const store = mainStore();
 const router = useRouter();
 
 const { theme } = useData();
-const { appId, apiKey, index } = theme.value.search ?? {};
+const { appId, apiKey, index, local } = theme.value.search ?? {};
 
 const hasSearchConfig = Boolean(appId && apiKey);
-if (!hasSearchConfig) {
-  console.warn("[Search] theme.search 缺少 appId / apiKey，搜索功能不可用");
+const localEnabled = computed(() => local?.enable !== false);
+if (!hasSearchConfig && localEnabled.value) {
+  console.warn("[Search] theme.search 缺少 appId / apiKey，已使用本地搜索");
 }
-const searchClient = hasSearchConfig ? liteClient(appId, apiKey) : null;
+
+// 包装 liteClient：Algolia 请求失败时切本地（InstantSearch 无 facet 用法只调 search）
+const algoliaFailed = ref(false);
+const liteClientInstance = hasSearchConfig ? liteClient(appId, apiKey) : null;
+const searchClient = hasSearchConfig
+  ? {
+      search: (requests) =>
+        liteClientInstance.search(requests).catch((err) => {
+          algoliaFailed.value = true;
+          throw err;
+        }),
+    }
+  : null;
 const indexName = index || "chiyu_it_0f1duc8max_pages";
+
+// 在线状态（组件在 ClientOnly 内，仍防御 window 不存在）
+const isOnline = ref(true);
+onMounted(() => {
+  isOnline.value = navigator.onLine;
+  window.addEventListener("online", () => {
+    isOnline.value = true;
+    algoliaFailed.value = false;
+  });
+  window.addEventListener("offline", () => {
+    isOnline.value = false;
+  });
+});
+
+// 模式：algolia / local / none
+// store.localSearchMode：off 不用本地 / on 仅离线或失败时降级 / always 始终本地
+const mode = computed(() => {
+  const localMode = localEnabled.value ? store.localSearchMode : "off";
+  if (localMode === "always") return "local";
+  if (localMode === "off") return hasSearchConfig ? "algolia" : "none";
+  if (!hasSearchConfig) return "local";
+  if (!isOnline.value || algoliaFailed.value) return "local";
+  return "algolia";
+});
 
 // 是否具有搜索词
 const hasSearchValue = ref(false);
@@ -98,6 +182,11 @@ watch(
     hasSearchValue.value = false;
     searchBoxKey.value += 1;
     instantSearchRef.value?.instantSearchInstance?.setUiState({ [indexName]: { query: "" } });
+    // 本地模式同步清空（非受控 input 同样换 key）
+    localQuery.value = "";
+    localResults.value = [];
+    localLimit.value = 8;
+    localInputKey.value += 1;
   },
 );
 
@@ -114,15 +203,15 @@ const sanitizeHighlight = (value) => {
   // 高亮标记有三种来源：InstantSearch 请求标记 __ais-highlight__、
   // 索引默认 <em>、instantsearch hits 插槽转换后的 <mark>，先暂存再统一还原
   return value
-    .replace(/__ais-highlight__/g, "\uE000")
-    .replace(/__\/ais-highlight__/g, "\uE001")
-    .replace(/<em[^>]*>/gi, "\uE000")
-    .replace(/<\/em\s*>/gi, "\uE001")
-    .replace(/<mark[^>]*>/gi, "\uE000")
-    .replace(/<\/mark\s*>/gi, "\uE001")
+    .replace(/__ais-highlight__/g, "")
+    .replace(/__\/ais-highlight__/g, "")
+    .replace(/<em[^>]*>/gi, "")
+    .replace(/<\/em\s*>/gi, "")
+    .replace(/<mark[^>]*>/gi, "")
+    .replace(/<\/mark\s*>/gi, "")
     .replace(/<[^>]*>/g, "")
-    .replace(/\uE000/g, "<mark>")
-    .replace(/\uE001/g, "</mark>");
+    .replace(//g, "<mark>")
+    .replace(//g, "</mark>");
 };
 
 // 取首个命中搜索词的标题行，否则退回第一行，作为结果卡片的锚点
@@ -189,45 +278,99 @@ const jumpSearch = (url) => {
   router.go(url);
 };
 
+// ---- 本地搜索（MiniSearch）----
+const {
+  loading: localLoading,
+  loadFailed: localLoadFailed,
+  loadIndex,
+  search: runLocalSearch,
+} = useLocalSearch();
+const localQuery = ref("");
+const localResults = ref([]);
+const localLimit = ref(8);
+const localInputKey = ref(0);
+
+// HTML 转义先行，防 v-html XSS，再注入 <mark>
+const escapeHtml = (s) =>
+  String(s).replace(
+    /[&<>"']/g,
+    (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c],
+  );
+
+const highlightLocal = (text, terms) => {
+  let out = escapeHtml(text || "");
+  for (const t of terms) {
+    if (!t) continue;
+    const re = new RegExp(t.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), "gi");
+    out = out.replace(re, (m) => `<mark>${m}</mark>`);
+  }
+  return out;
+};
+
+// 高亮词：query 按空白切分 + 抽取其中的 CJK 连续段（bigram 是检索机制，
+// 高亮直接匹配用户输入的整段中文更直观）
+const highlightTerms = (query) => {
+  const parts = String(query).trim().split(/\s+/).filter(Boolean);
+  const cjk = String(query).match(/[\u4e00-\u9fff]{2,}/g) || [];
+  return [...new Set([...parts, ...cjk])];
+};
+
+const pagedLocalResults = computed(() => localResults.value.slice(0, localLimit.value));
+
+const runLocalSearchDebounced = debounce(async () => {
+  localLimit.value = 8;
+  try {
+    const hits = await runLocalSearch(localQuery.value);
+    const terms = highlightTerms(localQuery.value);
+    localResults.value = hits.slice(0, 32).map((h) => {
+      const matchedHeading = (h.headings || []).find((t) =>
+        terms.some((term) => t.toLowerCase().includes(term.toLowerCase())),
+      );
+      const rawContent = highlightLocal(h.content || "", terms);
+      return {
+        url: h.url,
+        title: highlightLocal(h.title || "", terms),
+        anchor: matchedHeading ? escapeHtml(matchedHeading) : "",
+        content: rawContent.includes("<mark>")
+          ? excerptAroundMatch(rawContent)
+          : escapeHtml(h.description || ""),
+      };
+    });
+  } catch {
+    localResults.value = []; // loadFailed 分支负责展示
+  }
+}, 150);
+watch(localQuery, () => {
+  if (mode.value === "local") runLocalSearchDebounced();
+});
+
+// mode 切到 local 时预取索引（离线时走 SW precache）
+watch(
+  mode,
+  (m) => {
+    if (m === "local") loadIndex().catch(() => {});
+  },
+  { immediate: true },
+);
+
+const retryLocal = () => {
+  loadIndex()
+    .then(() => runLocalSearchDebounced())
+    .catch(() => {});
+};
+
 onBeforeUnmount(() => {
   hasSearchValue.value = false;
+  runLocalSearchDebounced.cancel();
 });
 </script>
 
 <style lang="scss">
-.ais-InstantSearch {
+.ais-InstantSearch,
+.local-search {
   height: 100%;
-  .ais-SearchBox {
-    height: 40px;
-    width: 100%;
-    .ais-SearchBox-input {
-      width: 100%;
-      outline: none;
-      border-radius: 8px;
-      font-size: 16px;
-      padding: 0.6rem 1rem;
-      color: var(--main-font-color);
-      font-family: var(--main-font-family);
-      border: 1px solid var(--main-card-border);
-      background-color: var(--main-card-second-background);
-      transition:
-        border-color 0.3s,
-        box-shadow 0.3s;
-      &:focus {
-        border-color: var(--main-color);
-        box-shadow: 0 8px 16px -4px var(--main-color-bg);
-      }
-      &::-webkit-search-cancel-button {
-        display: none;
-      }
-    }
-    .ais-SearchBox-loadingIndicator,
-    .ais-SearchBox-submit,
-    .ais-SearchBox-reset {
-      display: none;
-    }
-  }
-  .ais-Hits {
+  .ais-Hits,
+  .local-hits {
     margin-top: 20px;
     min-height: 300px;
     height: 100%;
@@ -244,6 +387,22 @@ onBeforeUnmount(() => {
       .text {
         font-size: 18px;
         opacity: 0.6;
+      }
+      .retry-btn {
+        margin-top: 12px;
+        padding: 6px 16px;
+        border-radius: 8px;
+        border: 1px solid var(--main-card-border);
+        background-color: var(--main-card-second-background);
+        color: var(--main-font-color);
+        cursor: pointer;
+        transition:
+          border-color 0.3s,
+          color 0.3s;
+        &:hover {
+          border-color: var(--main-color);
+          color: var(--main-color);
+        }
       }
     }
     .search-list {
@@ -289,6 +448,55 @@ onBeforeUnmount(() => {
           margin-bottom: 0;
         }
       }
+      .load-more-btn {
+        display: block;
+        width: 100%;
+        margin-top: 8px;
+        padding: 8px 0;
+        border-radius: 8px;
+        border: 1px solid var(--main-card-border);
+        background-color: var(--main-card-second-background);
+        color: var(--main-font-second-color);
+        font-size: 14px;
+        cursor: pointer;
+        transition:
+          border-color 0.3s,
+          color 0.3s;
+        &:hover {
+          border-color: var(--main-color);
+          color: var(--main-color);
+        }
+      }
+    }
+  }
+  .ais-SearchBox {
+    height: 40px;
+    width: 100%;
+    .ais-SearchBox-input {
+      width: 100%;
+      outline: none;
+      border-radius: 8px;
+      font-size: 16px;
+      padding: 0.6rem 1rem;
+      color: var(--main-font-color);
+      font-family: var(--main-font-family);
+      border: 1px solid var(--main-card-border);
+      background-color: var(--main-card-second-background);
+      transition:
+        border-color 0.3s,
+        box-shadow 0.3s;
+      &:focus {
+        border-color: var(--main-color);
+        box-shadow: 0 8px 16px -4px var(--main-color-bg);
+      }
+      &::-webkit-search-cancel-button {
+        display: none;
+      }
+    }
+    .ais-SearchBox-loadingIndicator,
+    .ais-SearchBox-submit,
+    .ais-SearchBox-reset {
+      display: none;
     }
   }
   .ais-Pagination {
@@ -340,7 +548,8 @@ onBeforeUnmount(() => {
       }
     }
   }
-  .ais-Stats {
+  .ais-Stats,
+  .local-footer {
     display: flex;
     align-items: center;
     flex-direction: row;
@@ -348,7 +557,8 @@ onBeforeUnmount(() => {
     margin-top: 20px;
     opacity: 0.8;
     font-size: 14px;
-    .power {
+    .power,
+    .local-brand {
       display: flex;
       flex-direction: row;
       align-items: center;
@@ -365,12 +575,12 @@ onBeforeUnmount(() => {
       .name {
         font-weight: bold;
       }
-      &:hover {
-        opacity: 1;
+    }
+    .power:hover {
+      opacity: 1;
+      color: var(--main-color);
+      .iconfont {
         color: var(--main-color);
-        .iconfont {
-          color: var(--main-color);
-        }
       }
       &:active {
         opacity: 1;
@@ -382,6 +592,29 @@ onBeforeUnmount(() => {
       .information {
         display: none;
       }
+    }
+  }
+}
+// 本地搜索输入框在 .ais-SearchBox 之外，单独挂样式
+.local-search {
+  .local-input {
+    width: 100%;
+    height: 40px;
+    outline: none;
+    border-radius: 8px;
+    font-size: 16px;
+    padding: 0.6rem 1rem;
+    color: var(--main-font-color);
+    font-family: var(--main-font-family);
+    border: 1px solid var(--main-card-border);
+    background-color: var(--main-card-second-background);
+    box-sizing: border-box;
+    transition:
+      border-color 0.3s,
+      box-shadow 0.3s;
+    &:focus {
+      border-color: var(--main-color);
+      box-shadow: 0 8px 16px -4px var(--main-color-bg);
     }
   }
 }

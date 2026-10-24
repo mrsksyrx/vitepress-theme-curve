@@ -1157,9 +1157,9 @@
               <div class="set-options">
                 <span
                   :class="['options', { choose: weatherLocationMode === 'satellite' }]"
-                  @click="switchLocationMode('satellite', '自动')"
+                  @click="switchLocationMode('satellite', '精确')"
                 >
-                  自动
+                  精确
                 </span>
                 <span
                   :class="['options', { choose: weatherLocationMode === 'ip' }]"
@@ -1195,20 +1195,9 @@
                     box-sizing: border-box;
                   "
                   placeholder="例如：苏州"
-                  @keyup.enter="
-                    weatherRefreshTrigger++;
-                    window.dispatchEvent(new Event('weather-refresh'));
-                  "
+                  @keyup.enter="weatherRefreshTrigger++"
                 />
-                <span
-                  class="options"
-                  @click="
-                    weatherRefreshTrigger++;
-                    window.dispatchEvent(new Event('weather-refresh'));
-                  "
-                >
-                  确认
-                </span>
+                <span class="options" @click="weatherRefreshTrigger++"> 确认 </span>
               </div>
             </div>
             <div class="set-item">
@@ -1361,6 +1350,29 @@
               </div>
             </div>
           </Transition>
+          <div class="set-item">
+            <span class="set-label">搜索数据来源</span>
+            <div class="set-options">
+              <span
+                :class="['options', { choose: localSearchMode === 'off' }]"
+                @click="localSearchMode = 'off'"
+              >
+                云端
+              </span>
+              <span
+                :class="['options', { choose: localSearchMode === 'on' }]"
+                @click="localSearchMode = 'on'"
+              >
+                自动
+              </span>
+              <span
+                :class="['options', { choose: localSearchMode === 'always' }]"
+                @click="localSearchMode = 'always'"
+              >
+                仅本地
+              </span>
+            </div>
+          </div>
           <!-- 开发中的功能（开发模式） -->
           <template v-if="store.devMode === 2">
             <div class="set-item">
@@ -1752,6 +1764,7 @@ const {
   scheduledLightTime,
   scheduledDarkTime,
   pwaCacheEnabled,
+  localSearchMode,
   readingHistoryLimit,
   readingProgressEnabled,
   hoverLineEnabled,
@@ -1796,10 +1809,14 @@ const clearPwaCache = async () => {
         cleared++;
       }
     }
-    $message.success(`已清除 ${cleared} 个运行时缓存`, { duration: 2000 });
+    if (typeof $message !== "undefined") {
+      $message.success(`已清除 ${cleared} 个运行时缓存`, { duration: 2000 });
+    }
   } catch (e) {
     console.error("Clear PWA cache failed:", e);
-    $message.error("清除缓存失败", { duration: 2000 });
+    if (typeof $message !== "undefined") {
+      $message.error("清除缓存失败", { duration: 2000 });
+    }
   } finally {
     pwaCacheClearing.value = false;
   }
@@ -1995,7 +2012,6 @@ const themeColorList = [
 const fontSizeEditing = ref(false);
 const fontSizeWarnVisible = ref(false);
 const removeAnimationsWarnVisible = ref(false);
-const advancedSettingsExpanded = ref(false);
 
 // 开发模式入口方法
 // 10 秒内点击 10 次「更多字体」按钮展示开发模式入口（入口显示在分支策略合并菜单内）
@@ -2126,7 +2142,9 @@ const saveStoreDefaults = async (data) => {
     const json = await res.json();
     if (!json.ok) {
       console.error("Save failed:", json.error);
-      $message.warning(`保存失败：${json.error || "格式不合法"}`);
+      if (typeof $message !== "undefined") {
+        $message.warning(`保存失败：${json.error || "格式不合法"}`);
+      }
       return false;
     }
     return true;
@@ -2142,7 +2160,6 @@ const saveStoreDefaults = async (data) => {
 // 切换天气定位方式
 const switchLocationMode = (mode, label) => {
   weatherLocationMode.value = mode;
-  window.dispatchEvent(new Event("weather-refresh"));
   if (typeof $message !== "undefined") {
     $message.success(`天气定位方式已切换为 ${label}`);
   }
@@ -2151,7 +2168,6 @@ const switchLocationMode = (mode, label) => {
 // 切换天气数据提供商
 const switchWeatherProvider = (provider) => {
   weatherProvider.value = provider;
-  window.dispatchEvent(new Event("weather-refresh"));
   if (typeof $message !== "undefined") {
     $message.success("已切换天气数据源");
   }

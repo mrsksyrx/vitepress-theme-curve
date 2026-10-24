@@ -374,6 +374,8 @@ export const themeConfig = {
     enable: false,
     appId: "0F1DUC8MAX",
     apiKey: "1f97c9169943484cfb9a05c825851ca4",
+    // 本地全文搜索：离线、Algolia 请求失败、或未配置 Algolia 时自动启用
+    local: { enable: true },
   },
   // 天气 Key
   // 请前往 高德开放平台注册 Web服务 Key
@@ -390,6 +392,17 @@ export const themeConfig = {
     wechat: "https://raw.20100907.xyz/pic/pay/wx.webp",
     // 支付宝二维码
     alipay: "https://raw.20100907.xyz/pic/pay/zfb.webp",
+  },
+  // 全局点赞（Vercel KV，见 api/like.ts；未配置 KV 时按钮计数显示 "-"）
+  likeData: {
+    enable: true,
+  },
+  // 「编辑此页」链接（文章底部，链到 GitHub 源文件编辑页）
+  editLink: {
+    enable: false,
+    repo: "", // 如 "https://github.com/user/repo"
+    branch: "main",
+    text: "编辑此页",
   },
   // 图片灯箱
   fancybox: {
@@ -418,6 +431,7 @@ export const themeConfig = {
       "skills-item",
       "right-menu-link",
       "link-card",
+      "edit-link",
     ],
   },
   // 站点统计

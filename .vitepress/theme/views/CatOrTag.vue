@@ -39,7 +39,7 @@
 import { usePostData } from "@/utils/usePostData.mjs";
 
 const { tagsData, categoriesData, loadPostData } = usePostData();
-const props = defineProps({
+defineProps({
   // 页面类型
   type: {
     type: String,

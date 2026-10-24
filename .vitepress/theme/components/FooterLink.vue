@@ -93,7 +93,7 @@ import { smoothScrolling } from "@/utils/helper";
 const { theme, site } = useData();
 const footer = theme.value?.footer ?? {};
 const siteMeta = theme.value?.siteMeta ?? {};
-const props = defineProps({
+defineProps({
   // 显示底栏
   showBar: {
     type: Boolean,

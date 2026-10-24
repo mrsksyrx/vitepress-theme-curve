@@ -181,6 +181,12 @@ export const themeConfig = {
 
   // ===== 功能开关 =====
   rewardData: { enable: false },
+  // 「编辑此页」（文章底部链到 GitHub 源文件，方便提 PR 修错字）
+  editLink: {
+    enable: true,
+    repo: "https://github.com/mrsksyrx/vitepress-theme-curve",
+    branch: "selfuse",
+  },
   music: {
     enable: true,
     url: "https://meting.20091010.xyz/api/meting",

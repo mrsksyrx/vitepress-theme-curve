@@ -19,7 +19,7 @@ const route = useRoute();
 const { frontmatter } = useData();
 
 // 配置
-const props = defineProps({
+defineProps({
   showInfo: {
     type: Boolean,
     default: false,
@@ -165,20 +165,6 @@ const schedulePersist = () => {
   }, wait);
 };
 
-// 加载阅读数据
-const loadReadingData = () => {
-  const postId = route.path;
-  if (!postId) return null;
-
-  let readingData = {};
-  try {
-    readingData = JSON.parse(localStorage.getItem("readingData") || "{}") || {};
-  } catch {
-    readingData = {};
-  }
-  return readingData[postId] || null;
-};
-
 // 检查是否为文章页面（posts/ 路径，或 frontmatter 声明 layout: post）
 const checkIsPostPage = () => {
   // 不要 decodeURIComponent：裸 % 会抛 URIError（同 App.vue isPostPage）
@@ -251,7 +237,8 @@ onBeforeUnmount(() => {
   left: 0;
   width: 100%;
   height: 3px;
-  z-index: 9999;
+  // 页面内浮层：高于导航（1000），低于弹窗/播放器（--z-player）
+  z-index: 2000;
   background: transparent;
 
   .progress-bar {

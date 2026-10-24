@@ -138,34 +138,97 @@ export const getMusicList = async (url, id, server = "netease", type = "playlist
  * 天气
  */
 
+const readJson = async (response, service) => {
+  if (!response.ok) {
+    throw new Error(`${service} 请求失败（HTTP ${response.status}）`);
+  }
+  return await response.json();
+};
+
+const requireAmapKey = (key) => {
+  if (!key) throw new Error("未配置高德 API Key");
+  return key;
+};
+
+const unwrapAmap = (data, service) => {
+  if (!data || String(data.status) !== "1") {
+    throw new Error(`${service}请求失败：${data?.info || "未知错误"}`);
+  }
+  return data;
+};
+
 // 获取高德地理位置信息
 export const getAdcode = async (key) => {
-  const res = await fetch(`https://restapi.amap.com/v3/ip?key=${key}`);
-  return await res.json();
+  const safeKey = requireAmapKey(key);
+  const response = await fetch(`https://restapi.amap.com/v3/ip?key=${encodeURIComponent(safeKey)}`);
+  return unwrapAmap(await readJson(response, "高德定位"), "高德定位");
+};
+
+// 根据经纬度获取高德 adcode（卫星定位需要精确查询天气区域）
+export const getAdcodeByCoords = async (key, lat, lon) => {
+  const safeKey = requireAmapKey(key);
+  const params = new URLSearchParams({
+    key: safeKey,
+    location: `${lon},${lat}`,
+  });
+  const response = await fetch(`https://restapi.amap.com/v3/geocode/regeo?${params}`);
+  const data = unwrapAmap(await readJson(response, "高德逆地理"), "高德逆地理");
+  const address = data.regeocode?.addressComponent;
+  const rawCity = address?.city || address?.town || address?.district;
+  return {
+    adcode: address?.adcode || null,
+    city: Array.isArray(rawCity) ? rawCity[0] || null : rawCity || null,
+  };
 };
 
 // 获取高德地理天气信息
 export const getWeather = async (key, city) => {
-  const res = await fetch(
-    `https://restapi.amap.com/v3/weather/weatherInfo?key=${key}&city=${city}`,
-  );
-  return await res.json();
+  const safeKey = requireAmapKey(key);
+  const params = new URLSearchParams({
+    key: safeKey,
+    city: String(city || ""),
+  });
+  const response = await fetch(`https://restapi.amap.com/v3/weather/weatherInfo?${params}`);
+  return unwrapAmap(await readJson(response, "高德天气"), "高德天气");
 };
 
 // 获取 wttr.in 天气信息（无需 API Key）
 export const getWeatherWttr = async (city) => {
-  const res = await fetch(`https://wttr.in/${encodeURIComponent(city)}?format=j1`);
-  return await res.json();
+  const response = await fetch(`https://wttr.in/${encodeURIComponent(city)}?format=j1`);
+  return await readJson(response, "wttr.in");
 };
 
+// 按城市名查询 Open-Meteo 坐标
+export const getOpenMeteoCoords = async (city) => {
+  const name = String(city || "").trim();
+  if (!name) throw new Error("城市名为空");
+  const params = new URLSearchParams({
+    name,
+    count: "1",
+    language: "zh",
+  });
+  const response = await fetch(`https://geocoding-api.open-meteo.com/v1/search?${params}`);
+  const data = await readJson(response, "Open-Meteo 定位");
+  const result = data?.results?.[0];
+  if (!result || result.latitude == null || result.longitude == null) {
+    throw new Error("Open-Meteo 未找到该城市");
+  }
+  return {
+    lat: result.latitude,
+    lon: result.longitude,
+    city: result.name || name,
+  };
+};
 // 获取 Open-Meteo 天气信息（无需 API Key，需要经纬度）
 export const getWeatherOpenMeteo = async (lat, lon) => {
-  const res = await fetch(
-    `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,relative_humidity_2m,wind_speed_10m,wind_direction_10m,weather_code`,
-  );
-  return await res.json();
+  const params = new URLSearchParams({
+    latitude: String(lat),
+    longitude: String(lon),
+    current: "temperature_2m,relative_humidity_2m,wind_speed_10m,wind_direction_10m,weather_code",
+  });
+  const response = await fetch(`https://api.open-meteo.com/v1/forecast?${params}`);
+  return await readJson(response, "Open-Meteo");
 };
-
 // 根据经纬度获取城市名（Nominatim 逆地理编码）
 // 注意：Nominatim 要求标识调用方的 User-Agent，并限流 1 req/s（请勿高频轮询）；
 // 浏览器端 fetch 禁止覆盖 User-Agent（forbidden header），此处仅为非浏览器环境/文档意图保留。

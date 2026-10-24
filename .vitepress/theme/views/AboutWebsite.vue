@@ -189,11 +189,8 @@
         </p>
         <p class="text">
           本站遵循
-          <a
-            href="https://www.gnu.org/licenses/agpl-3.0.html"
-            target="_blank"
-            rel="noopener noreferrer"
-            ><strong>AGPL v3</strong></a
+          <a href="https://opensource.org/license/mit" target="_blank" rel="noopener noreferrer"
+            ><strong>MIT</strong></a
           >
           协议<a
             href="https://github.com/mrsksyrx/vitepress-theme-curve"

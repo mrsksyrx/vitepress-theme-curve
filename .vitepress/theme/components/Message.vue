@@ -205,12 +205,8 @@
 
 <script setup>
 import { mainStore } from "@/store";
-import { useIsMobileLayout } from "@/utils/layout.js";
 
 const store = mainStore();
-
-// 根据页面布局决定默认消息样式
-const isMobileLayout = useIsMobileLayout();
 
 const useCardStyle = computed(() => {
   return store.messageStyle === "card";
@@ -269,11 +265,6 @@ const progressUpdateKey = ref(0);
 const bottomMessageType = computed(() => {
   if (islandMessages.value.length === 0) return "info";
   return islandMessages.value[0].type;
-});
-const bottomMessageKey = computed(() => {
-  if (islandMessages.value.length === 0) return 0;
-  progressUpdateKey.value; // 触发重新计算
-  return islandMessages.value[0].key;
 });
 const bottomMessageDuration = computed(() => {
   if (islandMessages.value.length === 0) return 0;
@@ -471,7 +462,7 @@ onUnmounted(() => {
 <style lang="scss" scoped>
 .message-wrapper {
   position: fixed;
-  z-index: 3000;
+  z-index: var(--z-message);
   display: inline-flex;
   flex-direction: column;
   align-items: flex-start;
@@ -560,7 +551,7 @@ onUnmounted(() => {
   width: 100%;
   width: 100vw;
   background-color: var(--main-color);
-  z-index: 3000;
+  z-index: var(--z-message);
   transition: opacity var(--press-out) var(--press-ease);
   .message-content {
     display: flex;
@@ -1006,7 +997,7 @@ onUnmounted(() => {
   top: 16px;
   left: 50%;
   transform: translateX(-50%);
-  z-index: 3000;
+  z-index: var(--z-message);
   display: flex;
   flex-direction: column;
   align-items: center;

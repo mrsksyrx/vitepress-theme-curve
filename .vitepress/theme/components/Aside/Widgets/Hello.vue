@@ -38,7 +38,7 @@
 <script setup>
 import { getGreetings } from "@/utils/helper";
 
-const { site, theme } = useData();
+const { theme } = useData();
 
 // 问候数据
 const helloClick = ref(0);

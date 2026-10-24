@@ -35,7 +35,6 @@
               v-if="theme.aside?.weather?.enable && store.weatherWidgetEnabled"
               class="panel-widget"
               force-fetch
-              @fetch-error="onWeatherError"
             />
             <HelloGithubHot
               v-if="theme.aside?.HelloGithub?.enable && store.helloGithubWidgetEnabled"
@@ -87,12 +86,6 @@ watch(
   },
 );
 
-// 天气获取失败时关掉开关（与 Aside 一致）
-const onWeatherError = (err) => {
-  console.error("天气组件获取失败：", err);
-  store.weatherWidgetEnabled = false;
-};
-
 // 热榜失败时关掉开关（浮层内不再用本地 showHot，避免下次打开仍是空壳）
 const onHotError = (err) => {
   console.error("HelloGithub 热榜获取失败：", err);
@@ -103,11 +96,11 @@ const hasAnyWidget = computed(() => {
   const aside = theme.value.aside || {};
   return Boolean(
     (aside.weather?.enable && store.weatherWidgetEnabled) ||
-      aside.countDown?.enable ||
-      aside.timing?.enable ||
-      (aside.HelloGithub?.enable && store.helloGithubWidgetEnabled) ||
-      (aside.tags?.enable && store.tagsWidgetEnabled) ||
-      aside.siteData?.enable,
+    aside.countDown?.enable ||
+    aside.timing?.enable ||
+    (aside.HelloGithub?.enable && store.helloGithubWidgetEnabled) ||
+    (aside.tags?.enable && store.tagsWidgetEnabled) ||
+    aside.siteData?.enable,
   );
 });
 
@@ -206,7 +199,6 @@ const onTouchEnd = () => {
 .mobile-widgets {
   position: fixed;
   inset: 0;
-  // 常规弹层：高于导航（1000），低于消息（3000）与 BottomPills（9999）
   z-index: 2000;
 
   .widgets-mask {

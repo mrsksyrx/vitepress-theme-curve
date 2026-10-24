@@ -56,7 +56,7 @@ import { usePostData } from "@/utils/usePostData.mjs";
 
 const { params } = useData();
 const { tagsData, categoriesData, loadPostData } = usePostData();
-const props = defineProps({
+defineProps({
   // 显示类别
   type: {
     type: String,

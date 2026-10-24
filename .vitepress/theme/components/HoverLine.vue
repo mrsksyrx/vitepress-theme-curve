@@ -11,7 +11,7 @@ const { hoverLineEnabled } = storeToRefs(mainStore());
 const route = useRoute();
 
 // 可定位到文本行的块级元素
-const BLOCK_SELECTOR = "p, h1, h2, h3, h4, h5, h6";
+const BLOCK_SELECTOR = "p, h1, h2, h3, h4, h5, h6, li, pre";
 // 线条长度（rem，跟随站点字号设置一起缩放）：固定值，不随被悬停元素的行高变化
 const LINE_LENGTH_REM = 2.4;
 // 线条到正文左边缘的距离（rem，跟随站点字号设置一起缩放）

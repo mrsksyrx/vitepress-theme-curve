@@ -9,7 +9,11 @@
         v-show="persistent ? show : true"
         :class="[
           'modal',
-          { 'modal-wrapper-mobile': isMobileLayout, 'gesture-closing': gestureClosing },
+          {
+            'modal-wrapper-mobile': isMobileLayout,
+            'gesture-closing': gestureClosing,
+            'modal-elevated': elevated,
+          },
         ]"
       >
         <div ref="modalMaskEl" class="modal-mask" @click.stop="maskClick" />
@@ -88,6 +92,11 @@ const props = defineProps({
   },
   // 内容常驻：关闭时只隐藏不卸载，适合搜索等重依赖，避免每次打开卡一下
   persistent: {
+    type: Boolean,
+    default: false,
+  },
+  // 提到 --z-elevated：需压过播放器（--z-player）时开启，如分享面板
+  elevated: {
     type: Boolean,
     default: false,
   },
@@ -234,8 +243,10 @@ onUnmounted(() => {
   justify-content: center;
   width: 100vw;
   height: 100vh;
-  // 常规弹层：高于导航（1000），低于消息（3000）与 BottomPills（9999）
-  z-index: 2000;
+  z-index: var(--z-player);
+  &.modal-elevated {
+    z-index: var(--z-elevated);
+  }
   .modal-mask {
     position: absolute;
     top: 0;
@@ -306,8 +317,9 @@ onUnmounted(() => {
     bottom: auto !important;
     left: auto !important;
     right: auto !important;
-    width: 100%;
-    max-width: 100%;
+    // !important：覆盖 .modal .modal-main 的 calc(100% - 40px) 与内联 maxWidth
+    width: 100% !important;
+    max-width: 100% !important;
     max-height: calc(100vh - 48px);
     max-height: calc(100dvh - 48px);
     border-radius: 20px 20px 0 0;

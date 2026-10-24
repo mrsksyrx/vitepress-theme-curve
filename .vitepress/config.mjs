@@ -2,6 +2,7 @@ import { defineConfig } from "vitepress";
 import { createRssFile } from "./theme/utils/generateRSS.mjs";
 import { withPwa } from "@vite-pwa/vitepress";
 import { getAllPosts } from "./theme/utils/getPostData.mjs";
+import { generateSearchIndex } from "./theme/utils/generateSearchIndex.mjs";
 import { jumpRedirect } from "./theme/utils/commonTools.mjs";
 import { getThemeConfig } from "./init.mjs";
 import markdownConfig from "./theme/utils/markdownConfig.mjs";
@@ -26,6 +27,12 @@ await fs.outputJson("public/data/postData.json", postData);
 
 // 获取主题配置
 const themeConfig = await getThemeConfig();
+
+// 本地全文搜索索引（search.enable 关闭时跳过，避免无谓产物）
+// public/data/*.json 会被 Workbox globPatterns 含 json 的规则自动 precache
+if (themeConfig.search?.enable) {
+  await fs.outputJson("public/data/localSearch.json", await generateSearchIndex());
+}
 
 // 固定跳转页（meta refresh → 首页）的 URL 集合，用于从 sitemap 中剔除。
 // 这些都是 page.md / page/index.md / page/1.md / pages/index.md 生成的跳转壳；
@@ -350,6 +357,70 @@ export default withPwa(
                 res.statusCode = 502;
                 res.end(JSON.stringify({ error: e.message || "resolve failed" }));
               }
+            });
+          },
+        },
+        {
+          // 本地 dev 没有 Vercel Functions，补一个与 api/like.ts 同口径的点赞端点。
+          // 必须拦截在 Vite 转译之前，否则 /api/like 会被当模块转译 api/like.ts 触发红色遮罩。
+          // 计数存内存，仅本次 dev server 生命周期有效（重启清零）。
+          name: "like-api",
+          configureServer(server) {
+            const counts = new Map();
+            // 与 api/like.ts 的 isValidId 同口径：仅拒控制字符 + 长度
+            const isValidId = (v) =>
+              typeof v === "string" &&
+              v.length > 0 &&
+              v.length <= 300 &&
+              // eslint-disable-next-line no-control-regex
+              !/[\u0000-\u001f\u007f]/.test(v);
+            server.middlewares.use("/api/like", (req, res) => {
+              res.setHeader("Content-Type", "application/json");
+              res.setHeader("Cache-Control", "no-store");
+              const url = new URL(req.url || "", "http://localhost");
+              if (req.method === "GET") {
+                const id = url.searchParams.get("id");
+                if (!isValidId(id)) {
+                  res.statusCode = 400;
+                  res.end(JSON.stringify({ error: "invalid id" }));
+                  return;
+                }
+                res.end(JSON.stringify({ count: counts.get(id) || 0 }));
+                return;
+              }
+              if (req.method === "POST") {
+                let body = "";
+                req.on("data", (chunk) => {
+                  body += chunk;
+                });
+                req.on("end", () => {
+                  let parsed;
+                  try {
+                    parsed = JSON.parse(body);
+                  } catch {
+                    res.statusCode = 400;
+                    res.end(JSON.stringify({ error: "invalid body" }));
+                    return;
+                  }
+                  const { id, action } = parsed || {};
+                  if (!isValidId(id)) {
+                    res.statusCode = 400;
+                    res.end(JSON.stringify({ error: "invalid id" }));
+                    return;
+                  }
+                  if (action !== "inc" && action !== "dec") {
+                    res.statusCode = 400;
+                    res.end(JSON.stringify({ error: "invalid action" }));
+                    return;
+                  }
+                  const next = Math.max(0, (counts.get(id) || 0) + (action === "inc" ? 1 : -1));
+                  counts.set(id, next);
+                  res.end(JSON.stringify({ count: next }));
+                });
+                return;
+              }
+              res.statusCode = 405;
+              res.end(JSON.stringify({ error: "method not allowed" }));
             });
           },
         },
