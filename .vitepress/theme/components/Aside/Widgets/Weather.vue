@@ -6,7 +6,13 @@
       <span class="title-name">天气数据</span>
     </div>
 
-    <div class="all-data">
+    <div v-if="loading && !weatherData" class="weather-status">正在获取天气数据...</div>
+    <div v-else-if="error" class="weather-status weather-error">
+      <span>天气数据获取失败</span>
+      <button type="button" class="retry-button" @click="fetchWeather(true)">重试</button>
+    </div>
+
+    <div v-else class="all-data">
       <!-- 城市 -->
       <div class="data-item">
         <span class="name"><i class="iconfont icon-home"></i> 城市</span>
@@ -41,15 +47,20 @@
 </template>
 
 <script setup>
-import { getAdcode, getWeather, getWeatherWttr, getWeatherOpenMeteo, getCityByCoords } from "@/api";
+import {
+  getAdcode,
+  getAdcodeByCoords,
+  getCityByCoords,
+  getOpenMeteoCoords,
+  getWeather,
+  getWeatherOpenMeteo,
+  getWeatherWttr,
+} from "@/api";
 import { useIsMobileLayout } from "@/utils/layout.js";
 import { mainStore } from "@/store";
 
 const isMobileLayout = useIsMobileLayout();
 const store = mainStore();
-
-// 声明会在请求出错时抛出的事件
-const emit = defineEmits(["fetch-error"]);
 
 const props = defineProps({
   // 移动端浮层等场景强制拉取（侧边栏默认移动端不请求）
@@ -62,6 +73,10 @@ const props = defineProps({
 const weatherData = ref(null);
 const loading = ref(true);
 const error = ref(false);
+
+const AMAP_KEY = import.meta.env.VITE_WEATHER_KEY || "";
+const DEFAULT_CITY = "北京";
+let fetchId = 0;
 
 // 高德 API 的中文城市名 -> 英文（wttr.in 需要英文城市名）
 const AMAP_CITY_MAP = {
@@ -111,147 +126,207 @@ const AMAP_CITY_MAP = {
   台北: "Taipei",
 };
 
-// 根据定位方式获取城市信息 { city, lat, lon }
+const withTimeout = (promise, timeout = 8000) => {
+  let timer;
+  return Promise.race([
+    promise,
+    new Promise((_, reject) => {
+      timer = setTimeout(() => reject(new Error("天气请求超时")), timeout);
+    }),
+  ]).finally(() => clearTimeout(timer));
+};
+
+const getPosition = () =>
+  new Promise((resolve) => {
+    if (typeof navigator === "undefined" || !navigator.geolocation) {
+      resolve(null);
+      return;
+    }
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        resolve({
+          lat: position.coords.latitude,
+          lon: position.coords.longitude,
+        });
+      },
+      () => resolve(null),
+      { timeout: 5000, maximumAge: 600000 },
+    );
+  });
+
+// IP 定位只依赖高德；失败时返回 null，让数据源继续使用自己的兜底能力
+const getIpLocation = async () => {
+  if (!AMAP_KEY) return null;
+  try {
+    const data = await withTimeout(getAdcode(AMAP_KEY));
+    if (!data?.adcode && !data?.city) return null;
+    return {
+      city: data.city || null,
+      adcode: data.adcode || null,
+      lat: null,
+      lon: null,
+    };
+  } catch {
+    return null;
+  }
+};
+
+// 根据定位方式获取城市信息；定位失败不直接终止天气请求
 const getCityInfo = async () => {
   const mode = store.weatherLocationMode;
 
   if (mode === "manual") {
-    return { city: store.weatherManualCity || "北京", lat: null, lon: null };
+    return {
+      city: store.weatherManualCity?.trim() || DEFAULT_CITY,
+      adcode: null,
+      lat: null,
+      lon: null,
+    };
   }
 
   if (mode === "satellite") {
-    return new Promise((resolve) => {
-      if (!navigator.geolocation) {
-        resolve({ city: "北京", lat: null, lon: null });
-        return;
-      }
-      navigator.geolocation.getCurrentPosition(
-        (pos) => {
-          resolve({ city: null, lat: pos.coords.latitude, lon: pos.coords.longitude });
-        },
-        () => {
-          resolve(null); // 回退到 IP
-        },
-        { timeout: 5000 },
-      );
-    }).then(async (result) => {
-      if (result === null) {
-        const { city } = await getAdcode(import.meta.env.VITE_WEATHER_KEY);
-        return { city: city || "北京", lat: null, lon: null };
-      }
-      // 卫星定位成功，尝试获取城市名
-      if (result.lat != null) {
-        try {
-          const cityName = await getCityByCoords(result.lat, result.lon);
-          return { city: cityName || "北京", lat: result.lat, lon: result.lon };
-        } catch {
-          return { city: "北京", lat: result.lat, lon: result.lon };
-        }
-      }
-      return result;
-    });
+    const position = await getPosition();
+    if (position) {
+      return { city: null, adcode: null, ...position };
+    }
   }
 
-  // 默认 IP 定位
-  const { city } = await getAdcode(import.meta.env.VITE_WEATHER_KEY);
-  return { city: city || "北京", lat: null, lon: null };
+  const ipLocation = await getIpLocation();
+  return (
+    ipLocation || {
+      city: store.weatherProvider === "amap" ? null : DEFAULT_CITY,
+      adcode: null,
+      lat: null,
+      lon: null,
+    }
+  );
 };
 
-// 中文城市名转英文
-const toEnglishCity = (name) => AMAP_CITY_MAP[name] || name;
+const toEnglishCity = (name) => {
+  const normalized = String(name || "").replace(/(市|特别行政区)$/u, "");
+  return AMAP_CITY_MAP[name] || AMAP_CITY_MAP[normalized] || name || "";
+};
 
-// 获取天气数据的核心逻辑
+const fetchWttr = async (location) => {
+  const query =
+    location.lat != null && location.lon != null
+      ? `~${location.lat},${location.lon}`
+      : toEnglishCity(location.city);
+  const data = await withTimeout(getWeatherWttr(query));
+  const current = data?.current_condition?.[0];
+  if (!current) throw new Error("wttr.in 返回数据为空");
+  const nearestCity = data?.nearest_area?.[0]?.areaName?.[0]?.value;
+  return {
+    city: nearestCity || location.city || DEFAULT_CITY,
+    temperature: current.temp_C,
+    humidity: current.humidity,
+    winddirection: current.winddir16Point,
+    windpower: current.windspeedKmph + " km/h",
+  };
+};
+
+const fetchOpenMeteo = async (location) => {
+  let coordinates = location;
+  let geocodedCity = null;
+
+  if (coordinates.lat == null || coordinates.lon == null) {
+    if (!coordinates.city) throw new Error("Open-Meteo 缺少城市或坐标");
+    coordinates = await withTimeout(getOpenMeteoCoords(coordinates.city));
+    geocodedCity = coordinates.city;
+  }
+
+  const data = await withTimeout(getWeatherOpenMeteo(coordinates.lat, coordinates.lon));
+  const current = data?.current;
+  if (!current) throw new Error("Open-Meteo 返回数据为空");
+
+  let city = location.city || geocodedCity;
+  if (!city && location.lat != null && location.lon != null) {
+    city = await getCityByCoords(location.lat, location.lon);
+  }
+
+  return {
+    city: city || DEFAULT_CITY,
+    temperature: current.temperature_2m,
+    humidity: current.relative_humidity_2m,
+    winddirection: current.wind_direction_10m != null ? current.wind_direction_10m + "°" : "--",
+    windpower: current.wind_speed_10m != null ? current.wind_speed_10m + " km/h" : "--",
+  };
+};
+
+const fetchAmap = async (location) => {
+  if (!AMAP_KEY) throw new Error("未配置高德 API Key");
+
+  let queryCity = location.adcode;
+  let displayCity = location.city;
+
+  if (location.lat != null && location.lon != null) {
+    const regeo = await withTimeout(getAdcodeByCoords(AMAP_KEY, location.lat, location.lon));
+    queryCity = regeo.adcode || queryCity;
+    displayCity = regeo.city || displayCity;
+  }
+
+  queryCity = queryCity || location.city;
+  if (!queryCity) throw new Error("无法确定高德天气区域");
+
+  const data = await withTimeout(getWeather(AMAP_KEY, queryCity));
+  const current = data?.lives?.[0];
+  if (!current) throw new Error("高德天气返回数据为空");
+
+  return {
+    ...current,
+    city: current.city || displayCity || DEFAULT_CITY,
+  };
+};
+
+const PROVIDER_CHAINS = {
+  amap: ["amap", "wttr", "openmeteo"],
+  wttr: ["wttr", "openmeteo"],
+  openmeteo: ["openmeteo", "wttr"],
+};
+
+const fetchByProvider = (provider, location) => {
+  if (provider === "wttr") return fetchWttr(location);
+  if (provider === "openmeteo") return fetchOpenMeteo(location);
+  return fetchAmap(location);
+};
+
+// 获取天气数据的核心逻辑；失败时按数据源链路回退
 const fetchWeather = async (showMsg = false) => {
+  const currentFetch = ++fetchId;
   loading.value = true;
   error.value = false;
-  try {
-    const { city, lat, lon } = await getCityInfo();
-    const provider = store.weatherProvider;
 
-    if (provider === "openmeteo") {
-      // Open-Meteo：优先使用坐标，没有坐标时通过城市名查询
-      let queryLat = lat;
-      let queryLon = lon;
-      if (queryLat == null) {
-        // 用 geocoding API 将城市名转坐标
-        const geoRes = await fetch(
-          `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(city)}&count=1`,
-        );
-        const geoData = await geoRes.json();
-        queryLat = geoData?.results?.[0]?.latitude;
-        queryLon = geoData?.results?.[0]?.longitude;
-      }
-      if (queryLat != null && queryLon != null) {
-        const data = await getWeatherOpenMeteo(queryLat, queryLon);
-        const c = data?.current;
-        if (c) {
-          weatherData.value = {
-            city: city,
-            temperature: c.temperature_2m,
-            humidity: c.relative_humidity_2m,
-            winddirection: c.wind_direction_10m + "°",
-            windpower: c.wind_speed_10m + " km/h",
-          };
-        }
-      }
-    } else if (provider === "wttr") {
-      // wttr.in
-      const englishCity = toEnglishCity(city);
-      const data = await getWeatherWttr(englishCity);
-      const current = data?.current_condition?.[0];
-      if (current) {
-        weatherData.value = {
-          city: data?.nearest_area?.[0]?.areaName?.[0]?.value || city,
-          temperature: current.temp_C,
-          humidity: current.humidity,
-          winddirection: current.winddir16Point,
-          windpower: current.windspeedKmph + " km/h",
-        };
-      }
-    } else {
-      // 高德 API，超时或失败时回退到 wttr.in
+  try {
+    const location = await getCityInfo();
+    const chain = PROVIDER_CHAINS[store.weatherProvider] || PROVIDER_CHAINS.amap;
+    let lastError = null;
+
+    for (let index = 0; index < chain.length; index += 1) {
+      const provider = chain[index];
       try {
-        const queryCity =
-          store.weatherLocationMode === "manual"
-            ? city
-            : (
-                await Promise.race([
-                  getAdcode(import.meta.env.VITE_WEATHER_KEY),
-                  new Promise((_, reject) => setTimeout(() => reject(new Error("timeout")), 5000)),
-                ])
-              ).adcode;
-        const { lives } = await Promise.race([
-          getWeather(import.meta.env.VITE_WEATHER_KEY, queryCity),
-          new Promise((_, reject) => setTimeout(() => reject(new Error("timeout")), 5000)),
-        ]);
-        weatherData.value = lives?.[0];
-      } catch {
-        // 高德超时或失败，回退 wttr.in
-        const data = await getWeatherWttr(toEnglishCity(city));
-        const current = data?.current_condition?.[0];
-        if (current) {
-          weatherData.value = {
-            city: data?.nearest_area?.[0]?.areaName?.[0]?.value || city,
-            temperature: current.temp_C,
-            humidity: current.humidity,
-            winddirection: current.winddir16Point,
-            windpower: current.windspeedKmph + " km/h",
-          };
+        const data = await fetchByProvider(provider, location);
+        if (currentFetch !== fetchId) return;
+        weatherData.value = data;
+        if (showMsg && typeof $message !== "undefined") {
+          $message.success("天气数据已刷新");
         }
+        return;
+      } catch (providerError) {
+        lastError = providerError;
+        console.warn(`天气数据源 ${provider} 获取失败：`, providerError);
       }
     }
-    if (showMsg && typeof $message !== "undefined") {
-      $message.success("天气数据已刷新");
-    }
-  } catch (e) {
-    console.error("获取天气失败：", e);
+
+    throw lastError || new Error("没有可用的天气数据源");
+  } catch (fetchError) {
+    if (currentFetch !== fetchId) return;
+    console.error("获取天气失败：", fetchError);
     error.value = true;
-    emit("fetch-error", e);
     if (showMsg && typeof $message !== "undefined") {
       $message.error("天气数据刷新失败");
     }
   } finally {
-    loading.value = false;
+    if (currentFetch === fetchId) loading.value = false;
   }
 };
 
@@ -271,11 +346,6 @@ watch(
   () => fetchWeather(true),
 );
 
-// 监听全局刷新事件（设置弹窗可能在组件未挂载时触发）
-const onWeatherRefresh = () => fetchWeather(true);
-onMounted(() => window.addEventListener("weather-refresh", onWeatherRefresh));
-onBeforeUnmount(() => window.removeEventListener("weather-refresh", onWeatherRefresh));
-
 onMounted(async () => {
   // 移动端侧边栏不挂载 Weather；小组件浮层挂载时必须拉数据。
   // 仅在「桌面布局却处于移动端宽度」时跳过，避免隐藏状态下白跑定位。
@@ -285,10 +355,45 @@ onMounted(async () => {
   }
   await fetchWeather();
 });
+
+onBeforeUnmount(() => {
+  fetchId += 1;
+});
 </script>
 
 <style lang="scss" scoped>
 .weather-data {
+  .weather-status {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    padding: 10px 0;
+    color: var(--main-font-second-color);
+    font-size: 0.9375rem;
+
+    &.weather-error {
+      color: var(--main-red, #e05a5a);
+    }
+
+    .retry-button {
+      padding: 3px 10px;
+      border: 1px solid var(--main-card-border);
+      border-radius: 8px;
+      background: transparent;
+      color: inherit;
+      cursor: pointer;
+      transition:
+        background-color 0.3s,
+        border-color 0.3s;
+
+      &:hover {
+        background-color: var(--main-color-bg);
+        border-color: var(--main-color);
+      }
+    }
+  }
+
   .all-data {
     display: flex;
     flex-direction: column;

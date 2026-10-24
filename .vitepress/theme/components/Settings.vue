@@ -1157,9 +1157,9 @@
               <div class="set-options">
                 <span
                   :class="['options', { choose: weatherLocationMode === 'satellite' }]"
-                  @click="switchLocationMode('satellite', '自动')"
+                  @click="switchLocationMode('satellite', '精确')"
                 >
-                  自动
+                  精确
                 </span>
                 <span
                   :class="['options', { choose: weatherLocationMode === 'ip' }]"
@@ -1195,20 +1195,9 @@
                     box-sizing: border-box;
                   "
                   placeholder="例如：苏州"
-                  @keyup.enter="
-                    weatherRefreshTrigger++;
-                    window.dispatchEvent(new Event('weather-refresh'));
-                  "
+                  @keyup.enter="weatherRefreshTrigger++"
                 />
-                <span
-                  class="options"
-                  @click="
-                    weatherRefreshTrigger++;
-                    window.dispatchEvent(new Event('weather-refresh'));
-                  "
-                >
-                  确认
-                </span>
+                <span class="options" @click="weatherRefreshTrigger++"> 确认 </span>
               </div>
             </div>
             <div class="set-item">
@@ -2171,7 +2160,6 @@ const saveStoreDefaults = async (data) => {
 // 切换天气定位方式
 const switchLocationMode = (mode, label) => {
   weatherLocationMode.value = mode;
-  window.dispatchEvent(new Event("weather-refresh"));
   if (typeof $message !== "undefined") {
     $message.success(`天气定位方式已切换为 ${label}`);
   }
@@ -2180,7 +2168,6 @@ const switchLocationMode = (mode, label) => {
 // 切换天气数据提供商
 const switchWeatherProvider = (provider) => {
   weatherProvider.value = provider;
-  window.dispatchEvent(new Event("weather-refresh"));
   if (typeof $message !== "undefined") {
     $message.success("已切换天气数据源");
   }

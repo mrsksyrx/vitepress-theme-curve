@@ -3,11 +3,7 @@
     <Hello v-if="theme.aside.hello.enable" class="weidgets" />
     <div class="sticky">
       <Toc v-if="theme.aside.toc.enable && showToc" class="weidgets" />
-      <Weather
-        v-if="theme.aside.weather.enable && store.weatherWidgetEnabled"
-        class="weidgets"
-        @fetch-error="onWeatherError"
-      />
+      <Weather v-if="theme.aside.weather.enable && store.weatherWidgetEnabled" class="weidgets" />
       <Countdown v-if="theme.aside.countDown.enable" class="weidgets" />
       <Timing v-if="theme.aside.timing.enable" class="weidgets" />
       <!-- HelloGithub 热榜 -->
@@ -35,11 +31,6 @@ defineProps({
 
 // 新增：热榜组件的显示开关
 const showHot = ref(true);
-// 天气组件获取失败时关闭小组件
-function onWeatherError(err) {
-  console.error("天气组件获取失败：", err);
-  store.weatherWidgetEnabled = false;
-}
 
 function onHotError(err) {
   console.error("HelloGithub 热榜获取失败：", err);

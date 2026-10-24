@@ -35,7 +35,6 @@
               v-if="theme.aside?.weather?.enable && store.weatherWidgetEnabled"
               class="panel-widget"
               force-fetch
-              @fetch-error="onWeatherError"
             />
             <HelloGithubHot
               v-if="theme.aside?.HelloGithub?.enable && store.helloGithubWidgetEnabled"
@@ -86,12 +85,6 @@ watch(
     if (val) gestureClosing.value = false;
   },
 );
-
-// 天气获取失败时关掉开关（与 Aside 一致）
-const onWeatherError = (err) => {
-  console.error("天气组件获取失败：", err);
-  store.weatherWidgetEnabled = false;
-};
 
 // 热榜失败时关掉开关（浮层内不再用本地 showHot，避免下次打开仍是空壳）
 const onHotError = (err) => {

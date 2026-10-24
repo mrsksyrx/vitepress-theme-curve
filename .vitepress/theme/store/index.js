@@ -26,6 +26,28 @@ if (typeof localStorage !== "undefined") {
   }
 }
 
+// 旧版本默认会直接使用卫星定位；迁移为 IP 定位，避免用户未主动选择时触发位置权限。
+// 仅迁移旧缓存中仍为 satellite 的值，后续用户在设置中选择“精确”仍会正常持久化。
+const migrateWeatherLocationDefault = () => {
+  if (typeof localStorage === "undefined") return;
+  const migrationKey = "weatherLocationDefaultVersion";
+  if (Number(localStorage.getItem(migrationKey) || 0) >= 1) return;
+  try {
+    const raw = localStorage.getItem("siteData");
+    if (raw) {
+      const persisted = JSON.parse(raw);
+      if (persisted?.weatherLocationMode === "satellite") {
+        persisted.weatherLocationMode = "ip";
+        localStorage.setItem("siteData", JSON.stringify(persisted));
+      }
+    }
+  } catch (error) {
+    console.warn("天气定位默认值迁移失败：", error);
+  }
+  localStorage.setItem(migrationKey, "1");
+};
+
+migrateWeatherLocationDefault();
 // 主题色 class 列表（粉色为默认，不需要 class）
 const THEME_COLOR_CLASSES = [
   "theme-purple",
@@ -180,8 +202,8 @@ export const mainStore = defineStore("main", {
       weatherSectionExpanded: false,
       // 天气数据源（amap = 高德，wttr = wttr.in，openmeteo = Open-Meteo）
       weatherProvider: "amap",
-      // 天气定位方式（satellite = 卫星定位，ip = IP定位，manual = 手动输入）
-      weatherLocationMode: "satellite",
+      // 天气定位方式（satellite = 精确定位，ip = IP定位，manual = 手动输入）
+      weatherLocationMode: "ip",
       // 手动输入的城市名
       weatherManualCity: "",
       // 天气刷新触发器（手动输入确认时 +1）
@@ -195,8 +217,8 @@ export const mainStore = defineStore("main", {
       siteVersion: "V1.5",
       siteVersionDate: "2026.10.22",
       // 分支版本（自动递增）
-      branchVersion: 224,
-      branchBuildTime: "2026.10.22 13:24:09",
+      branchVersion: 246,
+      branchBuildTime: "2026.10.24 15:41:10",
     };
   },
   actions: {
