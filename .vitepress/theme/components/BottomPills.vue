@@ -18,10 +18,15 @@
                 >歌词</span
               >
             </div>
-            <div v-show="store.playerPanelTab === 'list'" class="pill-card-list">
+            <div
+              v-show="store.playerPanelTab === 'list'"
+              ref="playlistScrollRef"
+              class="pill-card-list"
+            >
               <div
                 v-for="(song, idx) in allSongs"
                 :key="song.id || idx"
+                :data-song-idx="idx"
                 :class="['pill-card-item', { active: currentSongIdx === idx }]"
                 @click="playSongByIdx(idx)"
               >
@@ -153,8 +158,10 @@ const currentSongIdx = ref(0);
 const pillLyrics = ref([]);
 const pillLyricIdx = ref(-1);
 const lrcScrollRef = ref(null);
+const playlistScrollRef = ref(null);
 const userScrolling = ref(false);
 let followResumeTimer = null;
+let lyricRequestId = 0;
 const hasPlayedOnce = ref(false);
 const prevCover = ref("");
 
@@ -224,16 +231,22 @@ const parseLrc = (text) => {
 
 // 加载歌词
 const loadLyrics = async () => {
+  // 先清空并用序号标记本次请求，避免旧歌词残留或快速切歌后返回错位
+  const requestId = ++lyricRequestId;
+  pillLyrics.value = [];
+  pillLyricIdx.value = -1;
   const p = window.$player;
   if (!p) return;
   const song = allSongs.value[currentSongIdx.value];
   if (!song?.lrc) return;
   try {
     const res = await fetch(song.lrc);
-    if (res.ok) {
-      pillLyrics.value = parseLrc(await res.text());
+    const text = await res.text();
+    if (res.ok && requestId === lyricRequestId) {
+      pillLyrics.value = parseLrc(text);
     }
   } catch (e) {
+    if (requestId !== lyricRequestId) return;
     console.warn("歌词加载失败", e);
   }
 };
@@ -313,12 +326,34 @@ const seekToLine = (idx) => {
 // 歌词行高亮变化时跟随滚动
 watch(pillLyricIdx, scrollToActiveLyric, { flush: "post" });
 
-// 展开面板或切换到歌词页时立即定位到当前行
+// 打开列表或切换曲目时，把当前曲目滚动到可视区域中央
+const scrollActiveSongIntoView = (behavior = "smooth") => {
+  if (store.playerFolded || store.playerPanelTab !== "list") return;
+  nextTick(() => {
+    const container = playlistScrollRef.value;
+    const el = container?.querySelector(`[data-song-idx="${currentSongIdx.value}"]`);
+    if (!el) return;
+    // 使用相对滚动容器的矩形差值；offsetTop 的参照元素会随布局层级变化，不能直接拿来计算
+    const elementDelta = el.getBoundingClientRect().top - container.getBoundingClientRect().top;
+    container.scrollTo({
+      top: Math.max(
+        0,
+        container.scrollTop + elementDelta - container.clientHeight / 2 + el.clientHeight / 2,
+      ),
+      behavior,
+    });
+  });
+};
+
+watch(currentSongIdx, () => scrollActiveSongIntoView());
+
+// 展开面板或切换到歌词页时立即定位到对应内容
 watch(
   () => [store.playerFolded, store.playerPanelTab],
   () => {
-    if (store.playerFolded || store.playerPanelTab !== "lrc") return;
-    scrollToActiveLyric();
+    if (store.playerFolded) return;
+    if (store.playerPanelTab === "list") scrollActiveSongIntoView("auto");
+    if (store.playerPanelTab === "lrc") scrollToActiveLyric();
   },
   { flush: "post" },
 );
@@ -345,6 +380,8 @@ const playSongByIdx = (idx) => {
 // 定时同步 + 监听切歌（暂停时也能捕获）
 let timer = null;
 let audioListeners = [];
+let retryTimer = null;
+let resizeHandler = null;
 
 // 页面滚动时自动折叠播放器面板，滚动到底部时收起胶囊
 let scrollHandler = null;
@@ -417,22 +454,23 @@ onMounted(() => {
     syncLyric();
   }, 500);
   attachAudioListeners();
-  const retryTimer = setInterval(() => {
-    if (window.$player?.audio) {
-      attachAudioListeners();
-      clearInterval(retryTimer);
-    }
+  retryTimer = setInterval(() => {
+    // 播放器重建后 audio 元素会更换，持续重绑以免丢失 loadeddata/ended 监听
+    if (window.$player?.audio) attachAudioListeners();
   }, 500);
   // 监听窗口大小变化
-  const onResize = () => {
+  resizeHandler = () => {
     isMobile.value = window.innerWidth <= 768;
   };
-  window.addEventListener("resize", onResize);
+  window.addEventListener("resize", resizeHandler);
 });
 onBeforeUnmount(() => {
   if (timer) clearInterval(timer);
+  if (retryTimer) clearInterval(retryTimer);
   if (coverFadeTimer) clearTimeout(coverFadeTimer);
   if (followResumeTimer) clearTimeout(followResumeTimer);
+  if (resizeHandler) window.removeEventListener("resize", resizeHandler);
+  lyricRequestId += 1;
   audioListeners.forEach(({ el, fn, evt }) => el.removeEventListener(evt, fn));
 });
 </script>

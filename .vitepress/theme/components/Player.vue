@@ -120,6 +120,8 @@ const currentLyrics = ref([]);
 const activeLyricIndex = ref(-1);
 const userScrolling = ref(false);
 let followResumeTimer = null;
+let playlistRequestId = 0;
+let lyricRequestId = 0;
 let disposed = false;
 
 // 随机轮播
@@ -193,6 +195,8 @@ const getMusicListData = async () => {
   // url 缺失时 new URL(url) 会抛 TypeError，直接跳过
   if (!url) return false;
 
+  // 用请求序号丢弃过期响应，避免快速切换歌单来源时旧请求覆盖新歌单
+  const requestId = ++playlistRequestId;
   try {
     // 根据歌单来源决定使用哪个 ID
     const activeId =
@@ -210,12 +214,13 @@ const getMusicListData = async () => {
       url: song.url ? new URL(song.url, apiOrigin).href : undefined,
       lrc: song.lrc ? new URL(song.lrc, apiOrigin).href : undefined,
     }));
+    if (requestId !== playlistRequestId || disposed) return false;
     allSongs.value = fullList;
-    initAPlayer(fullList?.length ? fullList : []);
+    initAPlayer(fullList?.length ? fullList : [], requestId);
     loadCurrentLyrics();
   } catch (error) {
     console.error("获取播放列表出错：", error);
-    initAPlayer([]);
+    if (requestId === playlistRequestId && !disposed) initAPlayer([]);
   }
 };
 
@@ -267,7 +272,7 @@ const tryAutoPlayOnInteraction = () => {
 };
 
 // 初始化播放器
-const initAPlayer = async (list) => {
+const initAPlayer = async (list, requestId) => {
   try {
     const playlistData = [...list];
     if (!playlistData?.length) return false;
@@ -275,8 +280,8 @@ const initAPlayer = async (list) => {
     const APlayer = module.default;
     // 先解析首曲，避免 APlayer 挂载后 audio.src 仍为空
     if (playlistData[0]?.url) await resolveAudioUrl(playlistData[0].url);
-    // 卸载后 import/解析可能才完成，避免往空容器挂播放器
-    if (disposed || !playerDom.value) return false;
+    // 卸载或新请求开始后 import/解析可能才完成，避免重复挂载或挂上过期歌单
+    if (disposed || !playerDom.value || requestId !== playlistRequestId) return false;
     player.value = new APlayer({
       container: playerDom.value,
       volume: playerVolume.value,
@@ -443,17 +448,19 @@ const parseLrc = (text) => {
 
 // 加载当前歌曲歌词
 const loadCurrentLyrics = async () => {
+  const requestId = ++lyricRequestId;
   currentLyrics.value = [];
   activeLyricIndex.value = -1;
   const song = allSongs.value[currentIdx.value];
   if (!song?.lrc) return;
   try {
     const res = await fetch(song.lrc);
-    if (res.ok) {
-      const text = await res.text();
+    const text = await res.text();
+    if (res.ok && !disposed && requestId === lyricRequestId) {
       currentLyrics.value = parseLrc(text);
     }
   } catch (e) {
+    if (disposed || requestId !== lyricRequestId) return;
     console.warn("Failed to load lyrics", e);
   }
 };
@@ -624,6 +631,9 @@ onMounted(() => {
 
 onBeforeUnmount(() => {
   disposed = true;
+  // 使仍在途的歌单/歌词请求失效，避免卸载后继续写状态
+  playlistRequestId += 1;
+  lyricRequestId += 1;
   stopRotate();
   clearTimeout(followResumeTimer);
   clearTimeout(musicSourceTimer);
