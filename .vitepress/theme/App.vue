@@ -28,8 +28,8 @@
   <!-- 页脚框外致谢 -->
   <div v-show="!loadingStatus" class="footer-credit">
     本站的诞生离不开上游作者的开源贡献。在此感谢他（她）们。本站遵循
-    <a href="https://www.gnu.org/licenses/agpl-3.0.html" target="_blank" rel="noopener noreferrer"
-      ><strong>AGPL v3</strong></a
+    <a href="https://opensource.org/license/mit" target="_blank" rel="noopener noreferrer"
+      ><strong>MIT</strong></a
     >
     协议
     <a
