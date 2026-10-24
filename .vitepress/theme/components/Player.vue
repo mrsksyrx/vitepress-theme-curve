@@ -110,6 +110,7 @@ const player = ref(null);
 const playerDom = ref(null);
 const suppressHover = ref(false);
 const rotateTimer = ref(null);
+const rotateSwitchTimer = ref(null);
 const hasPlayed = ref(false);
 const allSongs = ref([]);
 const currentIdx = ref(0);
@@ -120,6 +121,7 @@ const currentLyrics = ref([]);
 const activeLyricIndex = ref(-1);
 const userScrolling = ref(false);
 let followResumeTimer = null;
+let rotateGeneration = 0;
 let playlistRequestId = 0;
 let lyricRequestId = 0;
 let disposed = false;
@@ -137,20 +139,29 @@ const preloadImage = (src) => {
 };
 
 const startRotate = () => {
-  if (!player.value || hasPlayed.value) return;
+  if (!player.value || hasPlayed.value || !isFolded.value) return;
   rotateTimer.value = setInterval(() => {
-    if (!player.value || hasPlayed.value) {
+    if (!player.value || hasPlayed.value || !isFolded.value) {
       stopRotate();
       return;
     }
+    const generation = ++rotateGeneration;
     rotatePhase.value = "out";
-    setTimeout(async () => {
-      if (!player.value || hasPlayed.value) return;
+    rotateSwitchTimer.value = setTimeout(async () => {
+      if (generation !== rotateGeneration || !player.value || hasPlayed.value || !isFolded.value) {
+        rotatePhase.value = "";
+        return;
+      }
       const len = player.value.list.audios.length;
       const idx = Math.floor(Math.random() * len);
       // 预加载封面
       const cover = allSongs.value[idx]?.cover;
       if (cover) await preloadImage(cover);
+      // 预加载期间可能已展开面板或开始播放，不能再切换旧曲目
+      if (generation !== rotateGeneration || !player.value || hasPlayed.value || !isFolded.value) {
+        rotatePhase.value = "";
+        return;
+      }
       player.value.list.switch(idx);
       currentIdx.value = idx;
       getMusicData();
@@ -160,13 +171,24 @@ const startRotate = () => {
 };
 
 const stopRotate = () => {
+  // 同时作废正在淡出/预加载封面的切换任务，避免展开面板后仍切歌
+  rotateGeneration += 1;
   if (rotateTimer.value) {
     clearInterval(rotateTimer.value);
     rotateTimer.value = null;
   }
+  if (rotateSwitchTimer.value) {
+    clearTimeout(rotateSwitchTimer.value);
+    rotateSwitchTimer.value = null;
+  }
 };
 
 const isFolded = playerFolded;
+
+// 面板展开后立即结束未播放前的随机轮换
+watch(isFolded, (folded) => {
+  if (!folded) stopRotate();
+});
 
 const toggleFold = () => {
   isFolded.value = !isFolded.value;
