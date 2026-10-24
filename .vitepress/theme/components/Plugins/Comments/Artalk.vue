@@ -54,6 +54,9 @@ const initArtalk = async () => {
     return artalk.value;
   } catch (error) {
     console.error("初始化评论出错：", error);
+    if (typeof $message !== "undefined") {
+      $message.error("评论区加载失败，请刷新重试");
+    }
   }
 };
 
