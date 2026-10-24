@@ -1,113 +1,588 @@
 <h1 align="center"> Curve </h1>
-<p align="center">A Simple VitePress Theme</p>
+<p align="center">一个 VitePress 博客主题</p>
 <p align="center">
   <img src="https://github.com/imsyy/vitepress-theme-curve/assets/42232682/bed62689-cfd8-4d98-b946-24555d4ce1fb" alt="curve-logo" />
 </p>
 
 ---
 
-> [!TIP]
-> 近期将通过 Nuxt 重构本项目前后端，敬请期待
+预览本站: [sgexilq.com](https://sgexilq.com/)
 
-Preview: 👻 [無名小栈](https://blog.imsyy.top/)
-
-Docs: 📖 [主题文档](https://blog.imsyy.top/pages/categories/%E4%B8%BB%E9%A2%98%E6%96%87%E6%A1%A3)
-
+本站基于以下开源项目二次开发：  
+ [kazukokawagawa/vitepress-theme-curve](https://github.com/kazukokawagawa/vitepress-theme-curve)  
+ [imsyy/vitepress-theme-curve](https://github.com/imsyy/vitepress-theme-curve)  
+ 本站的诞生离不开上游作者的开源贡献，在此感谢他(她)们。
+ 
 > [!NOTE]
-> 该主题本意为自用，所以部分配置可能并不完善，包括评论系统的支持，目前仅支持 Artalk，如有其他需求，可提交 pr
+> 该主题本意为自用，所以可能并不能做到开箱即用，如果有此需求，建议优先使用上游项目。  
+> 近期可能会新增一个单独的分支可用于直接使用，敬请期待。
 
-## Hello
+# VitePress Theme Curve 项目更新笔记
 
-🎉 你好啊，很高兴你选择了 [vitepress-theme-curve](https://github.com/imsyy/vitepress-theme-curve)，你可以查看 [主题文档](https://blog.imsyy.top/pages/categories/%E4%B8%BB%E9%A2%98%E6%96%87%E6%A1%A3) 以了解更多，如果你在使用本主题时遇到问题，你可以在 [GitHub](https://github.com/imsyy/vitepress-theme-curve) 中正确的提交 [issues](https://github.com/imsyy/vitepress-theme-curve/issues) 以获取社区的帮助。
+## 相比上游仓库的主要更新
 
-## 快速开始
+- **站点定制**：改为个人博客站点，重新配置标题、域名、Logo、导航、页脚、友链、项目入口和关于页面。
+- **视觉样式**：加入粉蓝主题、动态背景、自定义光标、亚克力顶栏、更多主题色和高对比度模式。
+- **移动端体验**：优化移动端导航、侧边栏、小组件面板、返回操作、手势和长文本显示。
+- **消息与动画**：增加卡片消息、超级岛消息、阅读进度条、悬停效果和更多过渡动画。
+- **个性化设置**：重构设置面板，支持配置导入导出、恢复默认、主题色、字体、布局、动画和组件开关。
+- **文章功能**：增加字数统计、预估阅读时间、分享面板、文章点赞和「编辑此页」。
+- **文章安全**：增强密码文章加密和客户端解锁能力。
+- **搜索功能**：支持 Algolia，并在离线或接口失败时自动降级到本地搜索。
+- **音乐播放器**：增强全局播放器，支持歌词、封面、播放顺序、随机播放、自动播放和更多播放源。
+- **侧边栏挂件**：增强天气、倒计时、计时、日期、站点数据和 GitHub 热榜等挂件。
+- **图片体验**：增加图片懒加载、骨架屏、图片灯箱和更稳定的图片加载处理。
+- **离线能力**：增强 PWA 缓存，优化字体、图标和文章数据的离线使用。
+- **内容与路由**：改进分类、标签和分页路由，使翻页和无 JavaScript 浏览更稳定。
+- **日期与时间**：统一文章日期、归档、倒计时和 RSS 的时间处理，减少时区导致的日期错误。
+- **性能优化**：减少首页文章数据请求失败时的空白，优化搜索面板、文章 GPT、图片加载和首屏初始化。
+- **稳定性修复**：修复移动端布局、弹窗层级、动画卡顿、播放器异常、评论加载和页面切换等问题。
+- **内存与生命周期**：完善组件卸载后的监听器、定时器和异步任务清理。
+- **构建优化**：优化 sitemap、canonical、RSS、PWA 和构建期文章数据生成。
+- **部署支持**：增强 Vercel、Cloudflare Pages 和 GitHub Actions 部署支持。
+- **接口能力**：增加点赞和音乐代理接口，并保持 Vercel 与 Cloudflare 两端实现同步。
+- **工具链**：改进 ESLint、TypeScript、Prettier 和包管理配置。
+- **安全加固**：修复外链跳转、URL 编码、配置持久化和敏感信息处理方面的问题。
+- **内容资源**：替换默认 Logo、图标和友链资源，增加本地字体和站点专属内容。
+- **许可证**：将错误的 AGPL v3 许可修正为 MIT。
 
-若您有修改主题的需求，请确保您拥有基础的前端知识，最好能掌握 [Vue.js](https://vuejs.org/) 框架的相关知识，并确保阅读了 `VitePress` 的 [官方文档](https://vitepress.dev/zh/guide/what-is-vitepress)
+## 目录结构
 
-### 书写新的文章
-
-你可以直接在站点根目录中的 `posts` 文件夹中直接新建 `markdown` 文件来书写，您的文件路径即为实际生成的网址路径。
-
-### 添加新的页面
-
-你可以直接在站点根目录中的 `pages` 文件夹中直接新建 `markdown` 文件来实现新建页面，您的文件路径即为实际生成的网址路径。
-
-主题中已经内置了几个常用页面以供参考。
-
-### 主题配置
-
-本主题提供了一个 `themeConfig.mjs` 文件用来配置，它位于 `.vitepress\theme\assets\themeConfig.mjs`，你可以将它复制一份并移动至根目录中，在这里里面的修改将会覆盖初始配置，请注意，**请不要更改文件名或者删除原配置文件，否则它将会不起作用！**
-
-### 静态文件
-
-通常情况下，静态文件处于根目录下的 `public` 文件夹中，通常用于存放字体或图片等文件信息。
-
-了解更多：[资源处理](https://vitepress.dev/zh/guide/asset-handling#asset-handling)
-
-### 部署
-
-如果你之前使用过类似于 [Hexo](https://hexo.io/zh-cn/) 一样的静态站点生成器的话，那么这二者是极为相似的，都是构建为静态文件后上传至服务器以实现访问，当然，你也可以借助 GitHub 的 Actions 以实现自动部署，具体细节请参考我的博客，此处不再细说。
-
-```bash
-# 安装依赖
-npm install
-# 构建
-npm run build
+```text
+vitepress-theme-curve/
+├── .vitepress/                # VitePress 配置和主题代码
+│   ├── config.mjs             # 站点配置、构建钩子、sitemap、PWA 等
+│   ├── init.mjs               # 加载并合并根目录 themeConfig.mjs
+│   ├── theme/                 # 主题入口、布局和核心逻辑
+│   │   ├── App.vue            # 自定义页面布局
+│   │   ├── index.mjs          # 主题入口，注册 Pinia 和全局能力
+│   │   ├── components/        # 导航、播放器、搜索、评论、挂件等组件
+│   │   ├── views/             # 首页、文章页、归档、友链等页面视图
+│   │   ├── store/             # Pinia 全局状态和持久化配置
+│   │   ├── style/             # SCSS 全局样式
+│   │   ├── utils/             # 文章、日期、搜索、RSS、加密等工具
+│   │   └── assets/            # 主题默认配置和默认友链数据
+├── posts/                     # 博客文章，文件路径对应 URL 路径
+├── pages/                     # 独立页面、分类页和标签页
+├── page/                      # 首页分页路由和跳转页面
+├── public/                    # 静态资源，构建时原样复制到产物根目录
+│   ├── fonts/                 # 本地字体资源
+│   ├── images/                # Logo、图标、封面和友链图片
+│   ├── data/                  # 构建期生成的文章数据和搜索索引
+│   ├── redirect.html          # 外链跳转中转页
+│   └── robots.txt             # 搜索引擎收录规则
+├── api/                       # Vercel Serverless 接口
+├── functions/api/             # Cloudflare Pages Functions 接口
+├── themeConfig.mjs            # 当前站点的个性化主题配置
+├── package.json               # 项目依赖和命令
+├── pnpm-lock.yaml             # pnpm 锁文件
+├── README.md                  # 项目说明
+├── AGENTS.md                  # 开发和维护说明
+└── .github/workflows/         # GitHub Actions 部署流程
 ```
 
-建议使用 `pnpm`，若未安装，可使用 `npm install pnpm -g` 来安装。
+其中：
+
+- `.vitepress/theme/components/` 放可复用的 Vue 组件。
+- `.vitepress/theme/views/` 放首页、文章页等大型页面视图。
+- `.vitepress/theme/utils/` 放文章数据、日期、搜索、RSS、加密等纯逻辑工具。
+- `public/data/postData.json` 和搜索索引由构建过程生成，不需要手工维护。
+- `.vitepress/auto-imports.d.ts`、`.vitepress/components.d.ts` 等是自动生成文件。
+- 修改站点配置时优先修改根目录 `themeConfig.mjs`，不要修改默认主题配置。
+
+## Frontmatter 与 Markdown 语法
+
+写文章时，在 `.md` 文件最顶部使用 `---` 包裹 Frontmatter：
+
+```markdown
+---
+title: 示例文章
+date: 2026-10-24
+description: 这是文章摘要
+categories: [开发]
+tags: [VitePress, Vue]
+---
+
+正文内容……
+```
+
+### 常用 Frontmatter 字段
+
+| 字段 | 说明 |
+| --- | --- |
+| `title` | 文章标题 |
+| `date` | 发布日期，建议使用 `YYYY-MM-DD` |
+| `description` | 文章摘要，用于列表和 RSS |
+| `categories` | 分类，可以是字符串或数组 |
+| `tags` | 标签，可以是字符串或数组 |
+| `top` | 置顶权重，数字越大越靠前，`true` 表示置顶 |
+| `cover` | 封面图片地址，需要开启封面显示功能后生效 |
+| `articleGPT` | AI 摘要卡片内容 |
+| `references` | 参考资料列表，每项包含标题和链接 |
+| `password` | 文章密码，设置后正文会在构建时加密 |
+| `comment` | 是否显示评论区，布尔值 |
+| `copyright` | 是否显示版权声明，布尔值 |
+
+例如：
+
+```markdown
+---
+title: 一篇带封面的文章
+date: 2026-10-24
+description: 用于文章列表展示的摘要
+categories: [前端]
+tags: [VitePress, Vue]
+top: 1
+cover: /images/example.webp
+articleGPT: 这篇文章介绍了主题的使用方法
+password: 123456
+comment: true
+copyright: true
+---
+```
+
+`tags` 和 `categories` 都支持两种写法：
+
+```yaml
+tags: [开发, 博客]
+categories: 前端
+```
+
+### 基础 Markdown 语法
+
+文章正文支持常见 Markdown 写法：
+
+```markdown
+# 一级标题
+
+## 二级标题
+
+**加粗文字**
+
+*斜体文字*
+
+~~删除线~~
+
+`行内代码`
+
+> 这是一段引用
+
+- 无序列表
+- 第二项
+
+1. 有序列表
+2. 第二项
+
+[链接文字](https://example.com)
+
+![图片说明](/images/example.png)
+
+---
+
+| 名称 | 说明 |
+| --- | --- |
+| 名称一 | 内容一 |
+```
+
+### 主题扩展语法
+
+项目在普通 Markdown 之外，还加入了一些主题扩展能力。
+
+#### 属性标记
+
+支持为元素添加 class、id 和自定义属性：
+
+```markdown
+::: card
+一个卡片内容
+:::
+
+::: card{.warning #my-card}
+带样式属性的卡片
+:::
+```
+
+#### 时间线
+
+```markdown
+::: timeline 时间线标题
+这是时间线中的内容。
+:::
+```
+
+#### 单选点样式
+
+```markdown
+::: radio
+这是一个带状态标记的内容。
+:::
+```
+
+#### 按钮样式
+
+```markdown
+::: button
+这是一个按钮
+:::
+```
+
+#### 卡片
+
+```markdown
+::: card
+这是一张卡片，可以包裹任意 Markdown 内容。
+:::
+```
+
+#### 提示块
+
+支持 Obsidian 风格的 `ad-*` 提示块，例如：
+
+````
+```ad-note
+这是一个提示块。
+```
+
+```ad-warning
+这是一个警告块。
+```
+
+```ad-tip
+这是一个技巧块。
+```
+````
+
+### 图片和表格
+
+- 图片会自动启用懒加载。
+- 站内图片会尝试使用 WebP 版本。
+- 开启 Fancybox 后，点击图片可以放大查看。
+- 表格会自动包裹在可横向滚动的容器中，宽表格不会撑破页面。
+- 图片可以放在普通 Markdown 链接中，主题会避免重复嵌套链接。
+
+### 加密文章
+
+如果 Frontmatter 中设置了 `password`：
+
+- 构建时会自动加密正文；
+- 页面默认显示“文章已加密”；
+- 用户输入正确密码后才会解密显示；
+- 正文中的脚本、样式和自定义块不会进入普通页面内容；
+- 密码文章不仅适用于 `posts/`，其他页面设置密码后也会被加密。
+
+### 写作建议
+
+- 日期建议使用 `YYYY-MM-DD`，避免不同设备出现时区差异。
+- 标签和分类建议使用数组写法，多个值更清晰。
+- 封面图建议使用稳定的本地路径或可靠图床。
+- 长表格建议控制列数，并合理使用标题层级。
+- 复杂内容可以优先使用卡片、提示块、时间线等主题语法。
+
+## 主题配置
+
+主题配置分为两层：
+
+- 默认配置：`.vitepress/theme/assets/themeConfig.mjs`
+- 个人覆盖配置：项目根目录的 `themeConfig.mjs`
+
+根目录配置会与默认配置进行深合并，因此只需要写需要修改的字段，其他字段会自动继承默认值。
+
+```js
+export const themeConfig = {
+  siteMeta: {
+    title: "我的博客",
+    site: "https://example.com",
+  },
+};
+
+export default themeConfig;
+```
+
+### 配置合并规则
+
+- 普通对象会进行深层合并。
+- `nav`、`navMore`、`footer.social`、`footer.sitemap` 等数组会整体替换默认数组。
+- 例如写了新的 `nav`，就会覆盖默认导航，而不是在默认导航后面追加。
+- 配置中没有写的字段会继续使用默认值。
+- 不要修改 `.vitepress/theme/assets/themeConfig.mjs`，个人定制应写在根目录 `themeConfig.mjs` 中。
+
+### 常用配置分组
+
+| 配置项 | 用途 |
+| --- | --- |
+| `siteMeta` | 站点标题、描述、Logo、域名、语言和作者信息 |
+| `nav` / `navMore` | 顶部导航和左上角更多菜单 |
+| `cover` | 文章列表封面显示方式 |
+| `footer` | 社交链接、页脚站点地图和底部信息 |
+| `comment` | 评论系统开关，以及 Artalk / Twikoo 参数 |
+| `aside` | 侧边栏组件开关和显示内容 |
+| `friends` | 友情链接数据和动态友链 |
+| `music` | 音乐播放器、歌单、平台和接口地址 |
+| `search` | Algolia 搜索配置 |
+| `fancybox` | 图片灯箱开关和资源地址 |
+| `likeData` | 文章点赞功能开关 |
+| `editLink` | 文章「编辑此页」链接 |
+| `jumpRedirect` | 站外链接跳转提示页 |
+| `rewardData` | 打赏功能配置 |
+| `inject.header` | 追加到页面 `<head>` 的标签 |
+| `since` | 网站建站年份或日期 |
+| `icp` | 备案信息 |
+| `postSize` | 首页每页文章数量 |
+
+### 常见配置示例
+
+```js
+export const themeConfig = {
+  comment: {
+    enable: true,
+    type: "twikoo",
+  },
+
+  music: {
+    enable: true,
+  },
+
+  search: {
+    enable: true,
+  },
+
+  fancybox: {
+    enable: true,
+  },
+
+  likeData: {
+    enable: true,
+  },
+
+  editLink: {
+    enable: true,
+    repo: "https://github.com/user/blog",
+    branch: "main",
+  },
+
+  jumpRedirect: {
+    enable: true,
+  },
+
+  postSize: 10,
+};
+```
+
+### 环境变量
+
+天气、热榜和状态挂件等服务可以通过 `.env` 配置：
+
+```dotenv
+VITE_WEATHER_KEY=
+VITE_HELLOGITHUB_API_URL=
+VITE_BETTER_STACK_STATUS_PAGE_URL=
+```
+
+注意：
+
+- 所有 `VITE_` 开头的变量都会进入浏览器端产物，不能放置真正的服务端秘密。
+- Better Stack 等服务端 Token 应配置在部署平台环境中。
+- 修改环境变量后通常需要重启开发服务器或重新构建。
+
+## 快速入门与部署
+
+### 环境要求
+
+- Node.js 20 或更高版本
+- pnpm 10 或更高版本
+- 建议使用 Git 管理项目版本
+
+### 安装依赖
+
+在项目根目录执行：
 
 ```bash
 pnpm install
+```
+
+项目使用 `pnpm-lock.yaml` 作为唯一锁文件，不建议继续使用 npm 安装依赖。
+
+### 本地开发
+
+启动开发服务器：
+
+```bash
+pnpm dev
+```
+
+默认监听：
+
+```text
+http://localhost:9877
+```
+
+修改文章、页面或主题配置后，必要时需要重新构建或重启开发服务器，文章索引才会完全刷新。
+
+### 构建静态站点
+
+执行：
+
+```bash
 pnpm build
 ```
 
-通常在未修改配置文件的情况下，打包后的文件会处于根目录下的 `.vitepress\dist` 目录中，您可以将其中的文件上传至任意服务器以访问。
+构建产物默认生成到：
 
-#### 全局点赞（可选，Vercel / Cloudflare Pages）
+```text
+.vitepress/dist
+```
 
-文章底部的点赞按钮（`LikeButton.vue`）通过 `api/like.ts`（Vercel）或 `functions/api/like.ts`（Cloudflare Pages）读写全局计数，存储需要 Redis：在 Vercel 项目的 Dashboard → Storage 中创建 Upstash for Redis 并连接到项目，集成会自动注入 REST 环境变量（两端均兼容 `KV_REST_API_URL`/`TOKEN`、`UPSTASH_REDIS_REST_URL`/`TOKEN` 以及 Marketplace 自定义前缀生成的 `UPSTASH_REDIS_REST_KV_REST_API_URL`/`TOKEN` 三组命名；Cloudflare Pages 在项目的 Environment Variables 中手动配置同名变量），重新部署一次即可生效。未配置时按钮仍会渲染，计数显示 `-`，不影响构建与静态部署（纯静态托管下点击不会计入全局计数）。
+构建过程中还会生成：
 
-## 更多
+- `sitemap.xml`
+- `rss.xml`
+- PWA 相关资源
+- 文章数据文件
 
-更多信息请参考：[主题文档](https://blog.imsyy.top/pages/categories/%E4%B8%BB%E9%A2%98%E6%96%87%E6%A1%A3)
+### 预览构建结果
 
-> Powered by VitePress
+```bash
+pnpm preview
+```
 
-[![Netlify Status](https://api.netlify.com/api/v1/badges/31ebe949-6ce7-46b7-a5fb-a73da20412d6/deploy-status)](https://app.netlify.com/sites/imsyy-blog/deploys)
+### 格式化与检查
 
-| 命令                 | 说明                                                                                      |
-| -------------------- | ----------------------------------------------------------------------------------------- |
-| `pnpm dev`           | 启动开发服务器（`vitepress dev --host`）                                                  |
-| `pnpm build`         | 构建静态站点（产出 `sitemap.xml`、`rss.xml` 与 PWA 资源）                                 |
-| `pnpm preview`       | 预览构建产物                                                                              |
-| `pnpm lint`          | ESLint 检查（`.js/.jsx/.cjs/.mjs/.vue/.ts`，含 `.vitepress`；自动修复用 `pnpm lint:fix`） |
-| `pnpm format`        | Prettier 格式化当前目录（`.prettierignore` 已排除 `dist`、锁文件与生成的 `*.d.ts`）       |
-| `pnpm deploy:vercel` | 通过 Vercel CLI 部署                                                                      |
-| `npx tsc --noEmit`   | TypeScript 类型检查（**不覆盖 `.vue`**，见下）                                            |
+```bash
+# Prettier 格式化
+pnpm format
+
+# ESLint 检查
+pnpm lint
+
+# ESLint 自动修复
+pnpm lint:fix
+
+# TypeScript 类型检查
+npx tsc --noEmit
+```
+
+需要注意：
+
+- 项目没有完整的自动化测试套件。
+- 裸 `tsc` 不会检查 `.vue` 文件。
+- `pnpm lint` 主要检查 JavaScript、TypeScript 和 Vue 文件。
+
+### GitHub Pages 部署
+
+项目包含 GitHub Actions 工作流，推送到指定分支后可以自动构建并部署到 GitHub Pages。
+
+部署前需要确认：
+
+- 仓库分支符合工作流配置；
+- 工作流使用的 Node 和 pnpm 版本满足项目要求；
+- GitHub Pages 已启用；
+- 构建输出目录为 `.vitepress/dist`。
+
+### Vercel 部署
+
+可以使用项目中的 Vercel 配置进行部署：
+
+```bash
+pnpm build
+pnpm deploy:vercel
+```
+
+Vercel 项目中需要配置相应的服务端环境变量，例如 Better Stack Token 或 Redis 相关配置。
+
+### Cloudflare Pages 部署
+
+Cloudflare Pages 可以使用：
+
+- 构建命令：`pnpm build`
+- 输出目录：`.vitepress/dist`
+- Functions 目录：`functions/`
+
+点赞、音乐和状态等接口需要根据 Cloudflare Pages Functions 的环境变量配置运行。
+
+### 任意静态服务器
+
+也可以直接将：
+
+```text
+.vitepress/dist
+```
+
+上传到任意静态服务器。
+
+由于项目启用了 `cleanUrls`，服务器需要支持无扩展名 URL 自动回退到对应的 HTML 页面。
+
+### 功能不可用时的降级
+
+以下功能在没有配置后端或网络不可用时会自动降级：
+
+- 点赞计数显示为 `-`
+- 天气挂件不可用
+- 搜索自动切换到本地或提示不可用
+- 音乐接口请求失败时播放器显示异常状态
+- PWA 离线数据可能不完整
+
+这些降级情况通常不会影响站点构建和基础页面访问。
+
+## 可用命令
+
+| 命令 | 说明 |
+| --- | --- |
+| `pnpm install` | 安装项目依赖 |
+| `pnpm dev` | 启动本地开发服务器，默认端口为 9877 |
+| `pnpm build` | 构建静态站点，输出到 `.vitepress/dist` |
+| `pnpm preview` | 预览已经构建好的静态站点 |
+| `pnpm format` | 使用 Prettier 格式化项目文件 |
+| `pnpm lint` | 使用 ESLint 检查 JavaScript、TypeScript 和 Vue 文件 |
+| `pnpm lint:fix` | 使用 ESLint 自动修复可修复的问题 |
+| `pnpm deploy:vercel` | 通过 Vercel CLI 部署项目 |
+| `npx tsc --noEmit` | 执行 TypeScript 类型检查，但不覆盖 `.vue` 文件 |
+
+### 常用组合
+
+第一次使用项目：
+
+```bash
+pnpm install
+pnpm dev
+```
+
+提交代码前：
+
+```bash
+pnpm format
+pnpm lint
+pnpm build
+```
+
+检查 TypeScript：
+
+```bash
+npx tsc --noEmit
+```
+
+### 命令注意事项
+
+- 项目应优先使用 `pnpm`，不建议使用 `npm install`。
+- `pnpm build` 会重新生成部分构建数据文件，运行后 Git 状态可能出现变化。
+- `pnpm lint` 不等于完整质量检查，项目目前没有覆盖所有 `.vue` 文件的类型检查。
+- 项目没有独立的自动化测试命令。
+- 构建产物只在 `.vitepress/dist` 中生成，运行 `pnpm build` 不会直接修改源码。
 
 ## 已知问题
 
-这些问题在仓库中**真实存在**，在此如实记录，避免使用者踩坑：
-
-- **质量链覆盖不全**：裸 `tsc` 不解析 `.vue` 单文件组件，实际参与类型检查的只有 `api/` 与 `functions/api/` 下的 6 个 `.ts`、`env.d.ts` 与 2 个生成的 `*.d.ts`，全仓 60+ 个 `.vue` 全部未被覆盖（完整覆盖需要 `vue-tsc`，本项目未安装也没有 `typecheck` 脚本）。ESLint 已覆盖 `.vitepress/` 与 `api/`、`functions/` 的 `.ts`（`pnpm lint` 显式传入 `.vitepress`，`--ext` 含 `.ts`）。
-- **仓库没有测试套件**：`package.json` 中没有 test 脚本，也没有任何单测框架；`timeTools`、`getPostData`、分页数学等纯函数建议后续补齐单元测试。
-- **密钥仍在版本控制中**：`.env` 至今仍被 Git 跟踪，其内容与 `HEAD` 完全一致，且 `.gitignore` **没有**忽略它（见下方[安全提示](#安全提示)）。
-- **跳转壳的重复内容**：`page.md`、`page/index.md`、`page/1.md`、`pages/index.md` 内容逐字节相同。`gray-matter` 以文件内容为键缓存解析结果，相同内容的文件会共享同一个 `head` 数组，历史上曾导致 canonical 标签跨页累积。构建配置现已在 `transformPageData` 中按页重建 `head`（替换引用、不就地 `push`，并保留 frontmatter 里用户自定义的 head 项，仅剔除 canonical 后补本页那条），但**共享 `head` 数组的根因仍在**，日后若在 `transformPageData` 里就地 `push` 新的 head 字段，同类问题会复现。
-- **构建期会写入工作区**：加载 `.vitepress/config.mjs` 时会重新生成 `public/data/postData.json`，因此运行 `dev`/`build` 后 `git status` 必然出现该文件的变动。该文件**未被跟踪且已被 `.gitignore` 忽略**，不会污染提交。
-- **`jumpRedirect` 默认关闭、本站已启用**：相关实现与 `/redirect.html` 已就位，主题默认 `jumpRedirect.enable: false`，但根目录 `themeConfig.mjs` 覆盖为 `true`。代码层缺陷（`text()` 丢嵌套元素、缺同源检查、非 http(s) 协议被包进中转页、Base64 非 UTF-8 对称）已修复。
-- **`public/` 会被原样拷进产物**：`public/` 是**源目录**，其中的文件在构建时被逐份拷贝到 `.vitepress/dist` 根下（`postData.json` 就是这么进去的），因此不要在里面放需要手工维护的产物——下一次构建会用同名的源文件覆盖它。
-- **`robots.txt` 是静态文件**：`public/robots.txt` 会被原样拷贝到产物根目录，**不是**构建期生成；修改收录规则请直接改该文件。
-- **`themeConfig.mjs` 被 Git 跟踪**：根目录的覆盖文件**已被提交**（`git ls-files themeConfig.mjs` 可复现）；修改会出现在 `git status` 中。
-- **`package-lock.json` 已删除**：该文件是上游 npm 残留，已移除并加入 `.gitignore`，请以 `pnpm-lock.yaml` 为准。
-- **第三方 CDN 依赖**：iconfont、Fancybox、Twikoo 等资源默认走公共 CDN，网络受限环境下相关样式或功能可能不可用。
-
-## 安全提示
-
-- **`.env` 仍在版本控制中**：该文件已被提交，内容与 `HEAD` 一致，且 `.gitignore` 未忽略它（`git ls-files .env` 可复现）。处理顺序应当是：**先吊销/轮换其中所有凭据**，再把它移出跟踪（`git rm --cached .env` 并补进 `.gitignore`），最后按需用 `git filter-repo` 重写历史——顺序颠倒会让旧密钥在历史中继续有效。注意 `git rm --cached .env` **并不会**清掉仓库里其它位置的同一凭据。
-- **同一个高德 Key 还有第二处明文**：除了 `.env:1`，`.vitepress/theme/assets/themeConfig.mjs` 的 `weatherkey` 注释块里也留了一份明文（在源码中搜索该 Key 的前 8 位即可定位两处）。该字段已废弃（天气挂件现在读 `import.meta.env.VITE_WEATHER_KEY`），但注释里的明文会随仓库公开。轮换 Key 时两处都要处理，且因为 `VITE_` 变量会被打包进前端产物、天气请求由**访客浏览器**直连 `restapi.amap.com`，这个 Key 本质上是公开的、无法用域名/IP 白名单保护——实际风险是**当日 5000 次配额被烧掉导致天气挂件失效**，不涉及账户接管。
-- 站点内含个人化配置与统计、评论等服务凭据，公开部署前请逐项检查 `themeConfig.mjs`、`.env` 与 `api/`、`functions/` 下的环境变量读取。
-- 所有 `VITE_` 前缀的变量都会被**打包进前端产物**，对其调用方可见，只应放可公开的值；`BETTER_STACK_API_TOKEN` 只在服务端使用，切勿加 `VITE_` 前缀或写入前端代码。
+- **类型检查覆盖不完整**：普通 `tsc` 不会解析 `.vue` 文件，因此目前没有覆盖所有 Vue 组件的完整类型检查。
+- **没有完整测试套件**：项目没有统一的自动化测试命令，分页、日期和文章数据等逻辑主要依靠人工验证。
+- **`.env` 仍可能被 Git 跟踪**：如果其中包含真实密钥，应先轮换凭据，再将其移出版本控制。
+- **构建会生成数据文件**：运行 `pnpm dev` 或 `pnpm build` 时会更新文章数据和搜索索引等文件，Git 状态可能出现变化。
+- **`public/` 是源目录**：其中的文件会原样复制到构建产物，不应放置需要手工维护的最终构建结果。
+- **`robots.txt` 是静态文件**：它不会根据配置自动生成，需要修改 `public/robots.txt`。
+- **跳转页和分页壳页面容易混淆**：部分页面只是跳转或分页入口，不应被搜索引擎当作主要内容收录。
+- **外链中转依赖配置**：`jumpRedirect` 默认关闭，当前站点通过根目录配置启用；非 HTTP(S) 链接不会进入中转页。
+- **部分资源依赖公共 CDN**：字体、图标、评论和图片灯箱等资源可能受到网络环境影响。
+- **点赞和状态接口依赖后端环境**：未配置 Redis、Better Stack 或服务端 Token 时，相关功能会显示不可用或降级状态。
+- **前端环境变量会公开**：所有 `VITE_` 变量都会进入浏览器端产物，不能用于保存真正的服务端秘密。
+- **主题配置已经站点化**：根目录 `themeConfig.mjs` 包含当前站点的标题、域名、导航、友链和服务配置，不能直接作为通用模板使用。
+- **上游仓库存在后续更新**：本地分支和上游仓库已经分叉，直接覆盖文件可能导致配置、路由或站点内容丢失。
 
 ## 来源声明
 
