@@ -19,7 +19,7 @@ const FONT_FAMILY_MAP = {
 
 const STYLE_ID_PREFIX = "curve-font-";
 const loadingTasks = new Map();
-const FONT_LOAD_TEXT = "LingShiChen123";
+const FONT_LOAD_TEXT = "Aa";
 
 const runWhenIdle = (callback) => {
   if (typeof window === "undefined") return;

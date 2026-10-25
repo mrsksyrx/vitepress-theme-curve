@@ -888,7 +888,7 @@
                   :class="['options', { choose: playerMusicSource === 'preset' }]"
                   @click="playerMusicSource = 'preset'"
                 >
-                  泠の预设
+                  模板预设
                 </span>
                 <span
                   :class="['options', { choose: playerMusicSource === 'custom' }]"
@@ -1572,7 +1572,7 @@
             <span class="set-label">查看源码</span>
             <div class="set-options">
               <a
-                href="https://github.com/mrsksyrx/vitepress-theme-curve/tree/master"
+                href="https://github.com/your-name/your-repository"
                 target="_blank"
                 rel="noopener noreferrer"
                 class="options"
@@ -1584,21 +1584,21 @@
             <span class="set-label">反馈与建议</span>
             <div class="set-options">
               <a
-                href="mailto:feedback@sgexilq.com"
+                href="mailto:hello@example.com"
                 target="_blank"
                 rel="noopener noreferrer"
                 class="options"
                 >EMail</a
               >
               <a
-                href="https://myat-qq.20091010.xyz"
+                href="https://example.com/qq"
                 target="_blank"
                 rel="noopener noreferrer"
                 class="options"
                 >QQ</a
               >
               <a
-                href="https://github.com/mrsksyrx/vitepress-theme-curve/issues"
+                href="https://github.com/your-name/your-repository/issues"
                 target="_blank"
                 rel="noopener noreferrer"
                 class="options"
@@ -1984,7 +1984,7 @@ const beautifyExpanded = ref(false);
 // 关闭开发模式确认提示
 const closeDevModeConfirmVisible = ref(false);
 const themeColorList = [
-  { value: "pink", label: "泠粉" },
+  { value: "pink", label: "粉色" },
   { value: "purple", label: "幻紫" },
   { value: "blue", label: "栈蓝" },
   { value: "red", label: "火红" },

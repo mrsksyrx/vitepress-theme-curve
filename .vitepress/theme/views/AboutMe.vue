@@ -1,44 +1,44 @@
 <template>
   <div class="about">
-    <h1 class="title">关于泠酱</h1>
+    <h1 class="title">关于作者</h1>
     <div class="about-content about-grid">
       <!-- Row 1 -->
       <div class="about-item hello" style="grid-column: 1 / 3; grid-row: 1">
         <span class="text1">初次见面，请多指教~</span>
-        <span class="text2 title2">我是 泠诗尘</span>
-        <span class="text3">一个跨性别女孩子</span>
+        <span class="text2 title2">我是 Your Name</span>
+        <span class="text3">一个热爱技术、写作与创作的人</span>
       </div>
 
       <div class="about-item skills" style="grid-column: 3; grid-row: 1">
-        <span class="tip">成分</span>
+        <span class="tip">兴趣</span>
         <div class="skills-list">
           <span class="skills-item tag-pink"
-            ><span class="tag-blue">Transgender</span
-            ><span class="tag-pink-text tag-bold">·MtF</span></span
+            ><span class="tag-blue">开发</span
+            ><span class="tag-pink-text tag-bold">·创作</span></span
           >
-          <span class="skills-item tag-pink">二次元</span>
-          <span class="skills-item tag-pink">百合</span>
-          <span class="skills-item">VOCALOID</span>
-          <span class="skills-item">番剧</span>
-          <span class="skills-item">漫画</span>
-          <span class="skills-item">Project Sekai</span>
-          <span class="skills-item">锦依卫</span>
+          <span class="skills-item tag-pink">阅读</span>
+          <span class="skills-item tag-pink">摄影</span>
+          <span class="skills-item">音乐</span>
+          <span class="skills-item">电影</span>
+          <span class="skills-item">设计</span>
+          <span class="skills-item">游戏</span>
+          <span class="skills-item">写作</span>
         </div>
       </div>
 
       <!-- Row 2 -->
       <div class="about-item card-mbti" style="grid-column: 1; grid-row: 2">
         <div class="mbti-type">
-          <span class="mbti-blue">IN</span><span class="mbti-pink">FP-T</span>
+          <span class="mbti-blue">MB</span><span class="mbti-pink">TI</span>
         </div>
       </div>
 
       <div class="about-item card-3" style="grid-column: 2; grid-row: 2">
         <span class="tip">我在</span>
         <span class="title2"
-          ><strong style="color: var(--about-blue)">重庆合川</strong>&<strong
+          ><strong style="color: var(--about-blue)">你的城市</strong>&<strong
             style="color: var(--about-accent)"
-            >江苏苏州</strong
+            >你的城市</strong
           ></span
         >
       </div>
@@ -46,12 +46,12 @@
       <div class="about-item card-5" style="grid-column: 3; grid-row: 2">
         <div class="info">
           <div class="info-item">
-            <span class="info-name">诞生于</span>
-            <span class="info-num" style="--color: var(--about-blue)">2009</span>
+            <span class="info-name">出生年份</span>
+            <span class="info-num" style="--color: var(--about-blue)">2000</span>
           </div>
           <div class="info-item">
             <span class="info-name">生日</span>
-            <span class="info-num" style="--color: var(--about-accent)">1010</span>
+            <span class="info-num" style="--color: var(--about-accent)">01-01</span>
           </div>
           <div class="info-item">
             <span class="info-name">距生日</span>
@@ -74,58 +74,48 @@
             font-weight: bold;
           "
         >
-          谢谢你，让我做了一场甜甜的梦。
+          保持好奇，持续学习，也别忘了记录生活。
         </p>
       </div>
 
       <!-- Row 4 -->
       <div class="about-item card-4" style="grid-column: 1 / 4; grid-row: 4">
         <div class="hrt-nodes" style="font-size: 18px">
-          <p class="text">获取小证：<span style="color: var(--about-accent)">2026.6.19</span></p>
-          <p class="text">获取HRT处方：<span style="color: var(--about-accent)">2026.7.29</span></p>
           <p class="text">
-            DIY HRT：<span style="color: var(--about-accent)">2026.5.10 - 2026.6.22</span>
+            完成第一个项目：<span style="color: var(--about-accent)">2024.09.01</span>
+          </p>
+          <p class="text">
+            开始系统学习：<span style="color: var(--about-accent)">2025.03.01</span>
+          </p>
+          <p class="text">
+            持续练习：<span style="color: var(--about-accent)">2025.06.01 - 2025.08.01</span>
           </p>
           <p class="text" style="margin-bottom: 1em">
-            开始正规HRT：<span style="color: var(--about-accent)">2026.10.5</span>
+            开始长期创作：<span style="color: var(--about-accent)">2026.01.01</span>
           </p>
         </div>
         <span class="tip"
-          >开始正式跨性别激素替代<br />已经
-          <span class="tag-pink-text"><LiveDate mode="days-since" :date="hrtStartDate" /></span>
+          >持续学习与创作<br />已经
+          <span class="tag-pink-text"
+            ><LiveDate mode="days-since" :date="milestoneStartDate"
+          /></span>
           天</span
         >
       </div>
 
       <!-- Row 5 -->
       <div class="about-item" style="grid-column: 1 / 4; grid-row: 5">
-        <span class="title2">二次元扩列卡</span>
+        <span class="title2">个人介绍</span>
         <div class="intro-content">
-          <p>cn泠诗尘，称呼随意，标识<span style="color: #f472b6">SGeXiLQ</span></p>
-          <p>
-            IN<span style="color: #f472b6">F</span>P-T，生男心女，性取向<span style="color: #a855f7"
-              >双</span
-            >，高一休学
-          </p>
-          <p>希望能被作为女孩子对待，而不是生理性别</p>
-          <p>生日2009.10.10，坐标重庆合川/江苏苏州</p>
-          <p>术力口/番剧/漫画，喜爱<span style="color: #f472b6">百合</span>向作品</p>
-          <p>游戏PJSK/Minecraft/EndField/maimai等，STEAM独立游戏，也会接触一些乙游（？</p>
-          <p>
-            推<span style="color: #39c5bb">Miku</span>/<span style="color: #66ccff">天依</span
-            >/<span style="color: #ffaad5">mzk</span>，喜欢<span style="color: #586294">烤25团</span
-            >，磕<span style="color: #ffaad5">糖</span><span style="color: #ccaa88">画</span>/<span
-              style="color: #66ccff"
-              >南</span
-            ><span style="color: #ee0000">北</span>组
-          </p>
-          <p>自家OC小女孩一只～</p>
-          <p>喜欢甜甜的、软软的、可爱的、亮晶晶的东西</p>
-          <p>有些社恐…但是熟了会非常非常黏人（x</p>
-          <p>喜欢疯狂分享一堆没什么意义但自己觉得很可爱的东西</p>
-          <p>回复速度与态度取决于你和当时的精神状态（偶尔会消失去自己的小世界贴贴</p>
-          <p>不是男娘，讨厌刻板印象，雷大众雷</p>
-          <p>猜你会雷：空间多转发&碎碎念/生心不一/Trans.MtF/adhd/微负(yyz)/女性主义(非极端)</p>
+          <p>昵称：Your Name，欢迎从这里开始了解我。</p>
+          <p>职业：在这里填写你的职业、专业或正在学习的方向。</p>
+          <p>兴趣：开发、阅读、摄影、音乐、电影、设计、游戏或写作。</p>
+          <p>生日：2000-01-01，坐标：你的城市。</p>
+          <p>我关注技术、创意和日常生活，也喜欢把学到的东西整理成文章。</p>
+          <p>这里可以放你的作品、项目、技能或长期重点内容。</p>
+          <p>联系方式：hello@example.com。</p>
+          <p>你可以根据自己的情况修改这一段，不需要照搬模板示例。</p>
+          <p>介绍内容建议保持真实、简洁，并定期更新。</p>
         </div>
         <p style="font-size: 12px; opacity: 0.5; margin-top: 12px; margin-bottom: 0">
           最后更新于 2026.10.9
@@ -134,16 +124,16 @@
 
       <!-- Row 6 -->
       <div class="about-item" style="grid-column: 1 / 4; grid-row: 6">
-        <span class="title2">𝕏 简介</span>
+        <span class="title2">简短介绍</span>
         <div class="intro-content">
-          <p>MtF｜小证2026.6｜家长党｜持证含糖 2026.10.5</p>
-          <p>DIY HRT 26.5.10-6.22｜诞生日2009.10.10</p>
-          <p>高一休学｜175cm/63kg｜重庆&苏州</p>
-          <p>想要变可爱｜友所有人｜同类贴贴｜缺爱</p>
-          <p>INFP-T｜双｜二次元｜音游｜百合｜术力口</p>
+          <p>Your Name｜技术与生活记录</p>
+          <p>正在学习前端、写作与产品设计</p>
+          <p>喜欢清晰的结构、可靠的工具和长期主义</p>
+          <p>欢迎交流，也欢迎通过留言板留下建议</p>
+          <p>这里可以替换成你的社交平台简介</p>
         </div>
         <p style="font-size: 12px; opacity: 0.5; margin-top: 12px; margin-bottom: 0">
-          最后更新于 2026.10.1
+          最后更新于 2026.01.01
         </p>
       </div>
     </div>
@@ -152,66 +142,42 @@
     <div class="about-content about-waterfall">
       <div class="about-item">
         <div class="intro-content">
-          <p>走上这条路是我自己的选择，有时候也会担心自己的选择到底是不是正确的。</p>
-          <p>
-            我决定去成为真正的自己，但我也会害怕，害怕我的努力得不到成果，害怕永远也见不到那个<span
-              style="color: var(--about-accent)"
-              >“她”</span
-            >。
-          </p>
-          <p>
-            但我还是会做出这个选择，因为<span style="color: var(--about-accent); font-weight: bold"
-              >“她”可能是我活下去的唯一动力了呢。</span
-            >
-          </p>
-          <p>
-            无论如何，不管会让我付出什么代价，我也一定要见到<span style="color: var(--about-accent)"
-              >“她”</span
-            >…
-          </p>
-          <p>每一步都是自己选的，我也就不再会后悔。</p>
+          <p>这里填写卡片一的内容。</p>
+          <p>这里填写补充说明。</p>
+          <p>这里填写重点内容。</p>
+          <p>这里填写其他信息。</p>
+          <p>这里填写总结。</p>
         </div>
       </div>
-      <!-- 记忆卡片 -->
       <div class="about-item">
-        <p class="text">在记忆之中，我逐渐开始忘记自己的存在。</p>
-        <p class="text" style="font-weight: bold">"我到底是谁？"</p>
-        <p class="text">不重要了。</p>
-        <p class="text">在记忆之中，我逐渐接受忘记自己的存在…</p>
+        <p class="text">这里填写卡片二的内容。</p>
+        <p class="text">这里填写第一段介绍。</p>
+        <p class="text">这里填写第二段介绍。</p>
+        <p class="text">这里填写第三段介绍。</p>
       </div>
-      <!-- 陷之死地 -->
       <div class="about-item">
-        <p class="text">陷之死地而后生，置之亡地而后存。</p>
-        <p class="text" style="color: var(--about-accent)">
-          失败的人生同样是人生，她们有权品尝至最后
-        </p>
+        <p class="text">这里填写卡片三的内容。</p>
+        <p class="text">这里填写补充说明或总结。</p>
       </div>
-      <!-- 关于这个站 -->
       <div class="about-item">
-        <p class="text">愿每个人都被世界温柔以待~</p>
-        <p class="text" style="color: var(--about-blue); opacity: 0.8">
-          年年岁岁花相似，岁岁年年人不同
-        </p>
-        <p class="text" style="color: var(--about-accent); font-weight: bold; font-size: 1.5em">
-          我爱你们
-        </p>
+        <p class="text">这里填写卡片四的内容。</p>
+        <p class="text">这里填写补充说明。</p>
+        <p class="text">这里填写强调内容。</p>
       </div>
-      <!-- 下方卡片 -->
       <div class="about-item">
-        <p class="text">往前走</p>
-        <p class="text">路是很难走</p>
-        <p class="text">跟我们普通人相比</p>
-        <p class="text">这是条非常难的崎岖的路</p>
-        <p class="text" style="color: var(--about-accent); font-weight: bold">但是不往前走怎么办</p>
-        <p class="text" style="color: var(--about-accent); font-weight: bold">可能连路都没有</p>
-        <p class="text" style="text-align: right; opacity: 0.6">------潘柏林</p>
+        <p class="text">这里填写内容一</p>
+        <p class="text">这里填写内容二</p>
+        <p class="text">这里填写内容三</p>
+        <p class="text">这里填写内容四</p>
+        <p class="text">这里填写内容五</p>
+        <p class="text">这里填写内容六</p>
+        <p class="text">——署名</p>
       </div>
-      <!-- 探索更多 -->
       <div class="about-item">
-        <p class="text" style="margin: 0">探索更多…</p>
+        <p class="text">相关链接</p>
         <div class="card-action">
-          <a href="/pages/hide/ww-aboutme-sgexilqlsc#各种账号" class="view-btn">我的各种账号</a>
-          <a href="/pages/hide/message" class="view-btn">留言板</a>
+          <a href="#" class="view-btn">示例链接一</a>
+          <a href="#" class="view-btn">示例链接二</a>
         </div>
       </div>
     </div>
@@ -219,9 +185,9 @@
 </template>
 
 <script setup>
-const birthDate = "2009-10-10";
-// 开始正规HRT；天数走 LiveDate（days-since），由 useClientNow 在浏览器端计算
-const hrtStartDate = "2026-10-05";
+const birthDate = "2000-01-01";
+// 里程碑日期；天数走 LiveDate（days-since），由 useClientNow 在浏览器端计算
+const milestoneStartDate = "2026-01-01";
 </script>
 
 <style lang="scss" scoped>

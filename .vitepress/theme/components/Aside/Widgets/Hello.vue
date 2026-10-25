@@ -15,7 +15,7 @@
       </div>
       <div class="link">
         <a
-          href="https://myat-github.20091010.xyz"
+          href="https://github.com/your-name/your-repository"
           target="_blank"
           rel="noopener noreferrer"
           class="social-link"
@@ -23,7 +23,7 @@
           <i class="iconfont icon-github"></i>
         </a>
         <a
-          href="mailto:sgexilq@qq.com"
+          href="mailto:hello@example.com"
           target="_blank"
           rel="noopener noreferrer"
           class="social-link"

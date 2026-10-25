@@ -9,7 +9,7 @@ import type { VercelRequest, VercelResponse } from "@vercel/node";
  * 浏览器端 fetch 读不到跳转 Location（跨域 + music.163.com 无 CORS），只能在服务端解析。
  */
 
-const ALLOWED_HOSTS = new Set(["meting.20091010.xyz", "meting.20100907.xyz", "music.163.com"]);
+const ALLOWED_HOSTS = new Set(["meting.example.dev", "meting.example.app", "music.163.com"]);
 const ALLOWED_SUFFIXES = [".music.126.net", ".music.163.com"];
 
 function isAllowedUrl(raw: string): URL | null {

@@ -5,4 +5,4 @@ Allow: /posts/
 Disallow: /redirect.html
 Disallow: /redirect
 
-Sitemap: https://sgexilq.com/sitemap.xml
+Sitemap: https://example.com/sitemap.xml

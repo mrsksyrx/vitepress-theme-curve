@@ -1,23 +1,23 @@
-// 个人主题配置（覆盖默认配置）
+// 模板主题配置（覆盖默认配置）
 // 仅定义需要覆盖的字段，未定义的字段使用默认值
 export const themeConfig = {
   // ===== 站点信息 =====
   siteMeta: {
-    title: "泠の小站",
-    description: "愿每个人都被世界温柔以待~",
+    title: "My Curve Blog",
+    description: "一个可直接使用的 VitePress 博客",
     logo: "/images/logo/favicon-256.png",
-    site: "https://sgexilq.com",
+    site: "https://example.com",
     author: {
-      name: "泠诗尘",
+      name: "Your Name",
       cover: "/images/logo/favicon-256.png",
-      email: "sgexilq@qq.com",
-      link: "https://sgexilq.com",
+      email: "hello@example.com",
+      link: "https://example.com",
     },
   },
   // 备案信息（留空则不显示）
-  icp: "萌ICP备20262118号",
+  icp: "",
   // 建站日期
-  since: "2026-08-19",
+  since: "2026-01-01",
 
   // ===== 页头注入 =====
   inject: {
@@ -57,7 +57,7 @@ export const themeConfig = {
     {
       text: "我的",
       items: [
-        { text: "关于泠酱", link: "/pages/about-me", icon: "contacts" },
+        { text: "关于作者", link: "/pages/about-me", icon: "contacts" },
         { text: "关于本站", link: "/pages/about-website", icon: "code" },
         // mobileOnly：只在移动端侧栏显示，不进桌面导航下拉
         {
@@ -68,7 +68,7 @@ export const themeConfig = {
         },
         {
           text: "服务状态",
-          link: "https://status.sgexilq.com",
+          link: "https://status.example.com",
           icon: "chart",
           mobileOnly: true,
         },
@@ -79,11 +79,11 @@ export const themeConfig = {
     {
       name: "项目",
       list: [
-        { icon: "/images/logo/favicon-256.png", name: "泠の小站", url: "/" },
+        { icon: "/images/logo/favicon-256.png", name: "My Curve Blog", url: "/" },
         {
           icon: "/images/logo/favicon-256.png",
-          name: "精神状态",
-          url: "https://whendie.sgexilq.com",
+          name: "示例服务",
+          url: "https://service.example.com",
         },
       ],
     },
@@ -92,12 +92,12 @@ export const themeConfig = {
   // ===== 页脚 =====
   footer: {
     social: [
-      { icon: "email", link: "mailto:sgexilq@qq.com" },
-      { icon: "qq", link: "https://myat-qq.20091010.xyz" },
-      { icon: "telegram", link: "https://myat-telegram.20091010.xyz" },
-      { icon: "twitter-x", link: "https://myat-twitter.20091010.xyz" },
-      { icon: "github", link: "https://myat-github.20091010.xyz" },
-      { icon: "bilibili", link: "https://myat-bilibili.20091010.xyz" },
+      { icon: "email", link: "mailto:hello@example.com" },
+      { icon: "qq", link: "https://example.com/qq" },
+      { icon: "telegram", link: "https://example.com/telegram" },
+      { icon: "twitter-x", link: "https://example.com/twitter" },
+      { icon: "github", link: "https://github.com/your-name/your-repository" },
+      { icon: "bilibili", link: "https://example.com/bilibili" },
     ],
     sitemap: [
       {
@@ -113,8 +113,8 @@ export const themeConfig = {
         text: "项目",
         items: [
           { text: "关于本站", link: "/pages/about-website" },
-          { text: "精神状态", link: "https://whendie.sgexilq.com", newTab: true },
-          { text: "音乐下载", link: "https://ncmmdp.mrsksyrx.top", newTab: true },
+          { text: "示例服务", link: "https://service.example.com", newTab: true },
+          { text: "示例项目", link: "https://project.example.com", newTab: true },
           { text: "友情链接", link: "/pages/link" },
         ],
       },
@@ -122,7 +122,7 @@ export const themeConfig = {
         text: "页面",
         items: [
           { text: "畅所欲言", link: "/pages/hide/message" },
-          { text: "关于泠泠", link: "/pages/hide/ww-aboutme-sgexilqlsc" },
+          { text: "扩展页面", link: "/pages/hide/ww-aboutme-sgexilqlsc" },
           { text: "隐私政策", link: "/pages/privacy" },
           { text: "版权协议", link: "/pages/cc" },
           // { text: "TO DO", link: "/pages/todo" },
@@ -131,10 +131,10 @@ export const themeConfig = {
       {
         text: "服务",
         items: [
-          { text: "站点状态", link: "https://status.sgexilq.com", newTab: true },
-          { text: "资源下载", link: "https://download.sgexilq.com", newTab: true },
+          { text: "站点状态", link: "https://status.example.com", newTab: true },
+          { text: "示例服务", link: "https://service.example.com", newTab: true },
           { text: "站点订阅", link: "/rss.xml" },
-          { text: "反馈建议", link: "mailto:feedback@sgexilq.com" },
+          { text: "反馈建议", link: "mailto:hello@example.com" },
         ],
       },
     ],
@@ -146,7 +146,7 @@ export const themeConfig = {
     type: "twikoo",
     twikoo: {
       js: "https://cdn.jsdelivr.net/npm/twikoo@1.6.42/dist/twikoo.all.min.js",
-      envId: "https://twikoo.20091010.xyz",
+      envId: "https://twikoo.example.com",
       region: "",
       lang: "zh-CN",
     },
@@ -156,20 +156,20 @@ export const themeConfig = {
   aside: {
     hello: {
       enable: true,
-      text: "欢迎来到<strong>泠の小站</strong>w<br>这里会有很多奇奇怪怪的东西哦（x<br>那就，请多指教啦",
+      text: "欢迎来到<strong>My Curve Blog</strong>w<br>这里会有很多奇奇怪怪的东西哦（x<br>那就，请多指教啦",
     },
     countDown: {
       enable: true,
-      data: { name: "生日", date: "2026-10-10" },
+      data: { name: "生日", date: "2000-01-01" },
     },
     timing: {
       enable: true,
       items: [
         {
           icon: "💌",
-          name: "泠诗尘",
+          name: "Your Name",
           event: "活着",
-          date: "2009-10-10",
+          date: "2000-01-01",
           includeStart: true,
         },
       ],
@@ -183,16 +183,16 @@ export const themeConfig = {
   rewardData: { enable: false },
   music: {
     enable: true,
-    url: "https://meting.20091010.xyz/api/meting",
-    id: ["18348521365", "18351552429", "18351506618"],
+    url: "https://meting.example.com/api/meting",
+    id: ["1234567890"],
     server: "netease",
     type: "playlist",
   },
   search: {
     enable: true,
-    appId: "WX8NR2C69E",
-    apiKey: "df2ea8c284a52afd157afa7f16adbca9",
-    index: "sgexilq_com_wx8nr2c69e_pages",
+    appId: "YOUR_ALGOLIA_APP_ID",
+    apiKey: "YOUR_SEARCH_ONLY_API_KEY",
+    index: "your_index_pages",
   },
   // 显式空串覆盖上游 51la 统计凭据，防止进包（defu 空对象不删键，必须空串）
   tongji: { "51la": "" },

@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-labelledby="title desc">
+  <title id="title">Curve Blog Template</title>
+  <desc id="desc">A neutral rounded square logo with a stylized letter C.</desc>
+  <defs>
+    <linearGradient id="background" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#14b8a6" />
+      <stop offset="1" stop-color="#2563eb" />
+    </linearGradient>
+  </defs>
+  <rect width="512" height="512" rx="112" fill="url(#background)" />
+  <path
+    d="M354 154c-28-28-66-44-108-44-86 0-154 68-154 154s68 154 154 154c42 0 80-16 108-44l-48-48c-16 16-36 24-60 24-50 0-86-36-86-86s36-86 86-86c24 0 44 8 60 24z"
+    fill="#fff"
+  />
+  <circle cx="360" cy="256" r="28" fill="#dbeafe" />
+</svg>

@@ -3,15 +3,15 @@
     <h1 class="title">关于本站</h1>
     <div class="about-content" style="grid-template-columns: 3fr 2fr">
       <div class="about-item hello">
-        <span class="title2">一个莫名其妙的小站(?)</span>
+        <span class="title2">一个记录知识与生活的博客</span>
         <span class="text4">
-          欢迎来到泠の小站w<br />
-          这里会有很多奇奇怪怪的东西哦（x<br />
-          那就，请多指教啦
+          欢迎来到 My Curve Blog。<br />
+          这里记录学习、开发与生活。<br />
+          很高兴在这里与你相遇。
         </span>
       </div>
       <div class="about-item skills" style="padding-top: 2rem">
-        <span class="title2">我不会的玩意</span>
+        <span class="title2">技术栈</span>
         <div class="skills-list">
           <a
             v-for="(item, index) in skillsData"
@@ -62,7 +62,7 @@
           style="padding: 1.2rem 1.2rem 1.2rem 1.8rem; justify-content: center"
         >
           <span class="title2"
-            ><strong>sgexilq</strong><strong style="color: var(--main-color)">.</strong
+            ><strong>example</strong><strong style="color: var(--main-color)">.</strong
             ><strong style="color: var(--main-color)">com</strong></span
           >
         </div>
@@ -71,7 +71,7 @@
           style="align-items: center; justify-content: center; padding-left: 1.7rem"
         >
           <span class="title2" style="white-space: nowrap">
-            <span>本站上线了</span>&nbsp;&nbsp;<span style="color: var(--main-accent)">{{
+            <span>本站已运行</span>&nbsp;&nbsp;<span style="color: var(--main-accent)">{{
               daysOnline === null ? "--" : daysOnline
             }}</span
             >&nbsp;&nbsp;<span>天</span>
@@ -79,128 +79,30 @@
         </div>
       </div>
     </div>
-    <!-- 站点状态 -->
-    <div class="about-content" style="display: flex">
-      <div class="about-item" style="padding: 1.2rem 2rem">
-        <p class="text" style="margin: 0.2rem 0; font-size: 1.6em">
-          <strong style="color: var(--main-color)">站点信息</strong>
-        </p>
-        <p class="text" style="margin: 0.2rem 0">
-          最近一次功能性或质量性更新于
-          <strong style="color: var(--main-accent)">{{ displaySiteVersionDate }}</strong>
-        </p>
-        <p class="text" style="margin: 0.2rem 0">
-          定义版本为 <strong style="color: var(--main-accent)">{{ displaySiteVersion }}</strong>
-        </p>
-        <p class="text" style="margin: 0.2rem 0">
-          定义版本随 <strong style="color: var(--main-color)">release</strong> 推送更新
-        </p>
-        <p class="text" style="margin: 0.2rem 0">
-          当前分支内部版本
-          <strong style="color: var(--main-accent)">{{ displayBranchVersion }}</strong>
-        </p>
-        <p class="text" style="margin: 0.2rem 0">
-          内部版本构建时间
-          <strong style="color: var(--main-accent)">{{ displayBranchBuildTime }}</strong>
-        </p>
-        <p class="text" style="margin: 0.2rem 0">
-          本站可用域名
-          <strong style="color: var(--main-accent)"
-            >sgexilq.com / sgexilq.top / mrsksyrx.top</strong
-          >
-        </p>
-        <p class="text" style="margin: 0.2rem 0">
-          服务域名 <strong style="color: var(--main-accent)">20091010.xyz</strong>
-        </p>
-        <p class="text" style="margin: 0.2rem 0">
-          本站的
-          <a
-            href="https://sgexilq.com/pages/privacy"
-            target="_blank"
-            rel="noopener noreferrer"
-            style="color: var(--main-color)"
-            ><strong>隐私政策</strong></a
-          >
-          与
-          <a
-            href="https://sgexilq.com/pages/cc"
-            target="_blank"
-            rel="noopener noreferrer"
-            style="color: var(--main-color)"
-            ><strong>版权协议</strong></a
-          >
-        </p>
-        <p class="text" style="margin: 0.2rem 0">
-          订阅本站
-          <a
-            href="https://sgexilq.com/rss.xml"
-            target="_blank"
-            rel="noopener noreferrer"
-            style="color: var(--main-color)"
-            ><strong>https://sgexilq.com/rss.xml</strong></a
-          >
-        </p>
-        <p class="text" style="margin: 0.2rem 0">
-          站点状态提供
-          <a
-            href="https://status.sgexilq.com"
-            target="_blank"
-            rel="noopener noreferrer"
-            style="color: var(--main-color)"
-            ><strong>Better Stack</strong></a
-          >
-        </p>
-        <p class="text" style="margin: 0.2rem 0">
-          反馈建议
-          <a href="mailto:feedback@sgexilq.com" style="color: var(--main-color)"
-            ><strong>feedback@sgexilq.com</strong></a
-          >
-        </p>
-        <p class="text" style="margin: 0.2rem 0">
-          本站开源地址
-          <a
-            href="https://github.com/mrsksyrx/vitepress-theme-curve"
-            target="_blank"
-            rel="noopener noreferrer"
-            style="color: var(--main-color)"
-            ><strong>https://github.com/mrsksyrx/vitepress-theme-curve</strong></a
-          >
-        </p>
-      </div>
-    </div>
     <!-- 下方卡片 -->
     <div class="about-content" style="display: flex">
       <div class="about-item">
         <span class="tip">上游致谢</span>
-        <span class="title2" style="margin-bottom: 0.8rem">vitepress-theme-curve</span>
+        <span class="title2" style="margin-bottom: 0.8rem">mrsksyrx / vitepress-theme-curve</span>
         <p class="text">
-          本站基于开源项目
+          本模板由
+          <a href="https://github.com/mrsksyrx" target="_blank" rel="noopener noreferrer"
+            ><strong>mrsksyrx</strong></a
+          >
+          维护，项目仓库为
           <a
-            href="https://github.com/kazukokawagawa/vitepress-theme-curve"
-            target="_blank"
-            rel="noopener noreferrer"
-            ><strong>vitepress-theme-curve</strong></a
-          >
-          构建，感谢原作者
-          <a href="https://chiyu.it/" target="_blank" rel="noopener noreferrer"
-            ><strong>池鱼</strong></a
-          >
-          的开源贡献
-        </p>
-        <p class="text">
-          本站遵循
-          <a
-            href="https://www.gnu.org/licenses/agpl-3.0.html"
-            target="_blank"
-            rel="noopener noreferrer"
-            ><strong>AGPL v3</strong></a
-          >
-          协议<a
             href="https://github.com/mrsksyrx/vitepress-theme-curve"
             target="_blank"
             rel="noopener noreferrer"
-            ><strong>开源</strong></a
+            ><strong>mrsksyrx/vitepress-theme-curve</strong></a
+          >。
+        </p>
+        <p class="text">
+          项目代码遵循
+          <a href="https://opensource.org/license/mit" target="_blank" rel="noopener noreferrer"
+            ><strong>MIT License</strong></a
           >
+          发布。
         </p>
         <p class="text" style="opacity: 0.4">
           技术栈：<a href="https://vitepress.dev/" target="_blank" rel="noopener noreferrer"
@@ -211,7 +113,7 @@
           <a href="https://sass-lang.com/" target="_blank" rel="noopener noreferrer">SCSS</a>
         </p>
         <p class="text" style="color: var(--main-accent); margin-top: 0.4rem">
-          本站的诞生离不开上游作者的开源贡献。
+          欢迎在仓库中提交 Issue 与建议。
         </p>
       </div>
     </div>
@@ -220,24 +122,13 @@
 
 <script setup>
 import { loadScript } from "@/utils/commonTools";
-import { mainStore } from "@/store";
+
 import { daysPassedAt, useClientNow } from "@/utils/useClientNow.mjs";
 import { toLocalDayTimestamp } from "@/utils/dateAnchor.mjs";
 
-const { theme } = useData();
-const store = mainStore();
-
-// 站点版本信息（store 优先，fallback 到 themeConfig）
-const displaySiteVersion = computed(() => store.siteVersion || theme.value.siteVersion);
-const displaySiteVersionDate = computed(() => store.siteVersionDate || theme.value.siteVersionDate);
-const displayBranchVersion = computed(() => store.branchVersion ?? theme.value.branchVersion);
-const displayBranchBuildTime = computed(
-  () => store.branchBuildTime || theme.value.branchBuildTime || "--",
-);
-
 // 站点上线天数：本地日历天口径，客户端时钟实时计算，避免 SSG 固化构建日天数
 const { now } = useClientNow();
-const daysOnline = computed(() => daysPassedAt(toLocalDayTimestamp("2026-08-19"), now.value));
+const daysOnline = computed(() => daysPassedAt(toLocalDayTimestamp("2026-01-01"), now.value));
 
 // 技能数据
 

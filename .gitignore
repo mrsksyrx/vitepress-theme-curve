@@ -20,6 +20,11 @@ test.html
 .vitepress/auto-imports.d.ts
 !.vitepress/theme/assets/themeConfig.mjs
 
+# Environment files
+.env
+.env.*
+!.env.example
+
 # Editor directories and files
 .vscode/*
 .vscode

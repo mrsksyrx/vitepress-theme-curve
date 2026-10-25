@@ -1,127 +1,450 @@
-<h1 align="center"> Curve </h1>
-<p align="center">A Simple VitePress Theme</p>
-<p align="center">
-  <img src="https://github.com/imsyy/vitepress-theme-curve/assets/42232682/bed62689-cfd8-4d98-b946-24555d4ce1fb" alt="curve-logo" />
-</p>
+# VitePress Theme Curve Template
+
+这是一个可以复制后直接开始使用的 VitePress 博客模板。它保留了原有主题的页面、导航、侧边栏、文章列表、分类、标签、归档、RSS、PWA 等功能，示例内容只是为了帮助你理解每个文件该放什么。
+
+即使你没有使用过 Node.js、Git 或 VitePress，也可以按照本页从零完成本地预览和第一次发布。
 
 ---
 
-> [!TIP]
-> 近期将通过 Nuxt 重构本项目前后端，敬请期待
+## 一、你会得到什么
 
-Preview: 👻 [無名小栈](https://blog.imsyy.top/)
+复制模板后，你会得到一个已经可以运行的博客：
 
-Docs: 📖 [主题文档](https://blog.imsyy.top/pages/categories/%E4%B8%BB%E9%A2%98%E6%96%87%E6%A1%A3)
+- 首页文章列表与分页
+- 文章详情页
+- 分类页、标签页和归档页
+- 关于作者、关于本站、友情链接、留言板等页面
+- 明暗主题、字体、侧边栏、音乐播放器、搜索、评论等主题功能
+- RSS、sitemap、PWA 和 GitHub Pages 部署工作流
 
-> [!NOTE]
-> 该主题本意为自用，所以部分配置可能并不完善，包括评论系统的支持，目前仅支持 Artalk，如有其他需求，可提交 pr
+模板已经把个人名称、域名、邮箱和服务地址替换成占位内容。正式使用前，把占位内容换成你自己的信息即可。
 
-## Hello
+---
 
-🎉 你好啊，很高兴你选择了 [vitepress-theme-curve](https://github.com/imsyy/vitepress-theme-curve)，你可以查看 [主题文档](https://blog.imsyy.top/pages/categories/%E4%B8%BB%E9%A2%98%E6%96%87%E6%A1%A3) 以了解更多，如果你在使用本主题时遇到问题，你可以在 [GitHub](https://github.com/imsyy/vitepress-theme-curve) 中正确的提交 [issues](https://github.com/imsyy/vitepress-theme-curve/issues) 以获取社区的帮助。
+## 二、零基础准备
 
-## 快速开始
+### 1. 安装 Node.js
 
-若您有修改主题的需求，请确保您拥有基础的前端知识，最好能掌握 [Vue.js](https://vuejs.org/) 框架的相关知识，并确保阅读了 `VitePress` 的 [官方文档](https://vitepress.dev/zh/guide/what-is-vitepress)
+前往 [Node.js 官网](https://nodejs.org/) 下载并安装 **LTS 版本**。安装时保持默认选项即可。
 
-### 书写新的文章
-
-你可以直接在站点根目录中的 `posts` 文件夹中直接新建 `markdown` 文件来书写，您的文件路径即为实际生成的网址路径。
-
-### 添加新的页面
-
-你可以直接在站点根目录中的 `pages` 文件夹中直接新建 `markdown` 文件来实现新建页面，您的文件路径即为实际生成的网址路径。
-
-主题中已经内置了几个常用页面以供参考。
-
-### 主题配置
-
-本主题提供了一个 `themeConfig.mjs` 文件用来配置，它位于 `.vitepress\theme\assets\themeConfig.mjs`，你可以将它复制一份并移动至根目录中，在这里里面的修改将会覆盖初始配置，请注意，**请不要更改文件名或者删除原配置文件，否则它将会不起作用！**
-
-### 静态文件
-
-通常情况下，静态文件处于根目录下的 `public` 文件夹中，通常用于存放字体或图片等文件信息。
-
-了解更多：[资源处理](https://vitepress.dev/zh/guide/asset-handling#asset-handling)
-
-### 部署
-
-如果你之前使用过类似于 [Hexo](https://hexo.io/zh-cn/) 一样的静态站点生成器的话，那么这二者是极为相似的，都是构建为静态文件后上传至服务器以实现访问，当然，你也可以借助 GitHub 的 Actions 以实现自动部署，具体细节请参考我的博客，此处不再细说。
+安装完成后，打开终端检查版本：
 
 ```bash
-# 安装依赖
-npm run install
-# 构建
-npm run build
+node -v
 ```
 
-建议使用 `pnpm`，若未安装，可使用 `npm install pnpm -g` 来安装。
+建议输出为 `v20` 或更高版本。
+
+### 2. 启用 pnpm
+
+安装 Node.js 后，在终端执行：
+
+```bash
+corepack enable
+corepack prepare pnpm@10 --activate
+```
+
+检查 pnpm：
+
+```bash
+pnpm -v
+```
+
+建议输出为 `10.x` 或更高版本。
+
+Windows 用户可以使用 PowerShell 或 Windows Terminal；macOS 用户使用“终端”。
+
+### 3. 获取项目
+
+如果使用 GitHub：
+
+1. 打开模板仓库页面。
+2. 点击右上角 **Use this template**。
+3. 选择 **Create a new repository**。
+4. 填写仓库名称并创建。
+
+如果不使用 GitHub，也可以直接下载 ZIP，解压到一个全英文路径，例如：
+
+```text
+D:\projects\my-blog
+```
+
+避免把项目放在包含特殊字符或过长路径的目录中。
+
+---
+
+## 三、第一次运行
+
+在终端进入项目目录：
+
+```powershell
+cd D:\projects\my-blog
+```
+
+macOS / Linux：
+
+```bash
+cd ~/projects/my-blog
+```
+
+安装依赖：
 
 ```bash
 pnpm install
+```
+
+启动开发服务器：
+
+```bash
+pnpm dev
+```
+
+看到类似输出后，打开浏览器访问：
+
+```text
+http://localhost:9877
+```
+
+如果端口被占用，可以使用：
+
+```bash
+pnpm dev -- --port 9878
+```
+
+停止服务器：在终端按 `Ctrl + C`。
+
+开发模式会自动刷新页面。修改 Markdown 或配置后，切回浏览器即可看到效果。
+
+---
+
+## 四、第一次修改
+
+### 1. 修改站点名称
+
+打开根目录的 [`themeConfig.mjs`](./themeConfig.mjs)。先修改下面几项：
+
+```js
+siteMeta: {
+  title: "My Blog",
+  description: "记录我的学习与生活",
+  site: "https://example.com",
+  author: {
+    name: "Your Name",
+    email: "hello@example.com",
+    link: "https://example.com",
+  },
+},
+```
+
+同时搜索并替换仓库中的占位内容：
+
+- `My Curve Blog`
+- `Your Name`
+- `hello@example.com`
+- `example.com`
+- `your-name`
+- `your-repository`
+
+建议使用编辑器的“全部替换”功能，但替换前先确认匹配范围。
+
+### 2. 写第一篇文章
+
+打开：
+
+```text
+posts/2026/0907.md
+```
+
+这是一篇示例文章。复制一份并改成自己的文件名也是可以的，例如：
+
+```text
+posts/2026/1025.md
+```
+
+文章开头是 frontmatter：
+
+```yaml
+---
+title: 我的第一篇文章
+date: 2026-10-25
+categories: [日常]
+tags: [记录, 开始]
+description: 这是我发布的第一篇文章。
+top: true
+cover: /images/blog/first-post/cover.webp
+---
+```
+
+字段说明：
+
+| 字段          | 是否必需 | 作用                         |
+| ------------- | -------- | ---------------------------- |
+| `title`       | 是       | 文章标题                     |
+| `date`        | 是       | 发布日期，会影响归档和排序   |
+| `categories`  | 建议填写 | 文章分类，可以写字符串或数组 |
+| `tags`        | 建议填写 | 文章标签，可以写字符串或数组 |
+| `description` | 建议填写 | 列表摘要和 SEO 描述          |
+| `top`         | 可选     | `true` 表示置顶              |
+| `cover`       | 可选     | 文章封面图片地址             |
+| `articleGPT`  | 可选     | 主题中的文章摘要文案         |
+
+frontmatter 结束后，正文直接使用 Markdown 写作。
+
+### 3. 添加图片
+
+图片建议放在 `public/` 下：
+
+```text
+public/images/blog/first-post/cover.webp
+```
+
+在文章中这样引用：
+
+```md
+![文章封面](/images/blog/first-post/cover.webp)
+```
+
+注意：
+
+- 路径以 `/images/...` 开头，表示网站根目录。
+- 文件名建议使用小写字母、数字和短横线。
+- 图片提交到 Git 前先压缩，避免仓库和网页加载过慢。
+
+### 4. 修改普通页面
+
+页面位于 `pages/` 目录。例如：
+
+```text
+pages/about-me.md
+pages/about-website.md
+pages/link.md
+pages/privacy.md
+```
+
+页面文件的路径会成为网址。修改 Markdown 内容即可，不需要修改 Vue 组件，除非你要改变页面布局。
+
+---
+
+## 五、目录结构
+
+```text
+.
+├─ posts/                    # 文章
+├─ pages/                    # 关于、友链、分类、标签等页面
+├─ page/                     # 首页分页和跳转壳
+├─ public/                   # 图片、字体、favicon、robots.txt
+├─ themeConfig.mjs           # 站点配置，只需要改这里
+├─ .vitepress/
+│  ├─ config.mjs             # VitePress、RSS、PWA 构建配置
+│  └─ theme/                 # 主题组件、样式和工具
+├─ api/                      # Vercel 服务端示例
+└─ functions/                # Cloudflare Pages 服务端示例
+```
+
+不要手工维护 `public/data/postData.json`。它会在开发或构建时自动生成，并且已经被 `.gitignore` 忽略。
+
+---
+
+## 六、主题配置
+
+所有站点配置都集中在根目录的 `themeConfig.mjs`。主题会把它与 `.vitepress/theme/assets/themeConfig.mjs` 中的默认配置合并。
+
+### 导航栏
+
+当前导航结构为：
+
+- `文库`：文章列表、全部分类、全部标签
+- `友链`：友情链接、畅所欲言
+- `我的`：关于作者、关于本站、回到主页、服务状态
+
+如果你要增加一个页面：
+
+1. 在 `pages/` 中创建 Markdown 文件。
+2. 在 `themeConfig.mjs` 的 `nav` 中增加对应菜单项。
+3. 运行 `pnpm dev` 检查导航。
+
+### 数组字段
+
+`nav`、`navMore`、`inject.header`、`footer.social`、`footer.sitemap`、`aside.timing.items` 等数组字段会整体替换默认值，不会把新旧数组拼接。修改时不要漏掉需要保留的项目。
+
+---
+
+## 七、常用命令
+
+| 命令                 | 用途                               |
+| -------------------- | ---------------------------------- |
+| `pnpm dev`           | 本地开发预览                       |
+| `pnpm build`         | 构建静态网站到 `.vitepress/dist`   |
+| `pnpm preview`       | 本地预览构建产物                   |
+| `pnpm format`        | 格式化项目文件                     |
+| `pnpm lint`          | 检查 JavaScript、Vue 和 TypeScript |
+| `pnpm lint:fix`      | 自动修复部分代码问题               |
+| `pnpm deploy:vercel` | 使用 Vercel CLI 部署               |
+
+正式发布前至少执行：
+
+```bash
+pnpm format
+pnpm lint
 pnpm build
 ```
 
-通常在未修改配置文件的情况下，打包后的文件会处于根目录下的 `.vitepress\dist` 目录中，您可以将其中的文件上传至任意服务器以访问。
+---
 
-## 更多
+## 八、启用可选功能
 
-更多信息请参考：[主题文档](https://blog.imsyy.top/pages/categories/%E4%B8%BB%E9%A2%98%E6%96%87%E6%A1%A3)
+### 评论
+
+在 `themeConfig.mjs` 中找到：
+
+```js
+comment: {
+  enable: true,
+  type: "twikoo",
+  twikoo: {
+    envId: "你的 Twikoo 环境地址",
+  },
+},
+```
+
+也可以选择 Artalk。具体字段以你使用的服务文档为准。
+
+### 搜索
+
+搜索使用 Algolia：
+
+```js
+search: {
+  enable: true,
+  appId: "你的 Algolia App ID",
+  apiKey: "你的 search-only API Key",
+  index: "你的索引名称",
+},
+```
+
+`apiKey` 应该使用只能搜索的公开 Key，不要使用管理员 Key。
+
+### 天气
+
+复制环境变量示例：
+
+```powershell
+Copy-Item .env.example .env.local
+```
+
+然后填写：
+
+```text
+VITE_WEATHER_KEY=你的高德天气 Key
+```
+
+再开启 `aside.weather`。所有 `VITE_` 变量都会进入浏览器产物，只能保存可公开的值。
+
+### 音乐
+
+配置 `music.url`、`music.id`、`music.server` 和 `music.type` 后开启 `music`。不要把需要保密的 API Token 放进前端配置。
+
+---
+
+## 九、发布到 GitHub Pages
+
+项目包含 `.github/workflows/deploy.yml`。它默认在 `master` 分支推送时构建并部署 `.vitepress/dist`。
+
+步骤：
+
+1. 在 GitHub 仓库中进入 **Settings → Pages**。
+2. 在 **Build and deployment** 中选择 **GitHub Actions**。
+3. 确认工作流中的分支与你的默认分支一致。
+4. 提交并推送代码。
+5. 在 Actions 页面等待部署完成。
+
+如果当前项目使用 `release` 分支，把工作流中的：
+
+```yaml
+branches: [master]
+```
+
+改成：
+
+```yaml
+branches: [release]
+```
+
+---
+
+## 十、发布到 Vercel
+
+项目包含 `vercel.json`。可以使用：
+
+```bash
+pnpm deploy:vercel
+```
+
+也可以在 Vercel 控制台导入仓库，使用以下设置：
+
+- Framework：VitePress / Other
+- Build command：`pnpm build`
+- Output directory：`.vitepress/dist`
+
+服务端 Token 放在 Vercel 的 Environment Variables 中，不要写入 `.env.local`。
+
+---
+
+## 十一、常见问题
+
+### `pnpm` 不是可用命令
+
+确认已经安装 Node.js，并执行：
+
+```bash
+corepack enable
+corepack prepare pnpm@10 --activate
+```
+
+### 页面没有更新
+
+确认 `pnpm dev` 仍在运行，并检查浏览器控制台是否有语法错误。Markdown 的 frontmatter 必须以 `---` 开始并以 `---` 结束。
+
+### 图片不显示
+
+确认图片在 `public/` 下，并且引用路径以 `/` 开头。例如：
+
+```md
+![封面](/images/blog/cover.webp)
+```
+
+### 构建后出现空白页面
+
+先执行：
+
+```bash
+pnpm build
+```
+
+如果构建失败，从第一条错误开始处理，不要只看最后一条警告。
+
+### 评论、搜索或天气不可用
+
+这些功能需要第三方服务。检查对应的 URL、Key、索引名称和环境变量是否填写正确。
+
+---
+
+## 十二、发布前检查
+
+- [ ] 站点标题、描述、域名、作者和邮箱已修改
+- [ ] Logo、favicon 和封面图片已替换
+- [ ] 示例文章已经修改或删除
+- [ ] 关于、友链、隐私和版权页面已经确认
+- [ ] 评论、搜索、音乐等第三方功能已配置或关闭
+- [ ] `pnpm build` 构建成功
+- [ ] 桌面端和移动端导航都能正常使用
+- [ ] `sitemap.xml`、`rss.xml`、`robots.txt` 内容正确
+- [ ] 仓库中没有真实密钥、私人邮箱或不必要的个人信息
+
+---
+
+## 十三、许可与致谢
+
+代码基于 [MIT License](./LICENSE)。主题源自 [imsyy/vitepress-theme-curve](https://github.com/imsyy/vitepress-theme-curve)，感谢上游作者与所有贡献者。
 
 > Powered by VitePress
-
-[![Netlify Status](https://api.netlify.com/api/v1/badges/31ebe949-6ce7-46b7-a5fb-a73da20412d6/deploy-status)](https://app.netlify.com/sites/imsyy-blog/deploys)
-
-| 命令                 | 说明                                                                                |
-| -------------------- | ----------------------------------------------------------------------------------- |
-| `pnpm dev`           | 启动开发服务器（`vitepress dev --host`）                                            |
-| `pnpm build`         | 构建静态站点（产出 `sitemap.xml`、`rss.xml` 与 PWA 资源）                           |
-| `pnpm preview`       | 预览构建产物                                                                        |
-| `pnpm lint`          | ESLint 检查并自动修复（`.js/.jsx/.cjs/.mjs/.vue`，**不含点目录**）                  |
-| `pnpm format`        | Prettier 格式化当前目录（`.prettierignore` 已排除 `dist`、锁文件与生成的 `*.d.ts`） |
-| `pnpm deploy:vercel` | 通过 Vercel CLI 部署                                                                |
-| `npx tsc --noEmit`   | TypeScript 类型检查（**不覆盖 `.vue`**，见下）                                      |
-
-## 已知问题
-
-这些问题在仓库中**真实存在**，在此如实记录，避免使用者踩坑：
-
-- **质量链覆盖不全**：裸 `tsc` 不解析 `.vue` 单文件组件，实际参与类型检查的只有 2 个 `.ts` 与 2 个生成的 `.d.ts`，57 个 `.vue` 全部未被覆盖（完整覆盖需要 `vue-tsc`，本项目未安装也没有 `typecheck` 脚本）。ESLint 现已覆盖 `.vitepress/`（`pnpm lint` 显式传入），但 `.ts` 仍不在 `--ext` 列表中，`api/`、`functions/` 的 `.ts` 仍漏。
-- **仓库没有测试套件**：`package.json` 中没有 test 脚本，也没有任何单测框架；`timeTools`、`getPostData`、分页数学等纯函数建议后续补齐单元测试。
-- **密钥仍在版本控制中**：`.env` 至今仍被 Git 跟踪，其内容与 `HEAD` 完全一致，且 `.gitignore` **没有**忽略它（见下方[安全提示](#安全提示)）。
-- **`.eslintignore` 残留**：其中仍列有已删除的临时目录（`_fix2`、`_fix3`、`.dsh_baseline`、`_fix_t1`、`_t4_*`）等历史条目。
-- **跳转壳的重复内容**：`page.md`、`page/index.md`、`page/1.md`、`pages/index.md` 内容逐字节相同。`gray-matter` 以文件内容为键缓存解析结果，相同内容的文件会共享同一个 `head` 数组，历史上曾导致 canonical 标签跨页累积。构建配置现已在 `transformPageData` 中按页重建 `head`（替换引用、不就地 `push`，并保留 frontmatter 里用户自定义的 head 项，仅剔除 canonical 后补本页那条），但**共享 `head` 数组的根因仍在**，日后若在 `transformPageData` 里就地 `push` 新的 head 字段，同类问题会复现。
-- **构建期会写入工作区**：加载 `.vitepress/config.mjs` 时会重新生成 `public/data/postData.json`，因此运行 `dev`/`build` 后 `git status` 必然出现该文件的变动。该文件**未被跟踪且已被 `.gitignore` 忽略**，不会污染提交。
-- **`jumpRedirect` 默认关闭、本站已启用**：相关实现与 `/redirect.html` 已就位，主题默认 `jumpRedirect.enable: false`，但根目录 `themeConfig.mjs` 覆盖为 `true`。代码层缺陷（`text()` 丢嵌套元素、缺同源检查、非 http(s) 协议被包进中转页、Base64 非 UTF-8 对称）已修复。
-- **`public/` 会被原样拷进产物**：`public/` 是**源目录**，其中的文件在构建时被逐份拷贝到 `.vitepress/dist` 根下（`postData.json` 就是这么进去的），因此不要在里面放需要手工维护的产物——下一次构建会用同名的源文件覆盖它。
-- **`robots.txt` 是静态文件**：`public/robots.txt` 会被原样拷贝到产物根目录，**不是**构建期生成；修改收录规则请直接改该文件。
-- **`themeConfig.mjs` 被 Git 跟踪**：根目录的覆盖文件**已被提交**（`git ls-files themeConfig.mjs` 可复现）；修改会出现在 `git status` 中。
-- **`package-lock.json` 已删除**：该文件是上游 npm 残留，已移除并加入 `.gitignore`，请以 `pnpm-lock.yaml` 为准。
-- **第三方 CDN 依赖**：iconfont、Fancybox、Twikoo 等资源默认走公共 CDN，网络受限环境下相关样式或功能可能不可用。
-
-## 安全提示
-
-- **`.env` 仍在版本控制中**：该文件已被提交，内容与 `HEAD` 一致，且 `.gitignore` 未忽略它（`git ls-files .env` 可复现）。处理顺序应当是：**先吊销/轮换其中所有凭据**，再把它移出跟踪（`git rm --cached .env` 并补进 `.gitignore`），最后按需用 `git filter-repo` 重写历史——顺序颠倒会让旧密钥在历史中继续有效。注意 `git rm --cached .env` **并不会**清掉仓库里其它位置的同一凭据。
-- **同一个高德 Key 还有第二处明文**：除了 `.env:1`，`.vitepress/theme/assets/themeConfig.mjs` 的 `weatherkey` 注释块里也留了一份明文（`git grep -n "1d65cc630df1f212e1d2e928643e3974"` 可复现两处）。该字段已废弃（天气挂件现在读 `import.meta.env.VITE_WEATHER_KEY`），但注释里的明文会随仓库公开。轮换 Key 时两处都要处理，且因为 `VITE_` 变量会被打包进前端产物、天气请求由**访客浏览器**直连 `restapi.amap.com`，这个 Key 本质上是公开的、无法用域名/IP 白名单保护——实际风险是**当日 5000 次配额被烧掉导致天气挂件失效**，不涉及账户接管。
-- 站点内含个人化配置与统计、评论等服务凭据，公开部署前请逐项检查 `themeConfig.mjs`、`.env` 与 `api/`、`functions/` 下的环境变量读取。
-- 所有 `VITE_` 前缀的变量都会被**打包进前端产物**，对其调用方可见，只应放可公开的值；`BETTER_STACK_API_TOKEN` 只在服务端使用，切勿加 `VITE_` 前缀或写入前端代码。
-
-## 来源声明
-
-本项目的站点内容与主题改造基于**另一条独立的创作谱系**，其中包括对多位作者文章的**转载**（见 `posts/archives/`、`posts/2025/1229.md` 等，正文中标注了原作者），以及涉及个人经历、医疗与调查性质的原创写作。
-
-- 站点文章版权归**各自作者**所有，不因收录在本仓库而改变。
-- 若你是某篇文章的权利人并希望其被移除，请通过 [GitHub Issues](https://github.com/imsyy/vitepress-theme-curve/issues) 联系维护者。
-- 代码部分以仓库根的 [MIT License](LICENSE) 授权，**该授权不适用于站点文章内容**。
-
-## 致谢与许可
-
-- 主题源自 [imsyy/vitepress-theme-curve](https://github.com/imsyy/vitepress-theme-curve)，感谢上游作者 [imsyy](https://imsyy.top) 的开源工作。
-- 基于 [VitePress](https://vitepress.dev/zh/) 与 [Vue 3](https://vuejs.org/) 构建。
-- 代码以 [MIT License](LICENSE) 授权。
-
-<div align="center">
-
-**Powered by VitePress**
-
-</div>

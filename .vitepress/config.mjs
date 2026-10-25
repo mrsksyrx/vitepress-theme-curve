@@ -32,7 +32,7 @@ const themeConfig = await getThemeConfig();
 // /page/2..N 是 page/[num].paths.mjs 生成的真实分页内容页，**不在此列**。
 //
 // 注意：VitePress 的 `transformItems` 传进来的 `item.url` 是**完整 URL**
-// （如 "https://chiyu.it/page"），而 sitemap.xml 里的 <loc> 也是完整 URL。
+// （如 "https://example.com/page"），而 sitemap.xml 里的 <loc> 也是完整 URL。
 // 因此归一化必须**先剥掉 origin**，只比较路径，否则路径与完整 URL 永不相等。
 const normalizeSitemapUrl = (url) => {
   let pathname = String(url || "");
@@ -301,8 +301,8 @@ export default withPwa(
               const reqUrl = new URL(req.url || "", "http://localhost");
               const raw = reqUrl.searchParams.get("url") || "";
               const ALLOWED_HOSTS = new Set([
-                "meting.20091010.xyz",
-                "meting.20100907.xyz",
+                "meting.example.dev",
+                "meting.example.app",
                 "music.163.com",
               ]);
               const ALLOWED_SUFFIXES = [".music.126.net", ".music.163.com"];

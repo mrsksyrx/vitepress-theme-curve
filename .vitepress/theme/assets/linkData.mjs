@@ -7,10 +7,10 @@ const linkData = [
     typeDesc: "自己的东西",
     typeList: [
       {
-        name: "泠の小站",
+        name: "My Curve Blog",
         avatar: "/images/logo/favicon-256.png",
-        desc: "一个莫名其妙的小站（？）",
-        url: "https://sgexilq.com",
+        desc: "一个记录技术与生活的博客",
+        url: "https://example.com",
       },
     ],
   },
@@ -21,16 +21,16 @@ const linkData = [
     typeDesc: "我们在一起",
     typeList: [
       {
-        name: "lan2984",
-        avatar: "/images/friend/lan2984.png",
-        desc: "不向焦虑与抑郁投降，这个世界终会有我们存在的地方",
-        url: "https://blog.lan2984.xyz",
+        name: "示例朋友一",
+        avatar: "/images/friend/friend-one.png",
+        desc: "一个记录技术、学习与生活的博客",
+        url: "https://friend-one.example.com",
       },
       {
-        name: "爅峫",
-        avatar: "/images/friend/moye.png",
-        desc: "在视界边缘，记录一切",
-        url: "https://luoxe.cn",
+        name: "示例朋友二",
+        avatar: "/images/friend/friend-two.png",
+        desc: "分享创作、设计与日常观察",
+        url: "https://friend-two.example.com",
       },
     ],
   },

@@ -116,7 +116,7 @@
               <span class="name">{{ item }}</span>
             </a>
           </div>
-          <a href="mailto:feedback@sgexilq.com" class="report">
+          <a href="mailto:hello@example.com" class="report">
             <i class="iconfont icon-report" />
             反馈与投诉
           </a>

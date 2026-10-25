@@ -292,7 +292,7 @@ export const mainStore = defineStore("main", {
       // 弹窗提示
       if (typeof $message !== "undefined") {
         const colorNames = {
-          pink: "泠粉",
+          pink: "粉色",
           purple: "幻紫",
           blue: "栈蓝",
           red: "火红",

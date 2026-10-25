@@ -235,7 +235,7 @@ export const ensureBusuanziCounts = (src) => {
 };
 
 // 始终排除的域名（含子域），这些域名的链接不走中转页
-const ALWAYS_EXCLUDE_DOMAINS = ["sgexilq.com", "sgexilq.top", "mrsksyrx.top", "20091010.xyz"];
+const ALWAYS_EXCLUDE_DOMAINS = ["example.com", "example.net", "example.org", "example.dev"];
 
 /**
  * 判断链接是否应跳过中转（相对路径/同源、非 http(s) 协议，或命中始终排除的域名）

@@ -22,7 +22,7 @@
             <div class="menu-top-control">
               <!-- 网址 -->
               <span class="site-url">
-                <span>sgexilq</span><span class="pill-domain">.com</span>
+                <span>example</span><span class="pill-domain">.com</span>
               </span>
               <!-- 关闭按钮 -->
               <div class="close-control" @click="closeMenu">
@@ -30,7 +30,7 @@
               </div>
             </div>
             <!-- 站点名称 -->
-            <span class="site-label">泠の小站</span>
+            <span class="site-label">My Curve Blog</span>
             <hr />
             <!-- 个性化配置 + 主题切换 -->
             <div class="menu-top-control settings-row">

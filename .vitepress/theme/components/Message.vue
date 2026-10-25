@@ -193,7 +193,7 @@
                 <span class="pill-prefix error">{{ pillText }}</span>
               </template>
               <template v-else>
-                <span>sgexilq</span><span class="pill-domain">.com</span>
+                <span>example</span><span class="pill-domain">.com</span>
               </template>
             </span>
           </div>
@@ -243,7 +243,7 @@ let progressInterval = null;
 // 药丸文本
 const pillText = computed(() => {
   if (store.devMode === 2) return "开发模式";
-  return "sgexilq.com";
+  return "example.com";
 });
 
 // 灵动模式消息末尾的开发模式文本

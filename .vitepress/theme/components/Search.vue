@@ -82,7 +82,7 @@ if (!hasSearchConfig) {
   console.warn("[Search] theme.search 缺少 appId / apiKey，搜索功能不可用");
 }
 const searchClient = hasSearchConfig ? liteClient(appId, apiKey) : null;
-const indexName = index || "chiyu_it_0f1duc8max_pages";
+const indexName = index || "example_com_pages";
 
 // 是否具有搜索词
 const hasSearchValue = ref(false);

@@ -10,7 +10,7 @@
       <template #footer-slot>
         <a
           class="to-github"
-          href="https://myat-github.20091010.xyz"
+          href="https://github.com/your-name/your-repository"
           target="_blank"
           rel="noopener noreferrer"
         >
