@@ -124,25 +124,25 @@ INFP-T｜双｜二次元｜音游｜百合｜术力口
 
 ## <span style="color: var(--main-color)">各种账号</span>
 
-### 常规
+### 建议
 
 泠の花园（QQ群）：<a href="https://myat-qm.20091010.xyz" target="_blank" rel="noopener noreferrer" style="color: var(--main-color)"><strong>1124267326</strong></a>  
 QQ：<a href="https://myat-qq.20091010.xyz" target="_blank" rel="noopener noreferrer" style="color: var(--main-color)"><strong>泠诗尘</strong></a>  
-Bilibili：<a href="https://myat-bilibili.20091010.xyz" target="_blank" rel="noopener noreferrer" style="color: var(--main-color)"><strong>泠诗尘</strong></a>  
-网易云音乐：<a href="https://myat-neteasecloudmusic.20091010.xyz" target="_blank" rel="noopener noreferrer" style="color: var(--main-color)"><strong>泠诗尘</strong></a>  
-小红书：<a href="https://myat-rednote.20091010.xyz" target="_blank" rel="noopener noreferrer" style="color: var(--main-color)"><strong>mzsecy</strong></a>
-
-### 更多
-
 邮箱：<a href="mailto:lsc@sgexilq.com" target="_blank" rel="noopener noreferrer" style="color: var(--main-color)"><strong>lsc@sgexilq.com</strong></a>
 /
 <a href="mailto:sgexilq@qq.com" target="_blank" rel="noopener noreferrer" style="color: var(--main-color)"><strong>sgexilq@qq.com</strong></a>  
 Twitter：<a href="https://myat-twitter.20091010.xyz" target="_blank" rel="noopener noreferrer" style="color: var(--main-color)"><strong>@mrsksyrx_xl</strong></a>  
-Telegram：<a href="https://myat-telegram.20091010.xyz" target="_blank" rel="noopener noreferrer" style="color: var(--main-color)"><strong>@mrsksyrx</strong></a>  
+Telegram：<a href="https://myat-telegram.20091010.xyz" target="_blank" rel="noopener noreferrer" style="color: var(--main-color)"><strong>@mrsksyrx</strong></a>
+
+### 更多
+
 Github：<a href="https://myat-github.20091010.xyz" target="_blank" rel="noopener noreferrer" style="color: var(--main-color)"><strong>@mrsksyrx</strong></a>  
+Bilibili：<a href="https://myat-bilibili.20091010.xyz" target="_blank" rel="noopener noreferrer" style="color: var(--main-color)"><strong>泠诗尘</strong></a>  
+网易云音乐：<a href="https://myat-neteasecloudmusic.20091010.xyz" target="_blank" rel="noopener noreferrer" style="color: var(--main-color)"><strong>泠诗尘</strong></a>  
+小红书：<a href="https://myat-rednote.20091010.xyz" target="_blank" rel="noopener noreferrer" style="color: var(--main-color)"><strong>mzsecy</strong></a>  
 STEAM：<a href="https://myat-steam.20091010.xyz" target="_blank" rel="noopener noreferrer" style="color: var(--main-color)"><strong>泠酱</strong></a>
 
-### 其他
+### 标识
 
 国内全平台昵称：**泠诗尘**  
 国内全平台ID/标识：**SGeXiLQ**
@@ -155,9 +155,16 @@ STEAM：<a href="https://myat-steam.20091010.xyz" target="_blank" rel="noopener 
 
 向我匿名提问！：<a href="https://ngl.sgexilq.com" target="_blank" rel="noopener noreferrer" style="color: var(--main-color)"><strong>NGL.Link</strong></a>（会在Twitter回复） / <a href="/pages/hide/message" style="color: var(--main-color)"><strong>留言板 - sgexilq.com</strong></a>
 
-本页面最后更新于 **2026.10.15**
+## <span style="color: var(--main-color)">P.S.</span>
 
-## <span style="color: var(--main-color)">结语</span>
+### 如何在线下捕捉一只泠酱
+
+让我想想哇…泠酱的特征…  
+泠酱总是抱着一台小米笔记本，戴着一个头戴式耳机…  
+会背着一个双肩包，和一只小洛…  
+还会有些yn刻板印象（？
+
+## <span style="color: var(--main-color)">碎碎念</span>
 
 走上这条路是我自己的选择，有时候也会担心自己的选择到底是不是正确的。  
 我决定去成为真正的自己，但我也会害怕，害怕我的努力得不到成果，害怕永远也见不到那个<span style="color: var(--main-color)">**“她”**</span>。  
