@@ -34,7 +34,7 @@ const linkData = [
       },
       {
         name: "lsf的空间",
-        avatar: "https://cdn.imgos.cn/vip/2026/03/22/69bfa3b63b482.png",
+        avatar: "/images/friend/lsf.jpg",
         desc: "你好awa",
         url: "https://lsfself.top/",
       },
