@@ -41,7 +41,6 @@
               class="panel-widget"
               show-on-mobile
               expand-all
-              @fetch-error="onHotError"
             />
             <!-- 点标签即跳转并收起面板（事件冒泡到组件根节点） -->
             <Tags
@@ -85,12 +84,6 @@ watch(
     if (val) gestureClosing.value = false;
   },
 );
-
-// 热榜失败时关掉开关（浮层内不再用本地 showHot，避免下次打开仍是空壳）
-const onHotError = (err) => {
-  console.error("HelloGithub 热榜获取失败：", err);
-  store.helloGithubWidgetEnabled = false;
-};
 
 const hasAnyWidget = computed(() => {
   const aside = theme.value.aside || {};
