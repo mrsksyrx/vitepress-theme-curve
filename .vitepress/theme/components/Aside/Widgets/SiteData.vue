@@ -35,11 +35,14 @@
         <span class="num" id="busuanzi_value_site_uv">0</span>
       </div>
     </div>
+    <p v-if="degraded" class="stats-warning">
+      当前不蒜子统计服务可能异常，已降级为自建统计服务，数据仅供参考
+    </p>
   </div>
 </template>
 
 <script setup>
-import { ensureBusuanziCounts } from "@/utils/commonTools";
+import { ensureSiteCounts } from "@/utils/commonTools";
 import { daysPassedAt, useClientNow } from "@/utils/useClientNow.mjs";
 
 const { theme } = useData();
@@ -51,8 +54,15 @@ const sinceDays = computed(() => daysPassedAt(theme.value.since, now.value));
 // [B27] 不再用 reload:true 重打点：已有缓存直接回填新节点，无缓存才首次加载
 const BUSUANZI_SRC = "https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js";
 
+// 数据源为自建（不蒜子超时降级）时显示提示
+const degraded = ref(false);
+
 onMounted(() => {
-  ensureBusuanziCounts(BUSUANZI_SRC);
+  ensureSiteCounts(BUSUANZI_SRC, {
+    onSource: (source) => {
+      degraded.value = source === "fallback";
+    },
+  });
 });
 </script>
 
@@ -93,6 +103,13 @@ onMounted(() => {
         padding-bottom: 0;
       }
     }
+  }
+  .stats-warning {
+    margin: 0.4rem 0.2rem 0;
+    font-size: 12px;
+    line-height: 1.5;
+    color: #e5484d;
+    opacity: 0.9;
   }
 }
 </style>

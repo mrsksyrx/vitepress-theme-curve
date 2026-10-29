@@ -53,6 +53,9 @@
               >
             </span>
           </div>
+          <span v-if="degraded" class="stats-warning">
+            当前不蒜子统计服务可能异常，已降级为自建统计服务，数据仅供参考
+          </span>
         </div>
       </div>
 
@@ -216,7 +219,7 @@
 </template>
 
 <script setup>
-import { loadScript } from "@/utils/commonTools";
+import { ensureSiteCounts } from "@/utils/commonTools";
 import { mainStore } from "@/store";
 import { daysPassedAt, useClientNow } from "@/utils/useClientNow.mjs";
 import { toLocalDayTimestamp } from "@/utils/dateAnchor.mjs";
@@ -307,10 +310,16 @@ const skillsData = [
   },
 ];
 
+const BUSUANZI_SRC = "https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js";
+
+// 数据源为自建（不蒜子超时降级）时显示提示
+const degraded = ref(false);
+
 onMounted(() => {
-  loadScript("https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js", {
-    async: true,
-    reload: true,
+  ensureSiteCounts(BUSUANZI_SRC, {
+    onSource: (source) => {
+      degraded.value = source === "fallback";
+    },
   });
 });
 </script>
@@ -549,6 +558,13 @@ onMounted(() => {
                 }
               }
             }
+          }
+          .stats-warning {
+            width: 100%;
+            margin-top: 0.5rem;
+            font-size: 12px;
+            line-height: 1.5;
+            color: #e5484d;
           }
         }
         &::after {
