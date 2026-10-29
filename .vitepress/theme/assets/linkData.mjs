@@ -32,6 +32,12 @@ const linkData = [
         desc: "在视界边缘，记录一切",
         url: "https://luoxe.cn",
       },
+      {
+        name: "lsf的空间",
+        avatar: "https://cdn.imgos.cn/vip/2026/03/22/69bfa3b63b482.png",
+        desc: "你好awa",
+        url: "https://lsfself.top/",
+      },
     ],
   },
 ];
