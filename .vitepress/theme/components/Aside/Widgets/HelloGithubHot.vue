@@ -33,12 +33,8 @@
     </div>
 
     <template v-else>
-      <!-- 列表容器：默认只露出前 5 条；expandAll 时不限高，全量展示 -->
-      <div
-        class="all-data"
-        ref="listContainer"
-        :style="!expandAll && containerHeight > 0 ? { maxHeight: containerHeight + 'px' } : null"
-      >
+      <!-- 桌面端限制约 5 条高度并可滚动；expandAll 时完整展开 -->
+      <div class="all-data" :class="{ expanded: expandAll }">
         <div class="data-item" v-for="(item, index) in list" :key="item.id || item.url">
           <span class="name">{{ index + 1 }}.</span>
           <span class="num">
@@ -75,8 +71,6 @@ const props = defineProps({
 
 const list = ref([]);
 const rawUpdateTime = ref("");
-const containerHeight = ref(0);
-const listContainer = ref(null);
 const loading = ref(true);
 const error = ref("");
 
@@ -151,10 +145,6 @@ async function fetchData() {
 
     list.value = normalizeItems(data?.data);
     rawUpdateTime.value = typeof data?.updateTime === "string" ? data.updateTime : "";
-
-    await nextTick();
-    if (currentFetch !== fetchId || props.expandAll) return;
-    calcHeight();
   } catch (err) {
     if (currentFetch !== fetchId || (err?.name === "AbortError" && !timedOut)) return;
 
@@ -177,19 +167,6 @@ async function fetchData() {
   }
 }
 
-// 计算前 5 条总高度（包含 margin）
-function calcHeight() {
-  const container = listContainer.value;
-  if (!container) return;
-  const items = Array.from(container.querySelectorAll(".data-item")).slice(0, SKELETON_COUNT);
-  const total = items.reduce((sum, el) => {
-    const style = getComputedStyle(el);
-    const margin = parseFloat(style.marginTop) + parseFloat(style.marginBottom);
-    return sum + el.getBoundingClientRect().height + margin;
-  }, 0);
-  containerHeight.value = total;
-}
-
 onMounted(() => {
   // 移动端侧边栏默认不挂载，小组件浮层通过 showOnMobile 强制拉取
   if (!props.showOnMobile && isMobile.value) {
@@ -198,16 +175,12 @@ onMounted(() => {
   }
 
   fetchData();
-  if (!props.expandAll && API_URL) {
-    window.addEventListener("resize", calcHeight);
-  }
 });
 
 onBeforeUnmount(() => {
   fetchId += 1;
   requestController?.abort();
   requestController = null;
-  window.removeEventListener("resize", calcHeight);
 });
 </script>
 
@@ -324,10 +297,29 @@ onBeforeUnmount(() => {
   }
 
   .all-data {
+    max-height: 9rem;
     overflow-y: auto;
-    overflow-x: hidden;
-    -webkit-overflow-scrolling: touch;
+    overscroll-behavior: contain;
+    scrollbar-width: thin;
+    scrollbar-color: var(--main-card-border) transparent;
 
+    &::-webkit-scrollbar {
+      width: 4px;
+    }
+
+    &::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    &::-webkit-scrollbar-thumb {
+      background: var(--main-card-border);
+      border-radius: 2px;
+    }
+
+    &.expanded {
+      max-height: none;
+      overflow: visible;
+    }
     .data-item {
       display: flex;
       align-items: flex-start;
