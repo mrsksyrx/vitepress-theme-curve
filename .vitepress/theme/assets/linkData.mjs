@@ -7,7 +7,7 @@ const linkData = [
     typeDesc: "自己的东西",
     typeList: [
       {
-        name: "泠の小站",
+        name: "泠诗尘",
         avatar: "/images/logo/favicon-256.png",
         desc: "一个莫名其妙的小站（？）",
         url: "https://sgexilq.com",
@@ -33,7 +33,7 @@ const linkData = [
         url: "https://luoxe.cn",
       },
       {
-        name: "lsf的空间",
+        name: "lsf",
         avatar: "/images/friend/lsf.jpg",
         desc: "你好awa",
         url: "https://lsfself.top/",
