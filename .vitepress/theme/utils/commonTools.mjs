@@ -165,45 +165,53 @@ export const loadCSS = (href, option = {}) => {
   return promise;
 };
 
-// ===== 不蒜子（busuanzi）计数缓存 =====
+// ===== 站点计数：不蒜子优先，自建 /api/visit 降级 =====
 // 不蒜子脚本只打一次点：SPA 切换路由会重挂 #busuanzi_value_* 节点，
 // 旧方案用 reload:true 强制重新插脚本再打点，导致 site_pv 虚高。
 // 改为包裹全局 bszTag.texts 捕获 JSONP 计数结果（模块级缓存），
 // 组件重挂后直接把缓存写回新节点，同一会话内只打一次点。
+//
+// 同时每次完整页面加载都向自建端点双写一份计数。展示源在一次页面加载内
+// 保持稳定：不蒜子 3 秒内先到则用不蒜子，否则降级自建；晚到的不蒜子数据
+// 直接忽略，不覆盖已上屏的降级数字。
 
+// 展示缓存：无论来自不蒜子还是自建，最终上屏的数值都落在这里
 // 只缓存站点级计数；page_pv 是页面级的，回填到别的页面会显示错误数字
-const busuanziCounts = Object.create(null);
-const BUSUANZI_CACHE_KEYS = ["site_pv", "site_uv"];
+const siteCounts = Object.create(null);
+const SITE_COUNT_KEYS = ["site_pv", "site_uv"];
 
-// 不蒜子脚本执行后暴露全局 bszTag.texts(data)，data 即 JSONP 返回的计数对象。
-// 包一层先缓存再交给原函数回填：即使节点已随组件卸载不存在，也能拿到数值。
-const wrapBusuanziTexts = () => {
-  const tag = typeof window === "undefined" ? null : window.bszTag;
-  if (!tag || typeof tag.texts !== "function" || tag.texts.__busuanziCountWrapped) return false;
-  const rawTexts = tag.texts;
-  const wrappedTexts = function (data) {
-    BUSUANZI_CACHE_KEYS.forEach((key) => {
-      if (data && data[key] !== undefined) busuanziCounts[key] = data[key];
+// 不蒜子 3 秒未响应即降级自建
+const BUSUANZI_TIMEOUT_MS = 3000;
+
+// 数据源："busuanzi" | "fallback"；null = 尚未决出
+let siteCountSource = null;
+// 整个页面加载期间只跑一次的决出流程（同页多组件共享）
+let siteCountRun = null;
+// 数据源订阅者（组件 onMounted 注册，驱动降级提示显隐）
+const siteCountSubscribers = new Set();
+
+// 不蒜子 JSONP 抵达信号：首次收到计数时 resolve
+let busuanziArrival = null;
+const getBusuanziArrival = () => {
+  if (!busuanziArrival) {
+    let resolve;
+    const promise = new Promise((r) => {
+      resolve = r;
     });
-    return rawTexts.call(this, data);
-  };
-  wrappedTexts.__busuanziCountWrapped = true;
-  tag.texts = wrappedTexts;
-  return true;
+    busuanziArrival = { promise, resolve };
+  }
+  return busuanziArrival;
 };
 
-/**
- * 把缓存的计数写回当前文档中的计数节点（组件重挂后的新节点）
- * @returns {boolean} 是否命中缓存（false = 尚未打过点，需要走 loadScript）
- */
-export const applyBusuanziCounts = () => {
+// 把当前缓存写回当前文档中的计数节点（组件重挂后的新节点）
+const applySiteCounts = () => {
   if (typeof document === "undefined") return false;
-  const keys = Object.keys(busuanziCounts);
+  const keys = Object.keys(siteCounts);
   if (keys.length === 0) return false;
   keys.forEach((key) => {
     const el = document.getElementById(`busuanzi_value_${key}`);
     // 与 bszTag.texts 原实现保持一致用 innerHTML 写入
-    if (el) el.innerHTML = busuanziCounts[key];
+    if (el) el.innerHTML = siteCounts[key];
   });
   // 容器显隐交给原逻辑（没有 busuanzi_container_* 节点时是空操作）
   const tag = typeof window === "undefined" ? null : window.bszTag;
@@ -211,27 +219,135 @@ export const applyBusuanziCounts = () => {
   return true;
 };
 
-/**
- * 确保站点计数可用：命中缓存直接回填；否则加载脚本并包裹 bszTag.texts 捕获结果。
- * 全程不使用 reload，同一会话内脚本与打点只发生一次。
- * @param {string} src - 不蒜子脚本地址
- * @returns {Promise<boolean>} 是否由缓存回填
- */
-export const ensureBusuanziCounts = (src) => {
-  // 脚本若此前已加载（bszTag 已存在），先补包裹，避免缓存被绕过
+// 兼容旧导出名：语义等价于回填当前展示缓存
+export const applyBusuanziCounts = applySiteCounts;
+
+// 不蒜子脚本执行后暴露全局 bszTag.texts(data)，data 即 JSONP 返回的计数对象。
+// 包一层：先判断数据源（降级后晚到的直接忽略），再缓存，最后交给原函数回填。
+const wrapBusuanziTexts = () => {
+  const tag = typeof window === "undefined" ? null : window.bszTag;
+  if (!tag || typeof tag.texts !== "function" || tag.texts.__siteCountWrapped) return false;
+  const rawTexts = tag.texts;
+  const wrappedTexts = function (data) {
+    // 已降级：晚到的不蒜子数据不覆盖降级缓存与已上屏数字
+    if (siteCountSource === "fallback") return;
+    SITE_COUNT_KEYS.forEach((key) => {
+      if (data && data[key] !== undefined) siteCounts[key] = data[key];
+    });
+    getBusuanziArrival().resolve(data);
+    return rawTexts.call(this, data);
+  };
+  wrappedTexts.__siteCountWrapped = true;
+  tag.texts = wrappedTexts;
+  return true;
+};
+
+// 订阅数据源；已有结论时立即同步给新订阅者（组件重挂场景）
+const subscribeSiteCountSource = (callback) => {
+  if (typeof callback !== "function") return;
+  if (siteCountSource) {
+    callback(siteCountSource);
+    return;
+  }
+  siteCountSubscribers.add(callback);
+};
+
+const notifySiteCountSource = () => {
+  if (!siteCountSource) return;
+  siteCountSubscribers.forEach((callback) => {
+    try {
+      callback(siteCountSource);
+    } catch {
+      // 单个订阅者（组件）已卸载或自身异常：不影响其它订阅者
+    }
+  });
+  siteCountSubscribers.clear();
+};
+
+// 自建计数：一次 fetch 同时完成写入与读取；任何失败都归为 null（调用方显示 0）
+const fetchSelfCounts = async () => {
+  try {
+    const url = new URL("/api/visit", window.location.href);
+    url.searchParams.set("p", window.location.pathname);
+    const res = await fetch(url.toString(), { keepalive: true, credentials: "same-origin" });
+    if (!res.ok) return null;
+    const data = await res.json();
+    if (!data || typeof data !== "object") return null;
+    return {
+      site_pv: Number(data.site_pv) || 0,
+      site_uv: Number(data.site_uv) || 0,
+    };
+  } catch {
+    return null;
+  }
+};
+
+// 决出展示源：不蒜子优先，3 秒未到则降级自建（并写入缓存）
+const runSiteCounts = async (busuanziSrc) => {
   wrapBusuanziTexts();
-  if (applyBusuanziCounts()) return Promise.resolve(true);
-  // 已在加载/已加载也走这里：loadScript 内部共享同一 Promise，不会重复打点
-  return loadScript(src, {
-    async: true,
-    callback: () => wrapBusuanziTexts(),
-  }).then(
-    () => {
-      wrapBusuanziTexts();
-      return false;
-    },
-    () => false,
-  );
+  const arrival = getBusuanziArrival();
+
+  // 每次完整页面加载只写一次自建（模块级单例 Promise：同页多组件共享）
+  const selfPromise = fetchSelfCounts();
+
+  // 加载不蒜子脚本；loadScript 内部共享同一 Promise，不会重复打点
+  if (busuanziSrc) {
+    loadScript(busuanziSrc, {
+      async: true,
+      callback: () => wrapBusuanziTexts(),
+    });
+  }
+
+  const busuanziWon = await Promise.race([
+    arrival.promise.then(() => true),
+    new Promise((resolve) => setTimeout(() => resolve(false), BUSUANZI_TIMEOUT_MS)),
+  ]);
+
+  if (busuanziWon) {
+    siteCountSource = "busuanzi";
+    // bszTag.texts 原实现已写 DOM；这里兜底回填（组件节点可能已重挂）
+    applySiteCounts();
+  } else {
+    // 先落定来源，堵住竞速窗口内晚到的不蒜子数据
+    siteCountSource = "fallback";
+    const selfCounts = await selfPromise;
+    SITE_COUNT_KEYS.forEach((key) => {
+      if (selfCounts && selfCounts[key] !== undefined) siteCounts[key] = selfCounts[key];
+    });
+    applySiteCounts();
+  }
+  notifySiteCountSource();
+  return siteCountSource;
+};
+
+/**
+ * 确保站点计数可用：不蒜子优先，3 秒未响应则降级自建计数。
+ * 每次完整页面加载只决出一次来源；SPA 切换路由重挂节点时直接回填缓存。
+ * @param {string} busuanziSrc - 不蒜子脚本地址
+ * @param {object} [options] - 配置
+ * @param {(source: "busuanzi" | "fallback") => void} [options.onSource] - 数据源订阅回调
+ * @returns {Promise<string | null>} 当前数据源
+ */
+export const ensureSiteCounts = (busuanziSrc, options = {}) => {
+  if (typeof document === "undefined") return Promise.resolve(siteCountSource);
+  subscribeSiteCountSource(options.onSource);
+
+  // 已决出：直接回填缓存（组件重挂后的新节点）
+  if (siteCountSource) {
+    applySiteCounts();
+    return Promise.resolve(siteCountSource);
+  }
+
+  // 首次调用：决出流程全局单例；异常兜底为降级，避免 unhandled rejection
+  if (!siteCountRun) {
+    siteCountRun = runSiteCounts(busuanziSrc).catch(() => {
+      siteCountSource = "fallback";
+      applySiteCounts();
+      notifySiteCountSource();
+      return siteCountSource;
+    });
+  }
+  return siteCountRun;
 };
 
 // 始终排除的域名（含子域），这些域名的链接不走中转页
