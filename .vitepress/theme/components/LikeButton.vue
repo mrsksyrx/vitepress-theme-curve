@@ -107,6 +107,7 @@ const toggleLike = async () => {
   writeLikes(store);
 
   let failed = false;
+  let failureNotified = false;
   let serverCount = null;
   try {
     const res = await fetch("/api/like", {
@@ -120,11 +121,16 @@ const toggleLike = async () => {
     } else {
       failed = true;
       if (res.status === 429 && typeof $message !== "undefined") {
+        failureNotified = true;
         $message.warning("点赞太频繁了，请稍后再试");
       }
     }
   } catch {
     failed = true;
+  }
+
+  if (failed && !failureNotified && typeof $message !== "undefined") {
+    $message.error("点赞失败，请稍后再试");
   }
 
   // localStorage 始终按 id 恢复（不受切篇影响）

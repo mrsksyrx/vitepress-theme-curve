@@ -97,14 +97,14 @@ async function toggleHitokoto() {
     isManualSloganDisplayed.value = true;
   } else {
     // 后续点击仍可手动获取新一言。
-    await fetchAndShowHitokoto();
+    await fetchAndShowHitokoto(true);
   }
 
   manualSloganTimeout.value = setTimeout(resumeHitokotoCycle, 3000);
 }
 
 // 真正执行一次请求并显示结果
-async function fetchAndShowHitokoto() {
+async function fetchAndShowHitokoto(notifyFailure = false) {
   try {
     const result = await getHitokoto();
     hitokotoData.value = {
@@ -116,6 +116,9 @@ async function fetchAndShowHitokoto() {
     isManualSloganDisplayed.value = false;
   } catch (err) {
     console.error("一言获取失败：", err);
+    if (notifyFailure && typeof $message !== "undefined") {
+      $message.error("一言获取失败，请稍后再试");
+    }
   }
 }
 

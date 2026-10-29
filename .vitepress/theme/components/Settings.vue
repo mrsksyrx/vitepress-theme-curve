@@ -816,10 +816,10 @@
             <div class="set-item">
               <span class="set-label">音乐播放器</span>
               <div class="set-options">
-                <span :class="['options', { choose: !playerShow }]" @click="playerShow = false">
+                <span :class="['options', { choose: !playerShow }]" @click="setPlayerShow(false)">
                   关闭
                 </span>
-                <span :class="['options', { choose: playerShow }]" @click="playerShow = true">
+                <span :class="['options', { choose: playerShow }]" @click="setPlayerShow(true)">
                   开启
                 </span>
               </div>
@@ -829,13 +829,13 @@
               <div class="set-options">
                 <span
                   :class="['options', { choose: islandStyle === 'standard' }]"
-                  @click="islandStyle = 'standard'"
+                  @click="setIslandStyle('standard')"
                 >
                   标准
                 </span>
                 <span
                   :class="['options', { choose: islandStyle === 'extended' }]"
-                  @click="islandStyle = 'extended'"
+                  @click="setIslandStyle('extended')"
                 >
                   拓展
                 </span>
@@ -846,13 +846,13 @@
               <div class="set-options">
                 <span
                   :class="['options', { choose: !playerAutoPlay }]"
-                  @click="playerAutoPlay = false"
+                  @click="setPlayerAutoPlay(false)"
                 >
                   关闭
                 </span>
                 <span
                   :class="['options', { choose: playerAutoPlay }]"
-                  @click="playerAutoPlay = true"
+                  @click="setPlayerAutoPlay(true)"
                 >
                   开启
                 </span>
@@ -863,19 +863,19 @@
               <div class="set-options">
                 <span
                   :class="['options', { choose: playerPlayMode === 'list' }]"
-                  @click="playerPlayMode = 'list'"
+                  @click="setPlayerPlayMode('list')"
                 >
                   顺序
                 </span>
                 <span
                   :class="['options', { choose: playerPlayMode === 'shuffle' }]"
-                  @click="playerPlayMode = 'shuffle'"
+                  @click="setPlayerPlayMode('shuffle')"
                 >
                   随机
                 </span>
                 <span
                   :class="['options', { choose: playerPlayMode === 'single' }]"
-                  @click="playerPlayMode = 'single'"
+                  @click="setPlayerPlayMode('single')"
                 >
                   单曲循环
                 </span>
@@ -886,13 +886,13 @@
               <div class="set-options">
                 <span
                   :class="['options', { choose: playerMusicSource === 'preset' }]"
-                  @click="playerMusicSource = 'preset'"
+                  @click="setPlayerMusicSource('preset')"
                 >
                   泠の预设
                 </span>
                 <span
                   :class="['options', { choose: playerMusicSource === 'custom' }]"
-                  @click="playerMusicSource = 'custom'"
+                  @click="setPlayerMusicSource('custom')"
                 >
                   自定义
                 </span>
@@ -930,13 +930,13 @@
               <div class="set-options">
                 <span
                   :class="['options', { choose: !islandPlayerSupport }]"
-                  @click="islandPlayerSupport = false"
+                  @click="setIslandPlayerSupport(false)"
                 >
                   关闭
                 </span>
                 <span
                   :class="['options', { choose: islandPlayerSupport }]"
-                  @click="islandPlayerSupport = true"
+                  @click="setIslandPlayerSupport(true)"
                 >
                   开启
                 </span>
@@ -1007,13 +1007,13 @@
               <div class="set-options">
                 <span
                   :class="['options', { choose: !readingProgressEnabled }]"
-                  @click="readingProgressEnabled = false"
+                  @click="setReadingProgressEnabled(false)"
                 >
                   关闭
                 </span>
                 <span
                   :class="['options', { choose: readingProgressEnabled }]"
-                  @click="readingProgressEnabled = true"
+                  @click="setReadingProgressEnabled(true)"
                 >
                   开启
                 </span>
@@ -1024,13 +1024,13 @@
               <div class="set-options">
                 <span
                   :class="['options', { choose: !backgroundBlur }]"
-                  @click="backgroundBlur = false"
+                  @click="setBackgroundBlur(false)"
                 >
                   关闭
                 </span>
                 <span
                   :class="['options', { choose: backgroundBlur }]"
-                  @click="backgroundBlur = true"
+                  @click="setBackgroundBlur(true)"
                 >
                   开启
                 </span>
@@ -1073,13 +1073,13 @@
               <div class="set-options">
                 <span
                   :class="['options', { choose: !weatherWidgetEnabled }]"
-                  @click="weatherWidgetEnabled = false"
+                  @click="setWeatherWidgetEnabled(false)"
                 >
                   关闭
                 </span>
                 <span
                   :class="['options', { choose: weatherWidgetEnabled }]"
-                  @click="weatherWidgetEnabled = true"
+                  @click="setWeatherWidgetEnabled(true)"
                 >
                   开启
                 </span>
@@ -1090,13 +1090,13 @@
               <div class="set-options">
                 <span
                   :class="['options', { choose: !helloGithubWidgetEnabled }]"
-                  @click="helloGithubWidgetEnabled = false"
+                  @click="setHelloGithubWidgetEnabled(false)"
                 >
                   关闭
                 </span>
                 <span
                   :class="['options', { choose: helloGithubWidgetEnabled }]"
-                  @click="helloGithubWidgetEnabled = true"
+                  @click="setHelloGithubWidgetEnabled(true)"
                 >
                   开启
                 </span>
@@ -1107,13 +1107,13 @@
               <div class="set-options">
                 <span
                   :class="['options', { choose: !tagsWidgetEnabled }]"
-                  @click="tagsWidgetEnabled = false"
+                  @click="setTagsWidgetEnabled(false)"
                 >
                   关闭
                 </span>
                 <span
                   :class="['options', { choose: tagsWidgetEnabled }]"
-                  @click="tagsWidgetEnabled = true"
+                  @click="setTagsWidgetEnabled(true)"
                 >
                   开启
                 </span>
@@ -1355,19 +1355,19 @@
             <div class="set-options">
               <span
                 :class="['options', { choose: localSearchMode === 'off' }]"
-                @click="localSearchMode = 'off'"
+                @click="setLocalSearchMode('off')"
               >
                 云端
               </span>
               <span
                 :class="['options', { choose: localSearchMode === 'on' }]"
-                @click="localSearchMode = 'on'"
+                @click="setLocalSearchMode('on')"
               >
                 自动
               </span>
               <span
                 :class="['options', { choose: localSearchMode === 'always' }]"
-                @click="localSearchMode = 'always'"
+                @click="setLocalSearchMode('always')"
               >
                 仅本地
               </span>
@@ -1393,13 +1393,13 @@
                   <div class="set-options">
                     <span
                       :class="['options', { choose: !pwaCacheEnabled }]"
-                      @click="pwaCacheEnabled = false"
+                      @click="setPwaCacheEnabled(false)"
                     >
                       关闭
                     </span>
                     <span
                       :class="['options', { choose: pwaCacheEnabled }]"
-                      @click="pwaCacheEnabled = true"
+                      @click="setPwaCacheEnabled(true)"
                     >
                       开启
                     </span>
@@ -1412,7 +1412,7 @@
                       v-for="limit in [50, 100, 200, 500, 0]"
                       :key="limit"
                       :class="['options', { choose: readingHistoryLimit === limit }]"
-                      @click="readingHistoryLimit = limit"
+                      @click="setReadingHistoryLimit(limit)"
                     >
                       {{ limit === 0 ? "无限" : limit }}
                     </span>
@@ -1429,13 +1429,13 @@
                   <div class="set-options">
                     <span
                       :class="['options', { choose: !imageWebpEnabled }]"
-                      @click="imageWebpEnabled = false"
+                      @click="setImageWebpEnabled(false)"
                     >
                       关闭
                     </span>
                     <span
                       :class="['options', { choose: imageWebpEnabled }]"
-                      @click="imageWebpEnabled = true"
+                      @click="setImageWebpEnabled(true)"
                     >
                       开启
                     </span>
@@ -1920,12 +1920,96 @@ const islandSettingsExpanded = ref(false);
 const musicPlayerExpanded = ref(false);
 // 小组件合并菜单展开状态
 const widgetsSectionExpanded = ref(false);
+// 设置项统一反馈
+const showSettingSuccess = (text) => {
+  if (typeof $message !== "undefined") {
+    $message.success(text);
+  }
+};
+
+const setPlayerShow = (enabled) => {
+  playerShow.value = enabled;
+  showSettingSuccess(`音乐播放器已${enabled ? "开启" : "关闭"}`);
+};
+
+const setIslandStyle = (style) => {
+  islandStyle.value = style;
+  showSettingSuccess(`音乐播放器样式已切换为${style === "standard" ? "标准" : "拓展"}`);
+};
+
+const setPlayerAutoPlay = (enabled) => {
+  playerAutoPlay.value = enabled;
+  showSettingSuccess(`进入站点自动播放音乐已${enabled ? "开启" : "关闭"}`);
+};
+
+const setPlayerPlayMode = (mode) => {
+  playerPlayMode.value = mode;
+  const labels = { list: "顺序", shuffle: "随机", single: "单曲循环" };
+  showSettingSuccess(`播放模式已切换为${labels[mode]}`);
+};
+
+const setPlayerMusicSource = (source) => {
+  playerMusicSource.value = source;
+  showSettingSuccess(`歌单来源已切换为${source === "preset" ? "泠の预设" : "自定义"}`);
+};
+
+const setIslandPlayerSupport = (enabled) => {
+  islandPlayerSupport.value = enabled;
+  showSettingSuccess(`超级岛支持已${enabled ? "开启" : "关闭"}`);
+};
+
+const setReadingProgressEnabled = (enabled) => {
+  readingProgressEnabled.value = enabled;
+  showSettingSuccess(`顶部阅读进度条已${enabled ? "开启" : "关闭"}`);
+};
+
+const setBackgroundBlur = (enabled) => {
+  backgroundBlur.value = enabled;
+  showSettingSuccess(`背景模糊已${enabled ? "开启" : "关闭"}`);
+};
+
+const setWeatherWidgetEnabled = (enabled) => {
+  weatherWidgetEnabled.value = enabled;
+  showSettingSuccess(`天气组件已${enabled ? "开启" : "关闭"}`);
+};
+
+const setHelloGithubWidgetEnabled = (enabled) => {
+  helloGithubWidgetEnabled.value = enabled;
+  showSettingSuccess(`HelloGithub热榜已${enabled ? "开启" : "关闭"}`);
+};
+
+const setTagsWidgetEnabled = (enabled) => {
+  tagsWidgetEnabled.value = enabled;
+  showSettingSuccess(`标签列表已${enabled ? "开启" : "关闭"}`);
+};
+
+const setLocalSearchMode = (mode) => {
+  localSearchMode.value = mode;
+  const labels = { off: "云端", on: "自动", always: "仅本地" };
+  showSettingSuccess(`搜索数据来源已切换为${labels[mode]}`);
+};
+
+const setPwaCacheEnabled = (enabled) => {
+  pwaCacheEnabled.value = enabled;
+  showSettingSuccess(`PWA 缓存增强已${enabled ? "开启" : "关闭"}`);
+};
+
+const setReadingHistoryLimit = (limit) => {
+  readingHistoryLimit.value = limit;
+  showSettingSuccess(`阅读历史条目上限已切换为${limit === 0 ? "无限" : limit}`);
+};
+
+const setImageWebpEnabled = (enabled) => {
+  imageWebpEnabled.value = enabled;
+  showSettingSuccess(`WebP 自动转换已${enabled ? "开启" : "关闭"}`);
+};
 // 移动端小组件面板：关闭时同步收起已打开的浮层
 const setMobileWidgetsEnabled = (enabled) => {
   mobileWidgetsEnabled.value = enabled;
   if (!enabled && store.mobileWidgetsShow) {
     store.changeShowStatus("mobileWidgetsShow");
   }
+  showSettingSuccess(`移动端小组件面板已${enabled ? "开启" : "关闭"}`);
 };
 // 自定义歌单 ID 临时输入值
 const playerCustomIdsInput = ref(playerCustomIds.value);
@@ -2196,6 +2280,7 @@ const autoFillBranchBuildTime = () => {
   const now = new Date();
   const pad = (n) => String(n).padStart(2, "0");
   branchBuildTime.value = `${now.getFullYear()}.${pad(now.getMonth() + 1)}.${pad(now.getDate())} ${pad(now.getHours())}:${pad(now.getMinutes())}:${pad(now.getSeconds())}`;
+  showSettingSuccess("构建时间已填入当前时间");
 };
 
 // 保存版本信息（站点版本 / 日期 / 内部版本 / 构建时间，一次写入）

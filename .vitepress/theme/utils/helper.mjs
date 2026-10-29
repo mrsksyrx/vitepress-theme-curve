@@ -134,6 +134,9 @@ export const copyText = async (data) => {
 export const copyImage = async (imageURL) => {
   if (!navigator.clipboard) {
     console.error("浏览器不支持 Clipboard API");
+    if (typeof $message !== "undefined") {
+      $message.error("当前浏览器不支持复制图片");
+    }
     return;
   }
   try {
