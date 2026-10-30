@@ -1389,23 +1389,6 @@
             <Transition name="fade-up">
               <div v-if="devFeaturesExpanded" class="set-expand-box">
                 <div class="set-item">
-                  <span class="set-label">PWA 缓存增强</span>
-                  <div class="set-options">
-                    <span
-                      :class="['options', { choose: !pwaCacheEnabled }]"
-                      @click="setPwaCacheEnabled(false)"
-                    >
-                      关闭
-                    </span>
-                    <span
-                      :class="['options', { choose: pwaCacheEnabled }]"
-                      @click="setPwaCacheEnabled(true)"
-                    >
-                      开启
-                    </span>
-                  </div>
-                </div>
-                <div v-if="pwaCacheEnabled" class="set-item">
                   <span class="set-label">阅读历史条目上限</span>
                   <div class="set-options">
                     <span
@@ -1749,6 +1732,7 @@ import { storeToRefs } from "pinia";
 import { mainStore, DEFAULT_FONT_SIZE } from "@/store";
 import { useConfigIO } from "@/utils/useConfigIO.mjs";
 import { useIsMobileLayout } from "@/utils/layout.js";
+import { safeStorage } from "@/utils/safeStorage.mjs";
 
 const store = mainStore();
 const { theme } = useData();
@@ -1808,7 +1792,6 @@ const {
   scheduledThemeEnabled,
   scheduledLightTime,
   scheduledDarkTime,
-  pwaCacheEnabled,
   localSearchMode,
   readingHistoryLimit,
   readingProgressEnabled,
@@ -1830,7 +1813,7 @@ const {
   branchBuildTime,
 } = storeToRefs(store);
 
-// PWA 缓存增强相关
+// 清除 PWA 运行时缓存
 const pwaCacheClearing = ref(false);
 const clearPwaCache = async () => {
   if (typeof $message === "undefined" || pwaCacheClearing.value) return;
@@ -2040,11 +2023,6 @@ const setLocalSearchMode = (mode) => {
   showSettingSuccess(`搜索数据来源已切换为${labels[mode]}`);
 };
 
-const setPwaCacheEnabled = (enabled) => {
-  pwaCacheEnabled.value = enabled;
-  showSettingSuccess(`PWA 缓存增强已${enabled ? "开启" : "关闭"}`);
-};
-
 const setReadingHistoryLimit = (limit) => {
   readingHistoryLimit.value = limit;
   showSettingSuccess(`阅读历史条目上限已切换为${limit === 0 ? "无限" : limit}`);
@@ -2115,9 +2093,9 @@ const handleCollapseAllGroups = () => {
 };
 
 // 停用所有开发中的功能：开启=一键关闭该分组全部选项；关闭=恢复默认设置
-const devFeaturesDisabled = computed(() => !pwaCacheEnabled.value && !imageWebpEnabled.value);
+// （PWA 缓存增强开关已移除，该组剩余可开关项只有 WebP 自动转换）
+const devFeaturesDisabled = computed(() => !imageWebpEnabled.value);
 const disableAllDevFeatures = () => {
-  pwaCacheEnabled.value = false;
   imageWebpEnabled.value = false;
   if (typeof $message !== "undefined") {
     $message.success("已停用所有开发中的功能");
@@ -2125,7 +2103,6 @@ const disableAllDevFeatures = () => {
 };
 const restoreDefaultDevFeatures = () => {
   // 恢复 store/index.js 中的默认值
-  pwaCacheEnabled.value = true;
   readingHistoryLimit.value = 100;
   imageWebpEnabled.value = false;
   if (typeof $message !== "undefined") {
@@ -2379,6 +2356,38 @@ const randomizePersistVersion = async () => {
   }
 };
 
+// 清除所有 IndexedDB（“清除数据”与“清除所有数据”两条流程共用）
+// databases() 并非标准 API（Safari 等不支持枚举数据库），不支持时直接跳过，
+// 不阻断 localStorage、缓存与 Service Worker 的清理；
+// deleteDatabase 可能被已打开的连接 block，统一等待成功/失败/被阻塞后再返回
+const clearIndexedDb = async () => {
+  if (typeof indexedDB === "undefined" || typeof indexedDB.databases !== "function") return;
+  let dbs = [];
+  try {
+    dbs = (await indexedDB.databases()) || [];
+  } catch {
+    // 枚举失败（权限或实现差异）时跳过，不阻断其余清理
+    return;
+  }
+  await Promise.all(
+    dbs
+      .filter((db) => db && db.name)
+      .map(
+        (db) =>
+          new Promise((resolve) => {
+            try {
+              const req = indexedDB.deleteDatabase(db.name);
+              req.onsuccess = resolve;
+              req.onerror = resolve;
+              req.onblocked = resolve;
+            } catch {
+              resolve();
+            }
+          }),
+      ),
+  );
+};
+
 // 清除数据但保留开发模式选项
 const handleClearDataKeepDevMode = async () => {
   if (typeof $message !== "undefined") {
@@ -2386,15 +2395,21 @@ const handleClearDataKeepDevMode = async () => {
   }
   const dev = store.devMode;
   // 站点版本/构建信息是构建期常量（不在 PERSIST_PATHS），无需保存/恢复
-  const savedVersion = localStorage.getItem("siteDataVersion");
+  const savedVersion = safeStorage.getItem("siteDataVersion");
   await saveStoreDefaults({
     DEFAULT_DEV_MODE: dev,
     bumpVersion: true,
   });
 
   // 清除 localStorage 和 sessionStorage
-  localStorage.clear();
-  sessionStorage.clear();
+  safeStorage.clear();
+  // Safari 隐私模式等环境下 sessionStorage.clear() 会抛异常，
+  // 必须兜住，否则后面的 SW 注销/版本恢复/reload 会被跳过
+  try {
+    sessionStorage.clear();
+  } catch {
+    // 存储不可用时跳过
+  }
 
   // 注销所有 Service Worker
   if ("serviceWorker" in navigator) {
@@ -2413,17 +2428,10 @@ const handleClearDataKeepDevMode = async () => {
   }
 
   // 清除所有 IndexedDB
-  if ("indexedDB" in window) {
-    const databases = await indexedDB.databases();
-    for (const db of databases) {
-      if (db.name) {
-        indexedDB.deleteDatabase(db.name);
-      }
-    }
-  }
+  await clearIndexedDb();
 
   // 恢复版本标记（siteData 无需恢复，版本常量直取构建值）
-  if (savedVersion) localStorage.setItem("siteDataVersion", savedVersion);
+  if (savedVersion) safeStorage.setItem("siteDataVersion", savedVersion);
   window.location.reload();
 };
 
@@ -2442,7 +2450,7 @@ const handleResetConfig = () => {
   }
   // 仅重置设置面板：清除持久化配置键 siteData（承载全部 PERSIST_PATHS），
   // 不触碰其它本地存储、Service Worker、缓存与 IndexedDB
-  localStorage.removeItem("siteData");
+  safeStorage.removeItem("siteData");
   window.location.reload();
 };
 
@@ -2488,27 +2496,21 @@ const handleClearAllData = async () => {
   }
 
   // 清除所有 IndexedDB
-  if ("indexedDB" in window) {
-    const databases = await indexedDB.databases();
-    for (const db of databases) {
-      if (db.name) {
-        await new Promise((resolve) => {
-          const req = indexedDB.deleteDatabase(db.name);
-          req.onsuccess = resolve;
-          req.onerror = resolve;
-          req.onblocked = resolve;
-        });
-      }
-    }
-  }
+  await clearIndexedDb();
 
   // 最后同步清空本地存储并立即刷新，期间不再交还事件循环，
   // 确保持久化插件没有机会把配置写回
   if (typeof $message !== "undefined") {
     $message.warning("数据已清除，页面即将刷新");
   }
-  localStorage.clear();
-  sessionStorage.clear();
+  safeStorage.clear();
+  // Safari 隐私模式等环境下 sessionStorage.clear() 会抛异常，
+  // 必须兜住，否则后面的 SW 注销/版本恢复/reload 会被跳过
+  try {
+    sessionStorage.clear();
+  } catch {
+    // 存储不可用时跳过
+  }
   window.location.reload();
 };
 

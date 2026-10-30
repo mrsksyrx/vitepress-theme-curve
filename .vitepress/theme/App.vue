@@ -85,6 +85,7 @@ import { storeToRefs } from "pinia";
 import { mainStore, initializeCursor, DEFAULT_FONT_SIZE } from "@/store";
 import { calculateScroll, specialDayGray } from "@/utils/helper";
 import { ensureGlobalFontsLoaded } from "@/utils/fontLoader.mjs";
+import { safeStorage } from "@/utils/safeStorage.mjs";
 
 // const screenWidth = ref(0);
 const route = useRoute();
@@ -138,7 +139,7 @@ const rightMenuRef = ref(null);
 const importCheckPass = () => {
   importCheckVisible.value = false;
   clearInterval(importCheckTimer);
-  localStorage.removeItem("importJustCompleted");
+  safeStorage.removeItem("importJustCompleted");
   if (typeof $message !== "undefined") {
     $message.success("配置导入成功");
   }
@@ -147,8 +148,8 @@ const importCheckPass = () => {
 const importCheckFail = () => {
   importCheckVisible.value = false;
   clearInterval(importCheckTimer);
-  localStorage.removeItem("siteData");
-  localStorage.removeItem("importJustCompleted");
+  safeStorage.removeItem("siteData");
+  safeStorage.removeItem("importJustCompleted");
   location.reload();
 };
 
@@ -337,7 +338,7 @@ onMounted(() => {
   colorSchemeMql = window.matchMedia("(prefers-color-scheme: dark)");
   colorSchemeMql.addEventListener("change", changeSiteThemeType);
   // 检查是否需要显示导入后检查弹窗
-  if (localStorage.getItem("importJustCompleted") === "true") {
+  if (safeStorage.getItem("importJustCompleted") === "true") {
     startImportCheck();
   }
 });

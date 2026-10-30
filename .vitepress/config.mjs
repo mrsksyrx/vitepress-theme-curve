@@ -466,10 +466,16 @@ export default withPwa(
         navigateFallback: undefined,
         // 运行时缓存策略：页面/数据优先取网络，静态资源才长期缓存
         runtimeCaching: [
-          // API 请求 - 网络优先（仅同源；跨域 Meting 等不得被拦截，
+          // API 请求 - 网络优先（仅同源 GET；跨域 Meting 等不得被拦截，
           // 其 pathname 也是 /api/，且 type=url 为 302 跳转链，进 SW 会 no-response）
+          // /api/visit 虽是 GET，但一次请求同时累加 PV/UV，属于有状态接口：
+          // 离线回放旧响应会重复/错记计数，直接排除出缓存（未匹配的请求默认纯网络）
           {
-            urlPattern: ({ url, sameOrigin }) => sameOrigin && url.pathname.startsWith("/api/"),
+            urlPattern: ({ request, url, sameOrigin }) =>
+              sameOrigin &&
+              request.method === "GET" &&
+              url.pathname.startsWith("/api/") &&
+              !/^\/api\/visit(?:\/|$)/i.test(url.pathname),
             handler: "NetworkFirst",
             options: {
               cacheName: "api-cache",

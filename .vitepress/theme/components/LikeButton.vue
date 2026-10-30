@@ -29,6 +29,8 @@
 </template>
 
 <script setup>
+import { safeStorage } from "@/utils/safeStorage.mjs";
+
 const { theme, page } = useData();
 const { likeData } = theme.value;
 
@@ -40,20 +42,17 @@ const liked = ref(false);
 const pending = ref(false);
 const popKey = ref(0);
 
+// 已赞记录读写（JSON 损坏时降级为空对象；存储异常由 safeStorage 兜底，不抛错）
 const readLikes = () => {
   try {
-    return JSON.parse(localStorage.getItem("postLikes") || "{}") || {};
+    return JSON.parse(safeStorage.getItem("postLikes") || "{}") || {};
   } catch {
     return {};
   }
 };
 
 const writeLikes = (store) => {
-  try {
-    localStorage.setItem("postLikes", JSON.stringify(store));
-  } catch {
-    // 存储不可用时已赞态仅本次会话有效
-  }
+  safeStorage.setItem("postLikes", JSON.stringify(store));
 };
 
 const displayCount = computed(() => (count.value === null ? "-" : count.value));

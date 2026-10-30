@@ -1,5 +1,6 @@
 import { ref } from "vue";
 import { PORTABLE_CONFIG_KEYS } from "./configKeys.mjs";
+import { safeStorage } from "./safeStorage.mjs";
 
 // 混淆编码
 const obfuscate = (str) => {
@@ -102,8 +103,6 @@ const BOOLEAN_KEYS = [
   "customThemeEnabled",
   "customThemeBeforeHighContrast",
   "removeAnimations",
-  // 计划第 11 项移除该开关时，同步从 PORTABLE_CONFIG_KEYS 与本表删掉这行
-  "pwaCacheEnabled",
   "readingProgressEnabled",
   "hoverLineEnabled",
   "imageWebpEnabled",
@@ -209,7 +208,7 @@ export const useConfigIO = (siteVersion = "V1.0") => {
 
   const handleExportConfig = () => {
     try {
-      const siteData = localStorage.getItem("siteData");
+      const siteData = safeStorage.getItem("siteData");
       if (!siteData) {
         if (typeof $message !== "undefined") {
           $message.error("没有可导出的配置数据");
@@ -300,11 +299,19 @@ export const useConfigIO = (siteVersion = "V1.0") => {
       const filtered = pickPortable(config);
       // 枚举/数值/颜色/URL/布尔统一校验：非法值丢弃，不写入 siteData
       sanitizeImportedConfig(filtered);
-      localStorage.setItem("siteData", JSON.stringify(filtered));
+      // 导入后会刷新并重新水合，配置必须真正落进持久化存储；
+      // 只挂账到会话内存（存储不可用/配额已满）会在 reload 后丢失，直接如实报错
+      if (!safeStorage.setItem("siteData", JSON.stringify(filtered))) {
+        if (typeof $message !== "undefined") {
+          $message.error("导入失败：浏览器存储不可用，配置未保存");
+        }
+        return;
+      }
       if (typeof $message !== "undefined") {
         $message.success("配置已导入，页面将刷新以应用设置", { duration: 3000 });
       }
-      localStorage.setItem("importJustCompleted", "true");
+      // 确认标记尽力而为：写失败只少一个导入后的确认弹窗，不回滚已保存的配置
+      safeStorage.setItem("importJustCompleted", "true");
       setTimeout(() => {
         location.reload();
       }, 3000);
