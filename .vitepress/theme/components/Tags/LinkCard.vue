@@ -1,6 +1,11 @@
 <!-- 链接卡片 -->
 <template>
-  <a :href="url" :target="isOutLink ? '_blank' : null" class="link-card s-card hover">
+  <a
+    :href="url"
+    :target="isOutLink ? '_blank' : null"
+    :rel="isOutLink ? 'noopener noreferrer' : null"
+    class="link-card s-card hover"
+  >
     <span v-if="isOutLink" class="link-tip">引用站外地址，请注意甄别链接安全性</span>
     <div class="link-data">
       <div class="link-icon">

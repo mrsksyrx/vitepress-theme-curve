@@ -287,6 +287,8 @@ export const mainStore = defineStore("main", {
     // 切换主题颜色
     changeThemeColor(color) {
       if (typeof document === "undefined") return;
+      // 枚举保护：非法主题色不落状态、不进 classList（与 App.vue 的守卫同一套白名单）
+      if (color !== "pink" && !THEME_COLOR_CLASSES.includes(`theme-${color}`)) return;
 
       this.themeColor = color;
       const html = document.documentElement;

@@ -9,10 +9,10 @@
 预览本站: [sgexilq.com](https://sgexilq.com/)
 
 本站基于以下开源项目二次开发：  
- [kazukokawagawa/vitepress-theme-curve](https://github.com/kazukokawagawa/vitepress-theme-curve)  
- [imsyy/vitepress-theme-curve](https://github.com/imsyy/vitepress-theme-curve)  
- 本站的诞生离不开上游作者的开源贡献，在此感谢他(她)们。
- 
+[kazukokawagawa/vitepress-theme-curve](https://github.com/kazukokawagawa/vitepress-theme-curve)  
+[imsyy/vitepress-theme-curve](https://github.com/imsyy/vitepress-theme-curve)  
+本站的诞生离不开上游作者的开源贡献，在此感谢他(她)们。
+
 > [!NOTE]
 > 该主题本意为自用，所以可能并不能做到开箱即用，如果有此需求，建议优先使用上游项目。  
 > 近期可能会新增一个单独的分支可用于直接使用，敬请期待。
@@ -108,20 +108,20 @@ tags: [VitePress, Vue]
 
 ### 常用 Frontmatter 字段
 
-| 字段 | 说明 |
-| --- | --- |
-| `title` | 文章标题 |
-| `date` | 发布日期，建议使用 `YYYY-MM-DD` |
-| `description` | 文章摘要，用于列表和 RSS |
-| `categories` | 分类，可以是字符串或数组 |
-| `tags` | 标签，可以是字符串或数组 |
-| `top` | 置顶权重，数字越大越靠前，`true` 表示置顶 |
-| `cover` | 封面图片地址，需要开启封面显示功能后生效 |
-| `articleGPT` | AI 摘要卡片内容 |
-| `references` | 参考资料列表，每项包含标题和链接 |
-| `password` | 文章密码，设置后正文会在构建时加密 |
-| `comment` | 是否显示评论区，布尔值 |
-| `copyright` | 是否显示版权声明，布尔值 |
+| 字段          | 说明                                      |
+| ------------- | ----------------------------------------- |
+| `title`       | 文章标题                                  |
+| `date`        | 发布日期，建议使用 `YYYY-MM-DD`           |
+| `description` | 文章摘要，用于列表和 RSS                  |
+| `categories`  | 分类，可以是字符串或数组                  |
+| `tags`        | 标签，可以是字符串或数组                  |
+| `top`         | 置顶权重，数字越大越靠前，`true` 表示置顶 |
+| `cover`       | 封面图片地址，需要开启封面显示功能后生效  |
+| `articleGPT`  | AI 摘要卡片内容                           |
+| `references`  | 参考资料列表，每项包含标题和链接          |
+| `password`    | 文章密码，设置后正文会在构建时加密        |
+| `comment`     | 是否显示评论区，布尔值                    |
+| `copyright`   | 是否显示版权声明，布尔值                  |
 
 例如：
 
@@ -159,7 +159,7 @@ categories: 前端
 
 **加粗文字**
 
-*斜体文字*
+_斜体文字_
 
 ~~删除线~~
 
@@ -179,8 +179,8 @@ categories: 前端
 
 ---
 
-| 名称 | 说明 |
-| --- | --- |
+| 名称   | 说明   |
+| ------ | ------ |
 | 名称一 | 内容一 |
 ```
 
@@ -308,26 +308,26 @@ export default themeConfig;
 
 ### 常用配置分组
 
-| 配置项 | 用途 |
-| --- | --- |
-| `siteMeta` | 站点标题、描述、Logo、域名、语言和作者信息 |
-| `nav` / `navMore` | 顶部导航和左上角更多菜单 |
-| `cover` | 文章列表封面显示方式 |
-| `footer` | 社交链接、页脚站点地图和底部信息 |
-| `comment` | 评论系统开关，以及 Artalk / Twikoo 参数 |
-| `aside` | 侧边栏组件开关和显示内容 |
-| `friends` | 友情链接数据和动态友链 |
-| `music` | 音乐播放器、歌单、平台和接口地址 |
-| `search` | Algolia 搜索配置 |
-| `fancybox` | 图片灯箱开关和资源地址 |
-| `likeData` | 文章点赞功能开关 |
-| `editLink` | 文章「编辑此页」链接 |
-| `jumpRedirect` | 站外链接跳转提示页 |
-| `rewardData` | 打赏功能配置 |
-| `inject.header` | 追加到页面 `<head>` 的标签 |
-| `since` | 网站建站年份或日期 |
-| `icp` | 备案信息 |
-| `postSize` | 首页每页文章数量 |
+| 配置项            | 用途                                       |
+| ----------------- | ------------------------------------------ |
+| `siteMeta`        | 站点标题、描述、Logo、域名、语言和作者信息 |
+| `nav` / `navMore` | 顶部导航和左上角更多菜单                   |
+| `cover`           | 文章列表封面显示方式                       |
+| `footer`          | 社交链接、页脚站点地图和底部信息           |
+| `comment`         | 评论系统开关，以及 Artalk / Twikoo 参数    |
+| `aside`           | 侧边栏组件开关和显示内容                   |
+| `friends`         | 友情链接数据和动态友链                     |
+| `music`           | 音乐播放器、歌单、平台和接口地址           |
+| `search`          | Algolia 搜索配置                           |
+| `fancybox`        | 图片灯箱开关和资源地址                     |
+| `likeData`        | 文章点赞功能开关                           |
+| `editLink`        | 文章「编辑此页」链接                       |
+| `jumpRedirect`    | 站外链接跳转提示页                         |
+| `rewardData`      | 打赏功能配置                               |
+| `inject.header`   | 追加到页面 `<head>` 的标签                 |
+| `since`           | 网站建站年份或日期                         |
+| `icp`             | 备案信息                                   |
+| `postSize`        | 首页每页文章数量                           |
 
 ### 常见配置示例
 
@@ -525,17 +525,17 @@ Cloudflare Pages 可以使用：
 
 ## 可用命令
 
-| 命令 | 说明 |
-| --- | --- |
-| `pnpm install` | 安装项目依赖 |
-| `pnpm dev` | 启动本地开发服务器，默认端口为 9877 |
-| `pnpm build` | 构建静态站点，输出到 `.vitepress/dist` |
-| `pnpm preview` | 预览已经构建好的静态站点 |
-| `pnpm format` | 使用 Prettier 格式化项目文件 |
-| `pnpm lint` | 使用 ESLint 检查 JavaScript、TypeScript 和 Vue 文件 |
-| `pnpm lint:fix` | 使用 ESLint 自动修复可修复的问题 |
-| `pnpm deploy:vercel` | 通过 Vercel CLI 部署项目 |
-| `npx tsc --noEmit` | 执行 TypeScript 类型检查，但不覆盖 `.vue` 文件 |
+| 命令                 | 说明                                                |
+| -------------------- | --------------------------------------------------- |
+| `pnpm install`       | 安装项目依赖                                        |
+| `pnpm dev`           | 启动本地开发服务器，默认端口为 9877                 |
+| `pnpm build`         | 构建静态站点，输出到 `.vitepress/dist`              |
+| `pnpm preview`       | 预览已经构建好的静态站点                            |
+| `pnpm format`        | 使用 Prettier 格式化项目文件                        |
+| `pnpm lint`          | 使用 ESLint 检查 JavaScript、TypeScript 和 Vue 文件 |
+| `pnpm lint:fix`      | 使用 ESLint 自动修复可修复的问题                    |
+| `pnpm deploy:vercel` | 通过 Vercel CLI 部署项目                            |
+| `npx tsc --noEmit`   | 执行 TypeScript 类型检查，但不覆盖 `.vue` 文件      |
 
 ### 常用组合
 

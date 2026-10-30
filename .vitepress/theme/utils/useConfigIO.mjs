@@ -46,8 +46,145 @@ const compareVersions = (a, b) => {
 // 旧导出格式把 V/. 剥掉后 parseInt（"V1.10" → 110），仅用于旧文件的就近比较
 const legacyVersionNumber = (input) => parseInt(String(input).replace(/[Vv.]/g, ""), 10) || 10;
 
-// 自定义主题色仅接受 3-8 位十六进制，与 cursor.js 的 setCursorColor 白名单一致
-const isValidHexColor = (value) => typeof value === "string" && /^#?[0-9a-fA-F]{3,8}$/.test(value);
+// 自定义主题色只接受 #RRGGBB：Settings 文本框按 #RRGGBB 输入（maxlength 7），
+// applyCustomThemeColor 还会在色值后拼 alpha 后缀构造 --main-color-bg，
+// 3/4/8 位色值会拼出非法 CSS 变量被静默丢弃，故不留口子
+const isValidHexColor = (value) => typeof value === "string" && /^#[0-9a-fA-F]{6}$/.test(value);
+
+// 导入校验白名单：不在名单内的值一律丢弃，不写入 siteData
+const ENUM_RULES = {
+  themeType: ["auto", "dark", "light"],
+  themeColor: ["pink", "purple", "blue", "red", "green", "gray"],
+  fontFamily: ["misans", "xlfont", "browserfont", "vsans", "hmos"],
+  backgroundType: ["close", "patterns", "image"],
+  bannerType: ["half", "full"],
+  siteLayout: ["auto", "pc", "mobile"],
+  lastSiteLayout: ["auto", "pc", "mobile"],
+  messageStyle: ["bar", "card", "island"],
+  messagePosition: [
+    "bar-top",
+    "bar-bottom",
+    "top-center",
+    "bottom-center",
+    "left-top",
+    "left-bottom",
+    "right-top",
+    "right-bottom",
+  ],
+  progressDirection: ["normal", "reverse", "decorative", "disabled"],
+  islandMode: ["dynamic", "extended"],
+  islandStyle: ["standard", "extended"],
+  playerPlayMode: ["list", "shuffle", "single"],
+  playerMusicSource: ["preset", "custom"],
+  infoPosition: ["normal", "fixed"],
+  weatherProvider: ["amap", "wttr", "openmeteo"],
+  // "satellite" 已废弃（store 加载时迁移为 "ip"），白名单只留当前有效值
+  weatherLocationMode: ["ip", "manual"],
+  localSearchMode: ["off", "on", "always"],
+};
+
+// 颜色字段：只接受 #RRGGBB
+const COLOR_KEYS = [
+  "customPrimaryColor",
+  "customSecondaryColor",
+  "lastCustomPrimaryColor",
+  "lastCustomSecondaryColor",
+];
+
+// 布尔字段：只接受布尔值（highContrast 是 false | true | "max" 三态，单独校验）
+const BOOLEAN_KEYS = [
+  "useRightMenu",
+  "useCustomCursor",
+  "playerShow",
+  "playerAutoPlay",
+  "islandPlayerSupport",
+  "backgroundBlur",
+  "customThemeEnabled",
+  "customThemeBeforeHighContrast",
+  "removeAnimations",
+  // 计划第 11 项移除该开关时，同步从 PORTABLE_CONFIG_KEYS 与本表删掉这行
+  "pwaCacheEnabled",
+  "readingProgressEnabled",
+  "hoverLineEnabled",
+  "imageWebpEnabled",
+  "weatherWidgetEnabled",
+  "helloGithubWidgetEnabled",
+  "tagsWidgetEnabled",
+  "mobileWidgetsEnabled",
+  "scheduledThemeEnabled",
+  "islandUseThemeColor",
+  "islandShowSeconds",
+  "islandShowDate",
+];
+
+// 数值字段：范围校验（playerVolume 直接进 audio.volume，越界会抛 IndexSizeError）
+const NUMBER_RULES = {
+  fontSize: (v) => Number.isInteger(v) && v >= 10 && v <= 24,
+  playerVolume: (v) => typeof v === "number" && Number.isFinite(v) && v >= 0 && v <= 1,
+  messageDuration: (v) => Number.isInteger(v) && v >= 0 && v <= 60000,
+  readingHistoryLimit: (v) => Number.isInteger(v) && v >= 0 && v <= 10000,
+};
+
+// 字符串格式字段
+const isTimeHm = (v) => typeof v === "string" && /^([01]\d|2[0-3]):[0-5]\d$/.test(v);
+const STRING_RULES = {
+  // 逗号分隔的数字歌单 ID，空串合法（Player.vue 会 split/trim/filter）
+  playerCustomIds: (v) =>
+    typeof v === "string" && v.split(",").every((s) => /^\d*$/.test(s.trim())),
+  scheduledLightTime: isTimeHm,
+  scheduledDarkTime: isTimeHm,
+  weatherManualCity: (v) => typeof v === "string" && v.length <= 100,
+};
+
+const isHttpUrl = (value) => {
+  try {
+    const url = new URL(value);
+    return url.protocol === "http:" || url.protocol === "https:";
+  } catch {
+    return false;
+  }
+};
+
+/**
+ * 导入配置统一校验：非法值直接丢弃，让对应键回落到默认值
+ * @param {object} filtered - pickPortable 之后的配置对象（原地修改）
+ */
+const sanitizeImportedConfig = (filtered) => {
+  for (const [key, allowed] of Object.entries(ENUM_RULES)) {
+    if (key in filtered && !allowed.includes(filtered[key])) {
+      delete filtered[key];
+    }
+  }
+  for (const key of COLOR_KEYS) {
+    if (key in filtered && !isValidHexColor(filtered[key])) {
+      delete filtered[key];
+    }
+  }
+  for (const [key, ok] of Object.entries(NUMBER_RULES)) {
+    if (key in filtered && !ok(filtered[key])) {
+      delete filtered[key];
+    }
+  }
+  for (const [key, ok] of Object.entries(STRING_RULES)) {
+    if (key in filtered && !ok(filtered[key])) {
+      delete filtered[key];
+    }
+  }
+  if ("backgroundUrl" in filtered && !isHttpUrl(filtered.backgroundUrl)) {
+    delete filtered.backgroundUrl;
+  }
+  for (const key of BOOLEAN_KEYS) {
+    if (key in filtered && typeof filtered[key] !== "boolean") {
+      delete filtered[key];
+    }
+  }
+  if ("highContrast" in filtered) {
+    const value = filtered.highContrast;
+    if (value !== true && value !== false && value !== "max") {
+      delete filtered.highContrast;
+    }
+  }
+};
 
 const pickPortable = (config) => {
   const filtered = {};
@@ -161,10 +298,8 @@ export const useConfigIO = (siteVersion = "V1.0") => {
     try {
       const config = data.config || data;
       const filtered = pickPortable(config);
-      // 导入的 customPrimaryColor 会流入光标样式 innerHTML / CSS 变量，非法值直接丢弃
-      if ("customPrimaryColor" in filtered && !isValidHexColor(filtered.customPrimaryColor)) {
-        delete filtered.customPrimaryColor;
-      }
+      // 枚举/数值/颜色/URL/布尔统一校验：非法值丢弃，不写入 siteData
+      sanitizeImportedConfig(filtered);
       localStorage.setItem("siteData", JSON.stringify(filtered));
       if (typeof $message !== "undefined") {
         $message.success("配置已导入，页面将刷新以应用设置", { duration: 3000 });

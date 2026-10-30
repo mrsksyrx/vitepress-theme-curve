@@ -372,6 +372,21 @@ const shouldSkipRedirect = (href) => {
 };
 
 /**
+ * 合并 rel 值：确保包含 noopener noreferrer，保留原有其他 token
+ * @param {string|null|undefined} rel
+ */
+const mergeNoopenerRel = (rel) => {
+  const tokens = new Set(
+    String(rel || "")
+      .split(/\s+/)
+      .filter(Boolean),
+  );
+  tokens.add("noopener");
+  tokens.add("noreferrer");
+  return [...tokens].join(" ");
+};
+
+/**
  * UTF-8 安全的 Base64 编码。
  * 必须与 redirect.html 里的解码保持对称：那边是 atob + TextDecoder，
  * 任一侧改回裸 btoa/atob 都会让非 Latin1 URL 变成乱码跳转。
@@ -426,6 +441,8 @@ export const jumpRedirect = (html, themeConfig, isDom = false) => {
               link.setAttribute("original-href", linkHref);
               // 覆盖 href
               link.setAttribute("href", redirectLink);
+              // 合并 rel，确保外链带 noopener noreferrer
+              link.setAttribute("rel", mergeNoopenerRel(link.getAttribute("rel")));
             }
           }
         } catch (error) {
@@ -465,12 +482,14 @@ export const jumpRedirect = (html, themeConfig, isDom = false) => {
           let attributesStr = "";
           for (let attr in attributes) {
             if (Object.prototype.hasOwnProperty.call(attributes, attr)) {
-              if (attr === "href" || attr === "original-href") continue;
+              if (attr === "href" || attr === "original-href" || attr === "rel") continue;
               attributesStr += ` ${attr}="${escapeAttr(attributes[attr])}"`;
             }
           }
+          // 合并 rel，确保外链带 noopener noreferrer
+          const relStr = mergeNoopenerRel(attributes.rel);
           // 构造新标签
-          const newLink = `<a href="${redirectPage}#url=${encodedHref}" original-href="${escapeAttr(href)}" ${attributesStr}>${innerHtml}</a>`;
+          const newLink = `<a href="${redirectPage}#url=${encodedHref}" original-href="${escapeAttr(href)}" rel="${escapeAttr(relStr)}" ${attributesStr}>${innerHtml}</a>`;
           // 替换原有标签
           $a.replaceWith(newLink);
         }

@@ -215,11 +215,12 @@ const changeSiteThemeType = () => {
   } else {
     htmlElement.classList.remove("image");
   }
-  // 应用主题色
+  // 应用主题色（classList.add 前做枚举保护，防止坏配置注入任意类名）
   const themeColors = ["theme-purple", "theme-blue", "theme-red", "theme-green", "theme-gray"];
   themeColors.forEach((cls) => htmlElement.classList.remove(cls));
-  if (themeColor.value !== "pink") {
-    htmlElement.classList.add(`theme-${themeColor.value}`);
+  const themeColorClass = `theme-${themeColor.value}`;
+  if (themeColor.value !== "pink" && themeColors.includes(themeColorClass)) {
+    htmlElement.classList.add(themeColorClass);
   }
 };
 
@@ -233,8 +234,12 @@ const changeSiteFont = async () => {
 
     if (currentTaskId !== fontSwitchTaskId) return;
 
-    htmlElement.classList.remove("vsans", "hmos", "xlfont", "misans", "browserfont");
-    htmlElement.classList.add(fontFamily.value);
+    const fontClasses = ["vsans", "hmos", "xlfont", "misans", "browserfont"];
+    htmlElement.classList.remove(...fontClasses);
+    // classList.add 前做枚举保护，防止坏配置注入任意类名
+    if (fontClasses.includes(fontFamily.value)) {
+      htmlElement.classList.add(fontFamily.value);
+    }
   } catch (error) {
     console.error("切换系统字体样式失败", error);
   }

@@ -2261,8 +2261,13 @@ const confirmFontSizeEdit = () => {
   fontSizeEditing.value = false;
   store.fontSizePending = false;
   if (typeof $message !== "undefined") {
+    // $message 的 html 模式走 v-html，fontSize 必须转义后再拼接
+    const sizeText = String(fontSize.value).replace(
+      /[&<>"']/g,
+      (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c],
+    );
     $message.success(
-      `全站字体大小已修改为 <span style="color: var(--main-color-blue)">${fontSize.value}</span>`,
+      `全站字体大小已修改为 <span style="color: var(--main-color-blue)">${sizeText}</span>`,
       { html: true },
     );
   }

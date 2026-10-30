@@ -73,6 +73,7 @@
             title="开往-友链接力"
             href="https://www.travellings.cn/go.html"
             target="_blank"
+            rel="noopener noreferrer"
           >
             <i class="iconfont icon-subway"></i>
           </a>
