@@ -9,7 +9,11 @@
           </h2>
           <span class="tip">{{ type?.typeDesc || "分组暂无简介" }}</span>
         </div>
-        <div class="all-link" v-if="type?.typeList">
+        <div
+          :class="isMobileLayout ? 'mobile-layout' : 'desktop-layout'"
+          class="all-link"
+          v-if="type?.typeList"
+        >
           <a
             v-for="(link, index) in type.typeList"
             :class="[
@@ -37,7 +41,12 @@
               </LazyLoader>
             </div>
             <div class="data">
-              <span :class="['name', { 'cf-friends-name': useFriendsLink }]">{{ link.name }}</span>
+              <span :class="['name', { 'cf-friends-name': useFriendsLink }]"
+                >{{ link.name
+                }}<span v-if="link.nameSuffix" class="name-suffix">{{
+                  link.nameSuffix
+                }}</span></span
+              >
               <span class="desc">{{ link.desc }}</span>
             </div>
           </a>
@@ -49,6 +58,10 @@
 </template>
 
 <script setup>
+import { useIsMobileLayout } from "@/utils/layout.js";
+
+const isMobileLayout = useIsMobileLayout();
+
 defineProps({
   // 列表数据
   listData: {
@@ -73,7 +86,7 @@ defineProps({
   .link-type-list {
     margin-top: 2rem;
     .title {
-      margin-left: 6px;
+      margin-left: 4px;
       margin-bottom: 1.6rem;
       .name {
         border-bottom: none;
@@ -90,6 +103,8 @@ defineProps({
       display: grid;
       gap: 20px;
       grid-template-columns: repeat(5, 1fr);
+      // 300px 可在当前桌面内容区内稳定容纳 4 列 (4 x 300px + 3 x 20px = 1260px)
+      --desktop-link-card-width: 300px;
       .link-card {
         display: flex;
         flex-direction: row;
@@ -143,6 +158,15 @@ defineProps({
           .name {
             font-weight: bold;
             font-size: 18px;
+            .name-suffix {
+              margin-left: 4px;
+              font-size: 14px;
+              font-weight: normal;
+              color: var(--main-font-second-color);
+              transition:
+                color 0.3s,
+                opacity 0.3s;
+            }
             overflow: hidden;
             text-overflow: ellipsis;
             display: -webkit-box;
@@ -180,6 +204,10 @@ defineProps({
             height: 0;
           }
           .data {
+            .name-suffix {
+              opacity: 0.65;
+              color: inherit;
+            }
             .desc {
               opacity: 0.7;
               color: var(--main-card-background);
@@ -198,6 +226,10 @@ defineProps({
       }
       @media (max-width: 576px) {
         grid-template-columns: 1fr;
+      }
+      &.desktop-layout {
+        grid-template-columns: repeat(auto-fill, var(--desktop-link-card-width));
+        justify-content: flex-start;
       }
     }
   }
