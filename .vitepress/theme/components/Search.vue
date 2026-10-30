@@ -53,7 +53,7 @@
   <div v-else-if="mode === 'local'" class="local-search">
     <input
       :key="localInputKey"
-      v-model="localQuery"
+      v-model="sharedQuery"
       class="local-input"
       placeholder="想要搜点什么"
       autofocus
@@ -67,7 +67,7 @@
           <span class="text">本地索引加载失败</span>
           <button class="retry-btn" type="button" @click="retryLocal">重试</button>
         </div>
-        <div v-else-if="localQuery && !localResults.length" class="no-result">
+        <div v-else-if="sharedQuery && !localResults.length" class="no-result">
           <i class="iconfont icon-search-empty" />
           <span class="text">搜索结果为空</span>
         </div>
@@ -94,7 +94,7 @@
       </Transition>
     </div>
     <div class="local-footer">
-      <span v-if="localQuery && localResults.length" class="text">
+      <span v-if="sharedQuery && localResults.length" class="text">
         共 {{ localResults.length }} 条结果
       </span>
       <span class="local-brand">本地搜索</span>
@@ -171,6 +171,10 @@ const mode = computed(() => {
 // 是否具有搜索词
 const hasSearchValue = ref(false);
 
+// Algolia 与本地搜索共享的查询值：searchChange 从 Algolia 同步写入，
+// 本地输入直接 v-model 绑定；离线/失败降级本地时查询词不丢
+const sharedQuery = ref("");
+
 // 关闭弹层时清空搜索词（Modal persistent 常驻，不能靠卸载重置）
 // setUiState 清的是 InstantSearch 状态；SearchBox 是非受控输入，需换 key 强制重建
 const instantSearchRef = ref(null);
@@ -183,7 +187,7 @@ watch(
     searchBoxKey.value += 1;
     instantSearchRef.value?.instantSearchInstance?.setUiState({ [indexName]: { query: "" } });
     // 本地模式同步清空（非受控 input 同样换 key）
-    localQuery.value = "";
+    sharedQuery.value = "";
     localResults.value = [];
     localLimit.value = 8;
     localInputKey.value += 1;
@@ -194,6 +198,8 @@ watch(
 const searchChange = ({ uiState, setUiState }) => {
   const searchData = Object.values(uiState);
   hasSearchValue.value = searchData.length > 0 && searchData[0].query?.length > 0;
+  // 同步 Algolia 当前 query 到共享查询值，降级本地时保留查询词
+  sharedQuery.value = searchData[0]?.query ?? "";
   setUiState(uiState);
 };
 
@@ -285,10 +291,12 @@ const {
   loadIndex,
   search: runLocalSearch,
 } = useLocalSearch();
-const localQuery = ref("");
+// 查询词用共享值 sharedQuery（与 Algolia 同步），降级本地后保留当前查询
 const localResults = ref([]);
 const localLimit = ref(8);
 const localInputKey = ref(0);
+// 请求序号：debounce 只合并按键，索引加载等异步仍会重叠，只允许最新请求写入 localResults
+let localSearchSeq = 0;
 
 // HTML 转义先行，防 v-html XSS，再注入 <mark>
 const escapeHtml = (s) =>
@@ -319,9 +327,11 @@ const pagedLocalResults = computed(() => localResults.value.slice(0, localLimit.
 
 const runLocalSearchDebounced = debounce(async () => {
   localLimit.value = 8;
+  const seq = ++localSearchSeq;
   try {
-    const hits = await runLocalSearch(localQuery.value);
-    const terms = highlightTerms(localQuery.value);
+    const hits = await runLocalSearch(sharedQuery.value);
+    if (seq !== localSearchSeq) return; // 已有更新请求，丢弃过期结果
+    const terms = highlightTerms(sharedQuery.value);
     localResults.value = hits.slice(0, 32).map((h) => {
       const matchedHeading = (h.headings || []).find((t) =>
         terms.some((term) => t.toLowerCase().includes(term.toLowerCase())),
@@ -337,18 +347,26 @@ const runLocalSearchDebounced = debounce(async () => {
       };
     });
   } catch {
+    if (seq !== localSearchSeq) return;
     localResults.value = []; // loadFailed 分支负责展示
   }
 }, 150);
-watch(localQuery, () => {
+watch(sharedQuery, () => {
   if (mode.value === "local") runLocalSearchDebounced();
 });
 
-// mode 切到 local 时预取索引（离线时走 SW precache）
+// mode 切到 local 时预取索引（离线时走 SW precache）；
+// 从 Algolia 降级时保留当前查询词，索引就绪后直接补跑一次本地搜索
 watch(
   mode,
   (m) => {
-    if (m === "local") loadIndex().catch(() => {});
+    if (m === "local") {
+      loadIndex()
+        .then(() => {
+          if (sharedQuery.value) runLocalSearchDebounced();
+        })
+        .catch(() => {});
+    }
   },
   { immediate: true },
 );
@@ -361,6 +379,7 @@ const retryLocal = () => {
 
 onBeforeUnmount(() => {
   hasSearchValue.value = false;
+  localSearchSeq += 1; // 使在途的本地搜索请求全部失效
   runLocalSearchDebounced.cancel();
 });
 </script>

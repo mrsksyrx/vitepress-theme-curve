@@ -43,14 +43,14 @@ export const generateSearchIndex = async () => {
   const posts = await Promise.all(
     paths.map(async (item) => {
       const { data, content: body } = matter(await fs.readFile(item, "utf-8"));
-      // 密文文章（frontmatter password）不落正文/description，否则等于把
-      // AES-GCM 保护的明文泄进 public/ 产物（会被 PWA precache 进公网缓存）
-      const isProtected = Boolean(data.password);
+      // 密文文章（frontmatter password / enc）不落 headings/description/content，
+      // 否则等于把 AES-GCM 保护的明文泄进 public/ 产物（会被 PWA precache 进公网缓存）
+      const isProtected = Boolean(data.password || data.enc);
       return {
         // 与 getAllPosts 的 regularPath 同口径（见 getPostData.mjs）
         url: `/${item.replace(/\.md$/, "")}`,
         title: data.title || "未命名文章",
-        headings: extractHeadings(body),
+        headings: isProtected ? [] : extractHeadings(body),
         tags: normalizeList(data.tags),
         categories: normalizeList(data.categories),
         description: isProtected ? "" : data.description || "",
