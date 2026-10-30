@@ -34,6 +34,7 @@ test.html
 .mimocode
 .vercel
 .claude
+.codex-attachments/
 .playwright-cli/
 public/data/postData.json
 public/data/localSearch.json
