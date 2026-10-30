@@ -1,6 +1,6 @@
 <!-- 全局播放器 -->
 <template>
-  <div v-if="playerShow" class="player-wrapper">
+  <div v-if="playerShow && musicEnabled" class="player-wrapper">
     <!-- 播放列表面板 -->
     <Transition name="playlist">
       <div v-if="!isFolded" class="expanded-panel">
@@ -91,6 +91,7 @@ import "aplayer/dist/APlayer.min.css";
 const store = mainStore();
 const { theme } = useData();
 const { enable, url, id, server, type } = theme.value.music;
+const musicEnabled = computed(() => enable === true);
 const {
   playerShow,
   playerAutoPlay,
@@ -121,6 +122,7 @@ const currentLyrics = ref([]);
 const activeLyricIndex = ref(-1);
 const userScrolling = ref(false);
 let followResumeTimer = null;
+let suppressHoverTimer = null;
 let rotateGeneration = 0;
 let playlistRequestId = 0;
 let lyricRequestId = 0;
@@ -170,6 +172,12 @@ const startRotate = () => {
   }, 3000);
 };
 
+const destroyPlayer = () => {
+  player.value?.destroy();
+  player.value = null;
+  if (typeof window !== "undefined") window.$player = null;
+};
+
 const stopRotate = () => {
   // 同时作废正在淡出/预加载封面的切换任务，避免展开面板后仍切歌
   rotateGeneration += 1;
@@ -194,7 +202,8 @@ const toggleFold = () => {
   isFolded.value = !isFolded.value;
   if (isFolded.value) {
     suppressHover.value = true;
-    setTimeout(() => {
+    clearTimeout(suppressHoverTimer);
+    suppressHoverTimer = setTimeout(() => {
       suppressHover.value = false;
     }, 350);
   }
@@ -259,9 +268,12 @@ const safePlay = () => {
 // 拦截导致 net::ERR_FAILED。浏览器读不到跳转 Location（跨域无 CORS），
 // 走同源 /api/music-url 在服务端解析成 https 直链再交给 <audio>。
 const resolveCache = new Map();
+const RESOLVE_CACHE_TTL = 30 * 1000;
 const resolveAudioUrl = async (rawUrl) => {
   if (!rawUrl) return rawUrl;
-  if (resolveCache.has(rawUrl)) return resolveCache.get(rawUrl);
+  const cached = resolveCache.get(rawUrl);
+  if (cached && cached.expires > Date.now()) return cached.value;
+  resolveCache.delete(rawUrl);
   let resolved = String(rawUrl).replace(/^http:\/\//i, "https://");
   try {
     const res = await fetch(`/api/music-url?url=${encodeURIComponent(rawUrl)}`, {
@@ -274,7 +286,7 @@ const resolveAudioUrl = async (rawUrl) => {
   } catch (e) {
     console.warn("解析音频直链失败，回退原始地址：", e);
   }
-  resolveCache.set(rawUrl, resolved);
+  resolveCache.set(rawUrl, { value: resolved, expires: Date.now() + RESOLVE_CACHE_TTL });
   return resolved;
 };
 
@@ -315,17 +327,21 @@ const initAPlayer = async (list, requestId) => {
       customAudioType: {
         meting: (media, song) => {
           const targetUrl = song.url;
-          resolveAudioUrl(targetUrl).then((resolved) => {
-            // 解析期间可能已切歌，别把旧地址盖到当前 audio 上
-            const nowUrl = player.value?.list?.audios?.[player.value.list.index]?.url;
-            if (nowUrl !== targetUrl) return;
-            const shouldPlay = !player.value?.paused;
-            media.src = resolved;
-            if (shouldPlay) {
-              const p = media.play();
-              if (p && typeof p.catch === "function") p.catch(() => {});
-            }
-          });
+          resolveAudioUrl(targetUrl)
+            .then((resolved) => {
+              if (disposed || !player.value) return;
+              // 解析期间可能已切歌，别把旧地址盖到当前 audio 上
+              const idx = player.value.list?.index ?? -1;
+              const nowUrl = player.value.list?.audios?.[idx]?.url;
+              if (nowUrl !== targetUrl) return;
+              const shouldPlay = !player.value.paused;
+              media.src = resolved;
+              if (shouldPlay) {
+                const p = media.play();
+                if (p && typeof p.catch === "function") p.catch(() => {});
+              }
+            })
+            .catch((error) => console.warn("解析音频直链失败：", error));
         },
       },
     });
@@ -446,7 +462,7 @@ const parseLrc = (text) => {
   const lines = text.split("\n");
   const result = [];
   const timeMap = new Map();
-  const timeExp = /\[(\d{2,}):(\d{2})(?:\.(\d{2,3}))?\]/g;
+  const timeExp = /\[(\d{1,3}):(\d{2})(?:\.(\d{2,3}))?\]/g;
   for (const line of lines) {
     const matches = [...line.matchAll(timeExp)];
     if (matches.length > 0) {
@@ -543,12 +559,19 @@ watch(currentIdx, () => {
 watch(
   () => playerShow.value,
   (val) => {
-    if (!val) return false;
+    if (!val) {
+      playlistRequestId += 1;
+      lyricRequestId += 1;
+      currentLyrics.value = [];
+      activeLyricIndex.value = -1;
+      destroyPlayer();
+      stopRotate();
+      playState.value = false;
+      return;
+    }
     currentLyrics.value = [];
     activeLyricIndex.value = -1;
-    player.value?.destroy();
-    // 清理：destroy 后置空 player 并停止轮播定时器，避免悬空引用与残留 interval
-    player.value = null;
+    destroyPlayer();
     stopRotate();
     getMusicListData();
   },
@@ -600,9 +623,7 @@ watch(
     clearTimeout(musicSourceTimer);
     musicSourceTimer = setTimeout(() => {
       if (playerMusicSource.value === "custom" && !playerCustomIds.value) return;
-      player.value?.destroy();
-      // 清理：destroy 后置空 player 并停止轮播定时器，避免悬空引用与残留 interval
-      player.value = null;
+      destroyPlayer();
       stopRotate();
       allSongs.value = [];
       hasPlayed.value = false;
@@ -658,15 +679,14 @@ onBeforeUnmount(() => {
   lyricRequestId += 1;
   stopRotate();
   clearTimeout(followResumeTimer);
+  clearTimeout(suppressHoverTimer);
   clearTimeout(musicSourceTimer);
   if (autoPlayInteractionHandler) {
     document.removeEventListener("click", autoPlayInteractionHandler);
     document.removeEventListener("keydown", autoPlayInteractionHandler);
     autoPlayInteractionHandler = null;
   }
-  player.value?.destroy();
-  // 清理：destroy 后置空 player（stopRotate 已在上方调用）
-  player.value = null;
+  destroyPlayer();
 });
 </script>
 

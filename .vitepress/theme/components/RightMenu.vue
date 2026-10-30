@@ -190,7 +190,12 @@
           </div>
           <!-- 播放器控制 -->
           <div
-            v-if="playerShow && playerData && playerData.name !== '未知曲目'"
+            v-if="
+              playerShow &&
+              theme.music?.enable === true &&
+              playerData &&
+              playerData.name !== '未知曲目'
+            "
             class="all-menu general player"
           >
             <div class="data">
@@ -437,18 +442,19 @@ const rightMenuFunc = async (type) => {
 
 // 播放器控制
 const playerControl = (type) => {
-  if (typeof $player !== "object" || !type) return false;
+  const player = window.$player;
+  if (!player || !type) return false;
   switch (type) {
     case "toggle":
-      $player?.toggle();
+      player.toggle();
       break;
     case "next":
-      $player?.skipForward();
-      $player?.play();
+      player.skipForward();
+      player.play();
       break;
     case "prev":
-      $player?.skipBack();
-      $player?.play();
+      player.skipBack();
+      player.play();
       break;
     default:
       return false;
