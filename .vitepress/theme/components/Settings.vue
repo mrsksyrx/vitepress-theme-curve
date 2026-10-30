@@ -2463,19 +2463,9 @@ const showClearAllWarning = () => {
 };
 const handleClearAllData = async () => {
   showClearAllConfirm.value = false;
-  if (typeof $message !== "undefined") {
-    $message.warning("数据已清除，页面即将刷新");
-  }
-  // 清除前将开发模式写回默认值（清除所有数据包含开发模式状态）
-  await saveStoreDefaults({
-    DEFAULT_DEV_MODE: 1,
-    bumpVersion: true,
-  });
 
-  // 清空 localStorage 和 sessionStorage
-  localStorage.clear();
-  sessionStorage.clear();
-
+  // 先完成所有异步清理，避免在清空本地存储后仍交还事件循环，
+  // 导致 pinia 持久化插件把内存中的配置写回 localStorage
   // 注销所有 Service Worker
   if ("serviceWorker" in navigator) {
     const registrations = await navigator.serviceWorker.getRegistrations();
@@ -2497,10 +2487,23 @@ const handleClearAllData = async () => {
     const databases = await indexedDB.databases();
     for (const db of databases) {
       if (db.name) {
-        indexedDB.deleteDatabase(db.name);
+        await new Promise((resolve) => {
+          const req = indexedDB.deleteDatabase(db.name);
+          req.onsuccess = resolve;
+          req.onerror = resolve;
+          req.onblocked = resolve;
+        });
       }
     }
   }
+
+  // 最后同步清空本地存储并立即刷新，期间不再交还事件循环，
+  // 确保持久化插件没有机会把配置写回
+  if (typeof $message !== "undefined") {
+    $message.warning("数据已清除，页面即将刷新");
+  }
+  localStorage.clear();
+  sessionStorage.clear();
   window.location.reload();
 };
 
