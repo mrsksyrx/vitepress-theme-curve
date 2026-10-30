@@ -58,7 +58,7 @@ VitePress blog theme (Vue 3 + Pinia + SCSS). Single package, no monorepo (`pnpm-
 - **`linebreak-style` is off** on purpose: the repo checks out with `core.autocrlf=true` (CRLF). Don't enable it or mass-convert line endings.
 - `npx tsc --noEmit` typechecks only a handful of `.ts` files — no `vue-tsc`, and `tsconfig.json` deliberately has `"types": ["node"]` (VitePress ships its own types; restore `"vite/client"` only if type issues appear).
 - Style: double quotes, Prettier `printWidth: 100`, `trailingComma: all`; ESLint uses airbnb-base + vue3-essential. Pure-format rules that conflict with Prettier (`no-confusing-arrow`, `newline-per-chained-call`, `operator-linebreak`, `brace-style` 等) are off in overrides — Prettier owns formatting.
-- 背景模糊：blur 类加在 `.background` 背景层（`store/index.js` + `Background.vue` scoped 规则），弹窗/导航保持清晰；`backgroundType: "close"` 时无背景层、开关无效（已知行为）。
+- 背景模糊：blur 类由 `Background.vue` 根据 `searchShow`/`showSettings`/`mobileMenuShow`/`mobileWidgetsShow` 计算绑定（至少一个浮层打开且 `backgroundBlur` 开启才加），弹窗/导航保持清晰；`changeShowStatus()` 不再直接操作背景 class；`backgroundType: "close"` 时无背景层、开关无效（已知行为）。
 - 全局浮层层级用 CSS 变量（`main.scss`）：`--z-player` 10000（播放器/普通弹窗）→ `--z-elevated` 11000（分享面板/侧边栏）→ `--z-message` 12000（消息/右键菜单/加载屏）。新浮层请用变量，勿写死数字。
 
 ## Deploy

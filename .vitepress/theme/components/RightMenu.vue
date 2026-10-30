@@ -82,7 +82,7 @@
             </div>
             <!-- 输入框 -->
             <div
-              v-if="clickedType === 'input' && typeof clickedTypeData?.value === 'string'"
+              v-if="clickedType === 'input' && typeof clickedInputEl?.value === 'string'"
               class="btn"
               @click="rightMenuFunc('input-paste')"
             >
@@ -113,7 +113,7 @@
             -->
             <a
               v-if="clickedType === 'text' || clickedType === 'input'"
-              :href="`https://cn.bing.com/search?q=${encodeURIComponent(clickedTypeData)}`"
+              :href="`https://cn.bing.com/search?q=${encodeURIComponent(clickedText)}`"
               class="btn right-menu-link"
               target="_blank"
               rel="noopener noreferrer"
@@ -124,7 +124,7 @@
             <div
               v-if="clickedType === 'text' || clickedType === 'input'"
               class="btn"
-              @click="copyText(clickedTypeData)"
+              @click="copyClickedText()"
             >
               <i class="iconfont icon-copy"></i>
               <span class="name">复制选中文本</span>
@@ -272,8 +272,24 @@ const rightMenuX = ref(0);
 const rightMenuY = ref(0);
 const clickedType = ref("normal");
 const clickedTypeData = ref(null);
+// 输入框元素单独留一份引用：有选区时 clickedTypeData 会被选中文本（字符串）覆盖
+const clickedInputEl = ref(null);
 const rightMenuRef = ref(null);
 const rightMenuShow = ref(false);
+
+// 复制 / 搜索用文本（输入框取 input.value，避免拿到 DOM 对象）
+const clickedText = computed(() => {
+  const data = clickedTypeData.value;
+  if (typeof data === "string") return data;
+  if (data && typeof data.value === "string") return data.value;
+  return "";
+});
+
+// 复制选中文本（空内容不提示复制成功）
+const copyClickedText = () => {
+  if (!clickedText.value) return;
+  copyText(clickedText.value);
+};
 
 // 快速评论
 const commentCopyShow = ref(false);
@@ -332,38 +348,40 @@ const closeRightMenu = (e) => {
   rightMenuY.value = 0;
   clickedType.value = "normal";
   clickedTypeData.value = null;
+  clickedInputEl.value = null;
   commentCopyData.value = false;
 };
 
 // 判断点击元素类型
 const checkClickType = (target) => {
   if (!target?.tagName) return false;
-  // 写入内容
-  clickedTypeData.value =
-    window.getSelection().toString().length > 0 ? window.getSelection().toString() : target;
-  switch (target.tagName) {
-    case "A":
-      // 链接类型
-      clickedType.value = "link";
-      break;
-    case "IMG":
-      // 图片类型
-      clickedType.value = "image";
-      break;
-    case "INPUT":
-    case "TEXTAREA":
-      // 输入框类型
-      clickedType.value = "input";
-      break;
-    default:
-      if (window.getSelection().toString().length > 0) {
-        // 已选中的文本
-        clickedType.value = "text";
-      } else {
-        // 普通模式
-        clickedType.value = "normal";
-      }
-      break;
+  const selectionText = window.getSelection()?.toString() ?? "";
+  const hasSelection = selectionText.length > 0;
+  clickedInputEl.value = null;
+  // closest 识别嵌套在链接 / 图片内部的图标、SVG 等子元素
+  const imgEl = target.tagName === "IMG" ? target : target.closest?.("img");
+  const linkEl = target.tagName === "A" ? target : target.closest?.("a[href]");
+  if (imgEl) {
+    // 图片类型（链接内图片也优先保留复制 / 下载图片能力）
+    clickedType.value = "image";
+    clickedTypeData.value = imgEl;
+  } else if (linkEl) {
+    // 链接类型（链接内部图标、SVG 归为链接）
+    clickedType.value = "link";
+    clickedTypeData.value = linkEl;
+  } else if (target.tagName === "INPUT" || target.tagName === "TEXTAREA") {
+    // 输入框类型
+    clickedType.value = "input";
+    clickedInputEl.value = target;
+    clickedTypeData.value = hasSelection ? selectionText : target;
+  } else if (hasSelection) {
+    // 已选中的文本
+    clickedType.value = "text";
+    clickedTypeData.value = selectionText;
+  } else {
+    // 普通模式
+    clickedType.value = "normal";
+    clickedTypeData.value = target;
   }
 };
 
@@ -390,9 +408,11 @@ const rightMenuFunc = async (type) => {
       case "reload":
         window.location.reload();
         break;
-      case "open-link":
-        window.open(clickedTypeData.value?.href);
+      case "open-link": {
+        const linkUrl = clickedTypeData.value?.href;
+        if (linkUrl) window.open(linkUrl, "_blank", "noopener,noreferrer");
         break;
+      }
       case "copy-link":
         const pageLink =
           (theme.value?.siteMeta?.site || "").replace(/\/+$/, "") + router.route.path;
@@ -414,21 +434,40 @@ const rightMenuFunc = async (type) => {
       //        const pageLink = theme.value.site + router.route.path;
       //        if (pageLink) copyText(pageLink);
       //        break;
-      case "input-paste":
+      case "input-paste": {
         const text = await navigator.clipboard.readText();
-        if (clickedTypeData.value && typeof clickedTypeData.value === "object") {
-          const inputElement = clickedTypeData.value;
-          const start = inputElement.selectionStart;
-          const end = inputElement.selectionEnd;
-          const value = inputElement.value;
-          // 在光标位置插入文本
-          const newValue = value.substring(0, start) + text + value.substring(end);
-          inputElement.value = newValue;
-          // 更新光标位置
-          const newCursorPosition = start + text.length;
-          inputElement.setSelectionRange(newCursorPosition, newCursorPosition);
+        const inputElement = clickedInputEl.value;
+        if (!inputElement || typeof inputElement !== "object") break;
+        const value = typeof inputElement.value === "string" ? inputElement.value : "";
+        // selectionStart / selectionEnd 在部分输入框上为 null，按追加到末尾处理
+        const start = Number.isInteger(inputElement.selectionStart)
+          ? inputElement.selectionStart
+          : value.length;
+        const end = Number.isInteger(inputElement.selectionEnd)
+          ? inputElement.selectionEnd
+          : value.length;
+        // 优先 setRangeText：一步完成替换与光标定位，避免 setSelectionRange 抛错
+        let replaced = false;
+        if (typeof inputElement.setRangeText === "function") {
+          try {
+            inputElement.setRangeText(text, start, end, "end");
+            replaced = true;
+          } catch (error) {
+            // 部分输入框不支持 setRangeText，回退到手动替换
+          }
         }
+        if (!replaced) {
+          inputElement.value = value.slice(0, start) + text + value.slice(end);
+          try {
+            inputElement.setSelectionRange(start + text.length, start + text.length);
+          } catch (error) {
+            // 部分输入框不支持 setSelectionRange，忽略光标定位
+          }
+        }
+        // 同步 v-model / 第三方组件（Artalk 等）的内部状态
+        inputElement.dispatchEvent(new Event("input", { bubbles: true }));
         break;
+      }
       default:
         return false;
     }
@@ -463,6 +502,8 @@ const playerControl = (type) => {
 
 // 选中内容是否为链接
 const isLink = (data) => {
+  // 只接受字符串，DOM 对象没有 trim()
+  if (typeof data !== "string") return false;
   if (!data) return false;
   const text = data.trim();
   if (!text) return false;

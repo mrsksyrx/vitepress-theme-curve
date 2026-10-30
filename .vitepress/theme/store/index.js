@@ -223,20 +223,14 @@ export const mainStore = defineStore("main", {
   },
   actions: {
     // 切换应用状态
-    changeShowStatus(value, blur = true) {
+    // 背景模糊由 Background.vue 根据各浮层状态计算，这里不再直接操作背景 class
+    changeShowStatus(value) {
       if (typeof document === "undefined") return; // 确保在客户端
 
       this[value] = !this[value];
       // 阻止滚动（引用计数，多弹窗并发时不会互相踩踏）
       if (this[value]) lockBodyScroll();
       else unlockBodyScroll();
-      // 背景层模糊（弹窗/导航保持清晰；close 模式下无背景层，开关无效）
-      const backgroundEl = document.querySelector(".background");
-      if (backgroundEl) {
-        this[value] && this.backgroundBlur && blur
-          ? backgroundEl.classList.add("blur")
-          : backgroundEl.classList.remove("blur");
-      }
     },
     // 更改字体大小
     changeFontSize(isAdd = false) {

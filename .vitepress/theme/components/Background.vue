@@ -1,7 +1,10 @@
 <template>
   <Teleport to="body">
     <!-- 站点背景 -->
-    <div v-if="backgroundType !== 'close'" :class="['background', backgroundType, themeValue]">
+    <div
+      v-if="backgroundType !== 'close'"
+      :class="['background', backgroundType, themeValue, { blur: shouldBlur }]"
+    >
       <img
         v-if="backgroundType === 'image'"
         :src="backgroundUrl"
@@ -20,7 +23,23 @@ import { storeToRefs } from "pinia";
 import { mainStore } from "@/store";
 
 const store = mainStore();
-const { backgroundType, backgroundUrl, themeValue } = storeToRefs(store);
+const {
+  backgroundType,
+  backgroundUrl,
+  themeValue,
+  backgroundBlur,
+  searchShow,
+  showSettings,
+  mobileMenuShow,
+  mobileWidgetsShow,
+} = storeToRefs(store);
+
+// 至少一个浮层（搜索 / 设置 / 移动菜单 / 移动小组件）打开时才模糊背景，全部关闭后移除
+const shouldBlur = computed(
+  () =>
+    backgroundBlur.value &&
+    (searchShow.value || showSettings.value || mobileMenuShow.value || mobileWidgetsShow.value),
+);
 
 // 加载失败
 const coverError = (e) => {

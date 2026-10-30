@@ -34,6 +34,7 @@
                     :href="link.url"
                     class="more-link"
                     :target="link.url?.startsWith('/') ? '_self' : '_blank'"
+                    rel="noopener noreferrer"
                   >
                     <span class="link-name">{{ link.name }}</span>
                   </a>
@@ -164,7 +165,7 @@
 <script setup>
 import { storeToRefs } from "pinia";
 import { mainStore } from "@/store";
-import { smoothScrolling, shufflePost } from "@/utils/helper";
+import { smoothScrolling, shufflePost, handleNavLink } from "@/utils/helper";
 import { usePostData } from "@/utils/usePostData.mjs";
 import { useIsMobileLayout } from "@/utils/layout.js";
 import SearchModal from "@/components/Search.vue";
@@ -208,14 +209,9 @@ const shuffleGo = async () => {
   }
 };
 
-// 站外链接交给浏览器新开标签，router.go 会丢弃 origin 把用户送回站内
+// 协议 / 锚点 / 站内路径的统一处理见 utils/helper.mjs 的 handleNavLink
 const goLink = (link) => {
-  if (!link) return;
-  if (/^https?:\/\//i.test(link)) {
-    window.open(link, "_blank", "noopener,noreferrer");
-    return;
-  }
-  router.go(link);
+  handleNavLink(link, router);
 };
 
 // [B50] 死代码：rightMenuSwitch 定义后无任何调用（模板与脚本均未引用），

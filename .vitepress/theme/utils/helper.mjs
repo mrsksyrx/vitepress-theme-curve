@@ -31,6 +31,16 @@ export const calculateScroll = throttle(
 );
 
 /**
+ * 滚动到元素位置（带顶栏偏移）
+ * rect.top 相对视口，必须换算成文档坐标后再 scrollTo，否则滚动过页面后会算错位置
+ */
+const scrollToElement = (element) => {
+  const scrollY = window.scrollY || window.pageYOffset || 0;
+  const top = Math.max(0, scrollY + element.getBoundingClientRect().top - 80);
+  window.scrollTo({ top, behavior: "smooth" });
+};
+
+/**
  * 平滑滚动至目标高度或元素
  * @param {number|HTMLElement} target - 目标高度或元素
  */
@@ -42,14 +52,12 @@ export const smoothScrolling = (target = 0) => {
       window.scrollTo({ top: target, behavior: "smooth" });
     } else if (target instanceof HTMLElement) {
       // 滚动至元素
-      const top = target.getBoundingClientRect().top - 80;
-      window.scrollTo({ top, behavior: "smooth" });
+      scrollToElement(target);
     } else if (typeof target === "string" && target.startsWith("#")) {
       // 滚动至 ID
       const element = document.querySelector(target);
       if (element) {
-        const top = element.getBoundingClientRect().top - 80;
-        window.scrollTo({ top, behavior: "smooth" });
+        scrollToElement(element);
       }
     } else {
       // 滚动至顶部
@@ -58,6 +66,63 @@ export const smoothScrolling = (target = 0) => {
   } catch (error) {
     console.error("平滑滚动出错：", error);
   }
+};
+
+/**
+ * 统一导航链接处理（Nav.vue / MobileMenu.vue 共用）
+ * - http: / https: 外部链接新标签打开
+ * - mailto: / tel: / sms: 交给浏览器协议处理
+ * - #hash 同页锚点：合成 <a> 点击交给 VitePress 拦截器，与原生锚点行为一致
+ * - 站内路径继续走 VitePress router
+ * - javascript: 等未知协议拒绝执行
+ * @param {string} link - 目标链接
+ * @param {object} router - VitePress router
+ * @returns {boolean} 是否已处理
+ */
+export const handleNavLink = (link, router) => {
+  if (typeof link !== "string") return false;
+  const url = link.trim();
+  if (!url) return false;
+  // 同页锚点：合成 <a> 点击交给 VitePress 的链接拦截器处理。
+  // 拦截器会 pushState({}) 并按锚点滚动，后退 / 前进也按锚点位置恢复；
+  // 手工 pushState 透传的 state 里带 scrollPosition 时会按入栈前位置恢复，对不齐原生行为
+  if (url.startsWith("#")) {
+    const anchor = document.createElement("a");
+    anchor.href = url;
+    anchor.style.display = "none";
+    document.body.appendChild(anchor);
+    anchor.click();
+    anchor.remove();
+    return true;
+  }
+  // 协议相对 URL 视为外部链接
+  if (url.startsWith("//")) {
+    window.open(`https:${url}`, "_blank", "noopener,noreferrer");
+    return true;
+  }
+  // 站内路径（含相对路径）
+  if (url.startsWith("/") || !/^[a-z][a-z0-9+.-]*:/i.test(url)) {
+    // 同源静态资源（rss.xml 等，可能带 query/hash）交给浏览器加载，router.go 只会渲染出 404
+    const filePath = url.split(/[?#]/)[0];
+    if (url.startsWith("/") && /\.(xml|json|pdf|txt|zip)$/i.test(filePath)) {
+      window.location.href = url;
+      return true;
+    }
+    router.go(url);
+    return true;
+  }
+  const protocol = url.slice(0, url.indexOf(":")).toLowerCase();
+  if (protocol === "http" || protocol === "https") {
+    window.open(url, "_blank", "noopener,noreferrer");
+    return true;
+  }
+  if (protocol === "mailto" || protocol === "tel" || protocol === "sms") {
+    // 交给浏览器协议处理器
+    window.location.href = url;
+    return true;
+  }
+  // javascript: 等未知协议拒绝执行
+  return false;
 };
 
 /**
