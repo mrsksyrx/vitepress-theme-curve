@@ -26,30 +26,36 @@ function isAllowedUrl(raw: string): URL | null {
   return null;
 }
 
-/** 逐跳跟 302，不拉取响应体；每一跳都过白名单，防跳转型 SSRF。 */
+const MAX_REDIRECTS = 5;
+const REDIRECT_STATUSES = new Set([301, 302, 303, 307, 308]);
+
+/** 逐跳跟重定向，不拉取响应体；每一跳都过白名单，防跳转型 SSRF。 */
 async function resolveAudioUrl(raw: string): Promise<string> {
   let current = isAllowedUrl(raw);
   if (!current) throw new Error("URL not allowed");
 
-  for (let i = 0; i < 5; i++) {
+  for (let redirects = 0; ; redirects += 1) {
     const res = await fetch(current.toString(), {
       method: "GET",
       redirect: "manual",
       signal: AbortSignal.timeout(5000),
       headers: { "User-Agent": "Mozilla/5.0" },
     });
-    if (res.status >= 300 && res.status < 400) {
-      const loc = res.headers.get("location");
-      if (!loc) break;
-      const next = isAllowedUrl(new URL(loc, current).toString());
-      if (!next) throw new Error("redirect target not allowed");
-      current = next;
-      continue;
+    // 这里只需要状态和 Location，立即取消未使用的响应体，避免占用连接。
+    await res.body?.cancel?.();
+    if (!REDIRECT_STATUSES.has(res.status)) {
+      // CDN 对 https 一视同仁，把 http 强升为 https 即可绕过混合内容拦截
+      return current.toString().replace(/^http:\/\//i, "https://");
     }
-    break;
+
+    const loc = res.headers.get("location");
+    if (!loc) throw new Error("redirect response missing Location");
+    if (redirects >= MAX_REDIRECTS) throw new Error("too many redirects");
+
+    const next = isAllowedUrl(new URL(loc, current).toString());
+    if (!next) throw new Error("redirect target not allowed");
+    current = next;
   }
-  // CDN 对 https 一视同仁，把 http 强升为 https 即可绕过混合内容拦截
-  return current.toString().replace(/^http:\/\//i, "https://");
 }
 
 export async function onRequestGet(context: any) {

@@ -52,6 +52,7 @@
             :key="linkIndex"
             :href="link.link"
             :target="link.newTab ? '_blank' : null"
+            :rel="link.newTab ? 'noopener noreferrer' : null"
             class="link-text"
           >
             {{ link.text }}

@@ -139,8 +139,11 @@
 import { mainStore } from "@/store";
 
 const store = mainStore();
+const { theme } = useData();
 
-const visible = computed(() => store.islandStyle === "extended" && store.playerShow);
+const visible = computed(
+  () => store.islandStyle === "extended" && store.playerShow && theme.value.music?.enable === true,
+);
 const pillStackHidden = ref(false);
 const isMobile = ref(typeof window !== "undefined" && window.innerWidth <= 768);
 
@@ -207,7 +210,7 @@ const parseLrc = (text) => {
   const lines = text.split("\n");
   const result = [];
   const timeMap = new Map();
-  const timeExp = /\[(\d{2,}):(\d{2})(?:\.(\d{2,3}))?\]/g;
+  const timeExp = /\[(\d{1,3}):(\d{2})(?:\.(\d{2,3}))?\]/g;
   for (const line of lines) {
     const matches = [...line.matchAll(timeExp)];
     if (matches.length > 0) {

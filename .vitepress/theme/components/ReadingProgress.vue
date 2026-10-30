@@ -12,6 +12,7 @@
 <script setup>
 import { storeToRefs } from "pinia";
 import { mainStore } from "@/store";
+import { safeStorage } from "@/utils/safeStorage.mjs";
 
 const store = mainStore();
 const { readingProgressEnabled, readingHistoryLimit } = storeToRefs(store);
@@ -89,7 +90,7 @@ const saveReadingData = (postId = route.path) => {
 
   let readingData = {};
   try {
-    readingData = JSON.parse(localStorage.getItem("readingData") || "{}") || {};
+    readingData = JSON.parse(safeStorage.getItem("readingData") || "{}") || {};
   } catch {
     readingData = {};
   }
@@ -109,7 +110,7 @@ const saveReadingData = (postId = route.path) => {
     sortedKeys.slice(0, keys.length - limit).forEach((key) => delete readingData[key]);
   }
 
-  localStorage.setItem("readingData", JSON.stringify(readingData));
+  safeStorage.setItem("readingData", JSON.stringify(readingData));
 };
 
 // [B29] 持久化与滚动解耦：静默节流 + 变化阈值 + 空闲写入

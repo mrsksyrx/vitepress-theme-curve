@@ -22,6 +22,7 @@
 
 <script setup>
 import { unlockPost, decryptWithKey } from "@/utils/decryptPost.mjs";
+import { safeStorage } from "@/utils/safeStorage.mjs";
 
 const props = defineProps({
   // 旧版明文密码（未走构建期加密时的兜底）
@@ -46,20 +47,16 @@ const inputPassword = ref("");
 const errorMessage = ref("");
 const verifying = ref(false);
 
-// localStorage 读写（损坏时降级为空对象，不抛异常）
+// 已解锁记录读写（JSON 损坏时降级为空对象；存储异常由 safeStorage 兜底，不抛错）
 const readStore = () => {
   try {
-    return JSON.parse(localStorage.getItem("unlockedPosts") || "{}");
+    return JSON.parse(safeStorage.getItem("unlockedPosts") || "{}") || {};
   } catch {
     return {};
   }
 };
 const writeStore = (store) => {
-  try {
-    localStorage.setItem("unlockedPosts", JSON.stringify(store));
-  } catch {
-    // 存储不可用时仅本次会话有效
-  }
+  safeStorage.setItem("unlockedPosts", JSON.stringify(store));
 };
 
 // 已保存的密钥匹配当前密文时直接解密（跳过 PBKDF2）

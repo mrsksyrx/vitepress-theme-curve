@@ -304,6 +304,9 @@ const parsedLyrics = ref([]);
 const currentLyricLines = ref([]);
 const currentLyricKey = ref("");
 const hasStartedPlayback = ref(false);
+let lyricRequestId = 0;
+let coverRequestId = 0;
+let disposed = false;
 
 // 解析 LRC 文本
 const parseLrc = (text) => {
@@ -342,6 +345,7 @@ const parseLrc = (text) => {
 
 // 加载歌词
 const loadLyrics = async (lrc) => {
+  const requestId = ++lyricRequestId;
   parsedLyrics.value = [];
   currentLyricLines.value = [];
   currentLyricKey.value = "";
@@ -350,20 +354,22 @@ const loadLyrics = async (lrc) => {
   if (lrc.startsWith("http") || lrc.startsWith("/")) {
     try {
       const res = await fetch(lrc);
-      if (res.ok) {
-        const text = await res.text();
+      const text = await res.text();
+      if (res.ok && !disposed && requestId === lyricRequestId) {
         parsedLyrics.value = parseLrc(text);
       }
     } catch (e) {
+      if (disposed || requestId !== lyricRequestId) return;
       console.warn("Failed to load lyrics", e);
     }
-  } else {
+  } else if (!disposed && requestId === lyricRequestId) {
     parsedLyrics.value = parseLrc(lrc);
   }
 };
 
 // 加载音频内嵌封面
 const loadEmbeddedCover = async (src) => {
+  const requestId = ++coverRequestId;
   embeddedCover.value = "";
   if (!src || typeof window === "undefined") return;
 
@@ -376,6 +382,7 @@ const loadEmbeddedCover = async (src) => {
     const abs = new URL(src, location.href).href;
     jsmediatags.read(abs, {
       onSuccess: (tag) => {
+        if (disposed || requestId !== coverRequestId) return;
         try {
           const picture = tag.tags?.picture;
           if (picture) {
@@ -390,10 +397,11 @@ const loadEmbeddedCover = async (src) => {
         }
       },
       onError: (error) => {
+        if (disposed || requestId !== coverRequestId) return;
         console.warn("Failed to read embedded cover tags", error);
       },
     });
-  } catch (err) {
+  } catch {
     // ignore errors
   }
 };
@@ -446,6 +454,13 @@ watch(
     loadLyrics(newLrc);
   },
   { immediate: true },
+);
+
+watch(
+  () => playlist.value.length,
+  (length) => {
+    if (length === 0 || currentIndex.value >= length) currentIndex.value = 0;
+  },
 );
 
 watch(currentTime, (newTime) => {
@@ -668,6 +683,9 @@ onMounted(() => {
 });
 
 onBeforeUnmount(() => {
+  disposed = true;
+  lyricRequestId += 1;
+  coverRequestId += 1;
   endDrag();
   if (observer) observer.disconnect();
   if (audioRef.value) {

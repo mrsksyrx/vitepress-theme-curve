@@ -31,6 +31,16 @@ export const calculateScroll = throttle(
 );
 
 /**
+ * 滚动到元素位置（带顶栏偏移）
+ * rect.top 相对视口，必须换算成文档坐标后再 scrollTo，否则滚动过页面后会算错位置
+ */
+const scrollToElement = (element) => {
+  const scrollY = window.scrollY || window.pageYOffset || 0;
+  const top = Math.max(0, scrollY + element.getBoundingClientRect().top - 80);
+  window.scrollTo({ top, behavior: "smooth" });
+};
+
+/**
  * 平滑滚动至目标高度或元素
  * @param {number|HTMLElement} target - 目标高度或元素
  */
@@ -42,14 +52,12 @@ export const smoothScrolling = (target = 0) => {
       window.scrollTo({ top: target, behavior: "smooth" });
     } else if (target instanceof HTMLElement) {
       // 滚动至元素
-      const top = target.getBoundingClientRect().top - 80;
-      window.scrollTo({ top, behavior: "smooth" });
+      scrollToElement(target);
     } else if (typeof target === "string" && target.startsWith("#")) {
       // 滚动至 ID
       const element = document.querySelector(target);
       if (element) {
-        const top = element.getBoundingClientRect().top - 80;
-        window.scrollTo({ top, behavior: "smooth" });
+        scrollToElement(element);
       }
     } else {
       // 滚动至顶部
@@ -58,6 +66,63 @@ export const smoothScrolling = (target = 0) => {
   } catch (error) {
     console.error("平滑滚动出错：", error);
   }
+};
+
+/**
+ * 统一导航链接处理（Nav.vue / MobileMenu.vue 共用）
+ * - http: / https: 外部链接新标签打开
+ * - mailto: / tel: / sms: 交给浏览器协议处理
+ * - #hash 同页锚点：合成 <a> 点击交给 VitePress 拦截器，与原生锚点行为一致
+ * - 站内路径继续走 VitePress router
+ * - javascript: 等未知协议拒绝执行
+ * @param {string} link - 目标链接
+ * @param {object} router - VitePress router
+ * @returns {boolean} 是否已处理
+ */
+export const handleNavLink = (link, router) => {
+  if (typeof link !== "string") return false;
+  const url = link.trim();
+  if (!url) return false;
+  // 同页锚点：合成 <a> 点击交给 VitePress 的链接拦截器处理。
+  // 拦截器会 pushState({}) 并按锚点滚动，后退 / 前进也按锚点位置恢复；
+  // 手工 pushState 透传的 state 里带 scrollPosition 时会按入栈前位置恢复，对不齐原生行为
+  if (url.startsWith("#")) {
+    const anchor = document.createElement("a");
+    anchor.href = url;
+    anchor.style.display = "none";
+    document.body.appendChild(anchor);
+    anchor.click();
+    anchor.remove();
+    return true;
+  }
+  // 协议相对 URL 视为外部链接
+  if (url.startsWith("//")) {
+    window.open(`https:${url}`, "_blank", "noopener,noreferrer");
+    return true;
+  }
+  // 站内路径（含相对路径）
+  if (url.startsWith("/") || !/^[a-z][a-z0-9+.-]*:/i.test(url)) {
+    // 同源静态资源（rss.xml 等，可能带 query/hash）交给浏览器加载，router.go 只会渲染出 404
+    const filePath = url.split(/[?#]/)[0];
+    if (url.startsWith("/") && /\.(xml|json|pdf|txt|zip)$/i.test(filePath)) {
+      window.location.href = url;
+      return true;
+    }
+    router.go(url);
+    return true;
+  }
+  const protocol = url.slice(0, url.indexOf(":")).toLowerCase();
+  if (protocol === "http" || protocol === "https") {
+    window.open(url, "_blank", "noopener,noreferrer");
+    return true;
+  }
+  if (protocol === "mailto" || protocol === "tel" || protocol === "sms") {
+    // 交给浏览器协议处理器
+    window.location.href = url;
+    return true;
+  }
+  // javascript: 等未知协议拒绝执行
+  return false;
 };
 
 /**
@@ -162,26 +227,51 @@ export const copyImage = async (imageURL) => {
  * 下载图片
  * @param {string} imageUrl 要下载的图片的URL地址
  */
-export const downloadImage = (imageUrl) => {
+export const downloadImage = async (imageUrl) => {
   try {
-    // 获取当前日期并转换为字符串形式，作为文件名
-    const date = new Date();
-    const timestamp = date.toISOString().replace(/[:.]/g, "-");
+    // 同源或允许 CORS 的图片可以读取 Blob，此时 download 属性可稳定生效。
+    const response = await fetch(imageUrl);
+    if (!response.ok) throw new Error(`image request failed: ${response.status}`);
+    const blob = await response.blob();
+
+    // blob.type 是实际内容类型；URL 扩展名只作为无 MIME 或未知 MIME 时的兜底。
+    const timestamp = new Date().toISOString().replace(/[:.]/g, "-");
+    const isImageMime = blob.type.startsWith("image/");
+    const mimeSubtype = blob.type.split("/")[1]?.split(";")[0]?.toLowerCase();
+    const mimeExt = !isImageMime
+      ? ""
+      : mimeSubtype === "svg+xml"
+        ? "svg"
+        : mimeSubtype === "x-icon" || mimeSubtype === "vnd.microsoft.icon"
+          ? "ico"
+          : mimeSubtype;
     const extMatch = /\.([a-zA-Z0-9]+)(?:[?#]|$)/.exec(imageUrl);
-    const ext = extMatch ? extMatch[1].toLowerCase() : "jpg";
+    const urlExt = extMatch ? extMatch[1].toLowerCase() : "";
+    const ext = mimeExt && /^[a-z0-9]+$/.test(mimeExt) ? mimeExt : urlExt || "jpg";
     const imageName = `image-${timestamp}.${ext}`;
-    const anchor = document.createElement("a");
-    anchor.download = imageName;
-    anchor.href = imageUrl;
-    anchor.target = "_blank";
-    anchor.style.display = "none";
-    document.body.appendChild(anchor);
-    anchor.click();
-    document.body.removeChild(anchor);
-  } catch (error) {
-    console.error("下载图片出错：", error);
+
+    const objectUrl = URL.createObjectURL(blob);
+    try {
+      const anchor = document.createElement("a");
+      anchor.download = imageName;
+      anchor.href = objectUrl;
+      anchor.style.display = "none";
+      document.body.appendChild(anchor);
+      anchor.click();
+      anchor.remove();
+    } finally {
+      // 下载任务启动是异步的；Firefox 过早 revoke 会让 blob 下载直接失败。
+      setTimeout(() => URL.revokeObjectURL(objectUrl), 60000);
+    }
     if (typeof $message !== "undefined") {
-      $message.error("下载图片错误，请重试");
+      $message.success("图片已开始下载");
+    }
+  } catch (error) {
+    // 跨域图片若未开放 CORS，浏览器无法读取响应内容；只能安全地打开原图降级。
+    console.warn("无法直接下载图片，已降级为新标签页打开：", error);
+    window.open(imageUrl, "_blank", "noopener,noreferrer");
+    if (typeof $message !== "undefined") {
+      $message.warning("该图片受跨域限制，无法直接下载，已在新标签页打开");
     }
   }
 };

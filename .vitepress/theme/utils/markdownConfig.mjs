@@ -128,7 +128,7 @@ const markdownConfig = (md, themeConfig) => {
     // 改为把灯箱属性挂到 <img>（Fancybox.bind("[data-fancybox]") 直接命中 img），
     // 并用 <span class="img-fancybox"> 保留 .img-fancybox / .post-img / .post-img-tip 的样式挂钩。
     if (insideLink(tokens, idx)) {
-      return `<span class="img-fancybox"><img class="post-img" src="${src}" alt="${alt}" loading="lazy" data-fancybox="gallery" data-caption="${alt}" /><span class="post-img-tip">${alt}</span></span>`;
+      return `<span class="img-fancybox"><img class="post-img" src="${src}" alt="${alt}" loading="lazy"${webpAttr} data-fancybox="gallery" data-caption="${alt}" /><span class="post-img-tip">${alt}</span></span>`;
     }
     return `<a class="img-fancybox" href="${src}" data-fancybox="gallery" data-caption="${alt}">
                 <img class="post-img" src="${src}" alt="${alt}" loading="lazy"${webpAttr} />

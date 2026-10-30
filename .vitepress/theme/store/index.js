@@ -1,6 +1,7 @@
 import { defineStore } from "pinia";
 import cursorInit from "@/utils/cursor.js";
 import { PERSIST_PATHS } from "@/utils/configKeys.mjs";
+import { safeStorage } from "@/utils/safeStorage.mjs";
 import { lockBodyScroll, unlockBodyScroll } from "@/utils/commonTools.mjs";
 
 let appCursorInstance;
@@ -16,35 +17,35 @@ const PERSIST_VERSION = 1;
 const DEFAULT_DEV_MODE = 1;
 
 // 模块加载时立即检查版本，确保在 pinia-persistedstate 水合之前清除旧缓存
-if (typeof localStorage !== "undefined") {
-  const storedVersion = parseInt(localStorage.getItem("siteDataVersion") || "0", 10);
+// （safeStorage 吞掉 SecurityError/QuotaExceededError，存储不可用时迁移直接降级跳过）
+{
+  const storedVersion = parseInt(safeStorage.getItem("siteDataVersion") || "0", 10);
   if (storedVersion !== PERSIST_VERSION) {
     // 版本迁移：清空旧持久化数据。站点版本/构建信息是构建期常量，
     // 不在 PERSIST_PATHS，无需保留——直接取当前构建的初始值即可。
-    localStorage.removeItem("siteData");
-    localStorage.setItem("siteDataVersion", String(PERSIST_VERSION));
+    safeStorage.removeItem("siteData");
+    safeStorage.setItem("siteDataVersion", String(PERSIST_VERSION));
   }
 }
 
 // 旧版本默认会直接使用卫星定位；迁移为 IP 定位，避免用户未主动选择时触发位置权限。
 // 仅迁移旧缓存中仍为 satellite 的值，后续用户在设置中选择“精确”仍会正常持久化。
 const migrateWeatherLocationDefault = () => {
-  if (typeof localStorage === "undefined") return;
   const migrationKey = "weatherLocationDefaultVersion";
-  if (Number(localStorage.getItem(migrationKey) || 0) >= 1) return;
+  if (Number(safeStorage.getItem(migrationKey) || 0) >= 1) return;
   try {
-    const raw = localStorage.getItem("siteData");
+    const raw = safeStorage.getItem("siteData");
     if (raw) {
       const persisted = JSON.parse(raw);
       if (persisted?.weatherLocationMode === "satellite") {
         persisted.weatherLocationMode = "ip";
-        localStorage.setItem("siteData", JSON.stringify(persisted));
+        safeStorage.setItem("siteData", JSON.stringify(persisted));
       }
     }
   } catch (error) {
     console.warn("天气定位默认值迁移失败：", error);
   }
-  localStorage.setItem(migrationKey, "1");
+  safeStorage.setItem(migrationKey, "1");
 };
 
 migrateWeatherLocationDefault();
@@ -178,8 +179,6 @@ export const mainStore = defineStore("main", {
       customThemeBeforeHighContrast: false,
       // 移除动画
       removeAnimations: false,
-      // PWA 缓存增强（预留；SW 缓存策略构建期写死，此开关当前不改变行为）
-      pwaCacheEnabled: true,
       // 本地搜索模式：off 不启用 / on 仅离线或 Algolia 失败时降级 / always 始终本地
       localSearchMode: "on",
       // 阅读历史条目上限（超出时按 lastVisit 裁剪 localStorage.readingData）
@@ -223,20 +222,14 @@ export const mainStore = defineStore("main", {
   },
   actions: {
     // 切换应用状态
-    changeShowStatus(value, blur = true) {
+    // 背景模糊由 Background.vue 根据各浮层状态计算，这里不再直接操作背景 class
+    changeShowStatus(value) {
       if (typeof document === "undefined") return; // 确保在客户端
 
       this[value] = !this[value];
       // 阻止滚动（引用计数，多弹窗并发时不会互相踩踏）
       if (this[value]) lockBodyScroll();
       else unlockBodyScroll();
-      // 背景层模糊（弹窗/导航保持清晰；close 模式下无背景层，开关无效）
-      const backgroundEl = document.querySelector(".background");
-      if (backgroundEl) {
-        this[value] && this.backgroundBlur && blur
-          ? backgroundEl.classList.add("blur")
-          : backgroundEl.classList.remove("blur");
-      }
     },
     // 更改字体大小
     changeFontSize(isAdd = false) {
@@ -293,6 +286,8 @@ export const mainStore = defineStore("main", {
     // 切换主题颜色
     changeThemeColor(color) {
       if (typeof document === "undefined") return;
+      // 枚举保护：非法主题色不落状态、不进 classList（与 App.vue 的守卫同一套白名单）
+      if (color !== "pink" && !THEME_COLOR_CLASSES.includes(`theme-${color}`)) return;
 
       this.themeColor = color;
       const html = document.documentElement;
@@ -464,6 +459,8 @@ export const mainStore = defineStore("main", {
     {
       key: "siteData",
       paths: PERSIST_PATHS,
+      // 统一走安全适配器：localStorage 不可用/写满时水合与写回直接降级，不抛异常
+      storage: safeStorage,
     },
   ],
 });

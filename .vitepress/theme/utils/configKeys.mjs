@@ -39,7 +39,6 @@ export const PERSIST_PATHS = [
   "lastCustomSecondaryColor",
   "customThemeBeforeHighContrast",
   "removeAnimations",
-  "pwaCacheEnabled",
   "localSearchMode",
   "readingHistoryLimit",
   "readingProgressEnabled",

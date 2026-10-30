@@ -334,25 +334,31 @@ export default withPwa(
               try {
                 let current = isAllowedUrl(raw);
                 if (!current) throw new Error("URL not allowed");
-                for (let i = 0; i < 5; i++) {
+                const maxRedirects = 5;
+                const redirectStatuses = new Set([301, 302, 303, 307, 308]);
+                for (let redirects = 0; ; redirects += 1) {
                   const hop = await fetch(current.toString(), {
                     method: "GET",
                     redirect: "manual",
                     signal: AbortSignal.timeout(5000),
                     headers: { "User-Agent": "Mozilla/5.0" },
                   });
-                  if (hop.status >= 300 && hop.status < 400) {
-                    const loc = hop.headers.get("location");
-                    if (!loc) break;
-                    const next = isAllowedUrl(new URL(loc, current).toString());
-                    if (!next) throw new Error("redirect target not allowed");
-                    current = next;
-                    continue;
+                  // 这里只需要状态和 Location，立即取消未使用的响应体，避免占用连接。
+                  await hop.body?.cancel?.();
+                  if (!redirectStatuses.has(hop.status)) {
+                    const url = current.toString().replace(/^http:\/\//i, "https://");
+                    res.end(JSON.stringify({ url }));
+                    return;
                   }
-                  break;
+
+                  const loc = hop.headers.get("location");
+                  if (!loc) throw new Error("redirect response missing Location");
+                  if (redirects >= maxRedirects) throw new Error("too many redirects");
+
+                  const next = isAllowedUrl(new URL(loc, current).toString());
+                  if (!next) throw new Error("redirect target not allowed");
+                  current = next;
                 }
-                const url = current.toString().replace(/^http:\/\//i, "https://");
-                res.end(JSON.stringify({ url }));
               } catch (e) {
                 res.statusCode = 502;
                 res.end(JSON.stringify({ error: e.message || "resolve failed" }));
@@ -466,10 +472,16 @@ export default withPwa(
         navigateFallback: undefined,
         // 运行时缓存策略：页面/数据优先取网络，静态资源才长期缓存
         runtimeCaching: [
-          // API 请求 - 网络优先（仅同源；跨域 Meting 等不得被拦截，
+          // API 请求 - 网络优先（仅同源 GET；跨域 Meting 等不得被拦截，
           // 其 pathname 也是 /api/，且 type=url 为 302 跳转链，进 SW 会 no-response）
+          // /api/visit 虽是 GET，但一次请求同时累加 PV/UV，属于有状态接口：
+          // 离线回放旧响应会重复/错记计数，直接排除出缓存（未匹配的请求默认纯网络）
           {
-            urlPattern: ({ url, sameOrigin }) => sameOrigin && url.pathname.startsWith("/api/"),
+            urlPattern: ({ request, url, sameOrigin }) =>
+              sameOrigin &&
+              request.method === "GET" &&
+              url.pathname.startsWith("/api/") &&
+              !/^\/api\/visit(?:\/|$)/i.test(url.pathname),
             handler: "NetworkFirst",
             options: {
               cacheName: "api-cache",

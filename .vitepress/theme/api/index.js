@@ -82,12 +82,16 @@ export const getMusicList = async (url, id, server = "netease", type = "playlist
   const ids = Array.isArray(id) ? id : [id];
   // allSettled：单个 id 失败（404/非 JSON）不应拖垮整份歌单，保留成功的条目
   const results = await Promise.allSettled(
-    ids.map((pid) =>
-      fetch(`${url}?server=${server}&type=${type}&id=${pid}`).then((r) => {
+    ids.map((pid) => {
+      const requestUrl = new URL(url, globalThis.location?.origin);
+      requestUrl.searchParams.set("server", String(server));
+      requestUrl.searchParams.set("type", String(type));
+      requestUrl.searchParams.set("id", String(pid));
+      return fetch(requestUrl).then((r) => {
         if (!r.ok) throw new Error(`HTTP ${r.status}`);
         return r.json();
-      }),
-    ),
+      });
+    }),
   );
   const merged = results
     .filter((r) => r.status === "fulfilled")

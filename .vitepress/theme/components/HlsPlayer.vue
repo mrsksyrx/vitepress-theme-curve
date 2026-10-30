@@ -42,15 +42,28 @@ function loadHlsJsOnce() {
   if (window.Hls) return Promise.resolve(window.Hls);
   if (hlsJsLoader) return hlsJsLoader;
 
-  hlsJsLoader = new Promise((resolve, reject) => {
+  const loader = new Promise((resolve, reject) => {
     const script = document.createElement("script");
     script.src = "https://cdn.jsdmirror.com/npm/hls.js@latest";
-    script.onload = () => resolve(window.Hls);
-    script.onerror = reject;
+    script.onload = () => {
+      if (window.Hls) {
+        resolve(window.Hls);
+        return;
+      }
+      script.remove();
+      hlsJsLoader = null;
+      reject(new Error("HLS.js loaded without exposing window.Hls"));
+    };
+    script.onerror = () => {
+      script.remove();
+      hlsJsLoader = null;
+      reject(new Error("HLS.js failed to load"));
+    };
     document.head.appendChild(script);
   });
+  hlsJsLoader = loader;
 
-  return hlsJsLoader;
+  return loader;
 }
 
 async function initPlayer() {

@@ -39,10 +39,11 @@ const groupByYear = (posts) => {
   posts.forEach((post) => {
     if (!post.date && !post.dateYMD) return;
 
-    // 优先用 dateYMD（作者日历日，与访客时区无关）；旧索引无此字段时回退本地解析
+    // 优先用 dateYMD（作者日历日，与访客时区无关）；
+    // 旧索引的 date 是 UTC 零点锚定，回退时也应取 UTC 年份，避免本地年错一天
     const year = post.dateYMD
       ? post.dateYMD.slice(0, 4)
-      : new Date(post.date).getFullYear().toString();
+      : new Date(post.date).getUTCFullYear().toString();
     if (!archiveData[year]) {
       archiveData[year] = {
         count: 0,

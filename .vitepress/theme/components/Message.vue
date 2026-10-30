@@ -203,7 +203,14 @@
   </Teleport>
 </template>
 
+<script>
+// 模块级自增序号：同一毫秒内多条消息也能生成唯一 key
+let msgKeyCounter = 0;
+</script>
+
 <script setup>
+// 上方普通 <script> 块的模块级声明合并后先于 import，import/first 会误报，故禁用
+/* eslint-disable import/first */
 import { mainStore } from "@/store";
 
 const store = mainStore();
@@ -319,7 +326,8 @@ const showMessage = (text, type = "info", options = {}, func = null) => {
     // 清除待执行的隐藏超时，防止新消息到达时容器被错误隐藏
     clearTimeout(islandWrapperHideTimeout.value);
 
-    const newKey = Date.now();
+    // 模块级自增序号做 key，避免同一毫秒多条消息覆盖 TransitionGroup 和超时记录
+    const newKey = ++msgKeyCounter;
     islandMessages.value.push({
       key: newKey,
       type,

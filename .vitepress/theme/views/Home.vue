@@ -30,13 +30,15 @@
 
 <script>
 // [B42] 模块级：组件随路由重挂载，实例级变量会丢，需跨实例记住最近列表页路径
+let lastListPath = null;
 </script>
 
 <script setup>
+// 上方普通 <script> 块的模块级声明合并后先于 import，import/first 会误报，故禁用
+/* eslint-disable import/first */
 import { mainStore } from "@/store";
 import { useDesktopAside } from "@/utils/useDesktopAside.mjs";
 import { usePostData } from "@/utils/usePostData.mjs";
-let lastListPath = null;
 
 const route = useRoute();
 const { theme } = useData();
