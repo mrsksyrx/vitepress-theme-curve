@@ -29,7 +29,7 @@ await fs.outputJson("public/data/postData.json", postData);
 const themeConfig = await getThemeConfig();
 
 // 本地全文搜索索引（search.enable 关闭时跳过，避免无谓产物）
-// public/data/*.json 会被 Workbox globPatterns 含 json 的规则自动 precache
+// public/data/*.json 走 SW 的网络优先运行时缓存，避免旧索引长期生效
 if (themeConfig.search?.enable) {
   await fs.outputJson("public/data/localSearch.json", await generateSearchIndex());
 }
@@ -461,7 +461,10 @@ export default withPwa(
         clientsClaim: true,
         skipWaiting: true,
         cleanupOutdatedCaches: true,
-        // 运行时缓存策略
+        // 关闭默认的 index.html 导航兜底：它会把所有导航都当成 precache 命中，
+        // 导致刷新也长期读旧壳，功能更新迟迟不可见。导航改为下面的网络优先策略。
+        navigateFallback: undefined,
+        // 运行时缓存策略：页面/数据优先取网络，静态资源才长期缓存
         runtimeCaching: [
           // API 请求 - 网络优先（仅同源；跨域 Meting 等不得被拦截，
           // 其 pathname 也是 /api/，且 type=url 为 302 跳转链，进 SW 会 no-response）
@@ -477,11 +480,15 @@ export default withPwa(
               },
             },
           },
-          // 文章页面 - 网络优先，离线回退缓存
-          // cleanUrls 模式下永不命中（URL 不带 .html 后缀），保留供 cleanUrls 关闭时使用
-          /*
+          // 页面导航 - 网络优先，离线回退最近一次缓存。
+          // 这里必须覆盖根路径 /，否则旧的 precache index.html 仍会被命中。
           {
-            urlPattern: ({ url, sameOrigin }) => sameOrigin && /\.html$/i.test(url.pathname),
+            urlPattern: ({ request, url, sameOrigin }) =>
+              sameOrigin &&
+              request.mode === "navigate" &&
+              !/^(?:\/sitemap\.xml|\/rss\.xml|\/robots\.txt|\/redirect(?:\.html)?(?:\/|$))/i.test(
+                url.pathname,
+              ),
             handler: "NetworkFirst",
             options: {
               cacheName: "html-cache",
@@ -492,58 +499,59 @@ export default withPwa(
               },
             },
           },
-          */
-          // VitePress 生成的页面路由（cleanUrls 模式，排除根级带点文件）
+          // 构建期生成的 JSON（hashmap、postData、搜索索引）也要能及时更新
           {
-            urlPattern: ({ url, sameOrigin }) =>
-              sameOrigin &&
-              /^\/[^/]+\/?$/.test(url.pathname) &&
-              !/\.(?:js|mjs|css|map|json|txt|xml|ico|png|jpe?g|gif|svg|webp|avif|woff2?|ttf|otf|webmanifest)$/i.test(
-                url.pathname,
-              ),
+            urlPattern: ({ url, sameOrigin }) => sameOrigin && /\.json$/i.test(url.pathname),
             handler: "NetworkFirst",
             options: {
-              cacheName: "page-cache",
+              cacheName: "json-cache",
               networkTimeoutSeconds: 3,
               expiration: {
-                maxEntries: 100,
-                maxAgeSeconds: 7 * 24 * 60 * 60, // 7 天
+                maxEntries: 50,
+                maxAgeSeconds: 24 * 60 * 60, // 1 天
               },
             },
           },
-          // 文章详情页路由（排除静态资源后缀）
+          // 字体 - 缓存优先（内容通常不变）
           {
             urlPattern: ({ url, sameOrigin }) =>
-              sameOrigin &&
-              /^\/[^/]+\/.+/.test(url.pathname) &&
-              !/\.(?:js|mjs|css|map|json|txt|xml|ico|png|jpe?g|gif|svg|webp|avif|woff2?|ttf|otf|webmanifest)$/i.test(
-                url.pathname,
-              ),
-            handler: "NetworkFirst",
-            options: {
-              cacheName: "post-cache",
-              networkTimeoutSeconds: 3,
-              expiration: {
-                maxEntries: 100,
-                maxAgeSeconds: 7 * 24 * 60 * 60, // 7 天
-              },
-            },
-          },
-          // 字体和样式 - 缓存优先
-          {
-            urlPattern: /\.(woff2|woff|ttf|css)$/i,
+              sameOrigin && /\.(?:woff2|woff|ttf)$/i.test(url.pathname),
             handler: "CacheFirst",
             options: {
-              cacheName: "static-assets-cache",
+              cacheName: "font-cache",
               expiration: {
                 maxEntries: 100,
                 maxAgeSeconds: 30 * 24 * 60 * 60, // 30 天
               },
             },
           },
-          // 图片 - 缓存优先
+          // 样式 - 同源优先网络，第三方 CSS 才后台更新，避免更新后仍长时间套旧样式
           {
-            urlPattern: /\.(ico|webp|png|jpe?g|svg|gif|bmp|psd|tiff|tga|eps)$/i,
+            urlPattern: ({ url, sameOrigin }) => sameOrigin && /\.css$/i.test(url.pathname),
+            handler: "NetworkFirst",
+            options: {
+              cacheName: "css-cache",
+              networkTimeoutSeconds: 3,
+              expiration: {
+                maxEntries: 100,
+                maxAgeSeconds: 7 * 24 * 60 * 60, // 7 天
+              },
+            },
+          },
+          {
+            urlPattern: ({ url, sameOrigin }) => !sameOrigin && /\.css$/i.test(url.pathname),
+            handler: "StaleWhileRevalidate",
+            options: {
+              cacheName: "third-party-css-cache",
+              expiration: {
+                maxEntries: 50,
+                maxAgeSeconds: 7 * 24 * 60 * 60, // 7 天
+              },
+            },
+          },
+          // 图片 - 缓存优先（同源/第三方都适合长期缓存）
+          {
+            urlPattern: /\.(?:ico|webp|png|jpe?g|gif|svg|bmp|psd|tiff|tga|eps)$/i,
             handler: "CacheFirst",
             options: {
               cacheName: "image-cache",
@@ -553,12 +561,24 @@ export default withPwa(
               },
             },
           },
-          // JS 资源 - 第三方无 hash JS 需要后台更新
+          // JS - 同源优先网络，第三方无 hash JS 后台更新
           {
-            urlPattern: /\.js$/i,
-            handler: "StaleWhileRevalidate",
+            urlPattern: ({ url, sameOrigin }) => sameOrigin && /\.js$/i.test(url.pathname),
+            handler: "NetworkFirst",
             options: {
               cacheName: "js-cache",
+              networkTimeoutSeconds: 3,
+              expiration: {
+                maxEntries: 100,
+                maxAgeSeconds: 7 * 24 * 60 * 60, // 7 天
+              },
+            },
+          },
+          {
+            urlPattern: ({ url, sameOrigin }) => !sameOrigin && /\.js$/i.test(url.pathname),
+            handler: "StaleWhileRevalidate",
+            options: {
+              cacheName: "third-party-js-cache",
               expiration: {
                 maxEntries: 100,
                 maxAgeSeconds: 7 * 24 * 60 * 60, // 7 天
@@ -566,8 +586,9 @@ export default withPwa(
             },
           },
         ],
-        // 预缓存构建产物
-        globPatterns: ["**/*.{js,css,html,ico,png,jpg,jpeg,gif,svg,woff2,ttf,json}"],
+        // 预缓存构建产物：不再预缓存 HTML/JSON，
+        // 否则 Workbox precache 路由会优先于上面的网络优先路由，刷新仍读旧内容。
+        globPatterns: ["**/*.{js,css,ico,png,jpg,jpeg,gif,svg,woff2,ttf}"],
         globIgnores: ["**/vp-icons.css", "**/sitemap.xml", "**/rss.xml"],
         // 排除路径
         navigateFallbackDenylist: [

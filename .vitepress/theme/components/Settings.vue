@@ -1665,32 +1665,77 @@
             </div>
           </Transition>
           <div class="set-item">
-            <span class="set-label">恢复默认配置</span>
+            <span class="set-label">还原</span>
             <div class="set-options">
               <span
-                v-if="!showResetConfirm"
-                class="options reset-btn"
-                @click="
-                  showResetConfirm = true;
-                  scrollToResetWarn();
-                  showResetWarning();
-                "
+                :class="['options', { choose: restoreSectionExpanded }]"
+                @click="restoreSectionExpanded = !restoreSectionExpanded"
               >
-                确认
+                {{ restoreSectionExpanded ? "收起" : "展开" }}
               </span>
             </div>
           </div>
           <Transition name="fade-up">
-            <div
-              v-if="showResetConfirm"
-              ref="resetWarnRef"
-              class="set-warn"
-              @click="showResetConfirm = false"
-            >
-              <span class="warn-text"
-                >你指的是要恢复默认配置吗，此操作将清空所有本地存储并完全重新拉取资源</span
-              >
-              <span class="options" @click.stop="handleResetConfig">确认</span>
+            <div v-if="restoreSectionExpanded" class="set-expand-box">
+              <div class="set-item">
+                <span class="set-label">恢复默认配置</span>
+                <div class="set-options">
+                  <span
+                    v-if="!showResetConfirm"
+                    class="options reset-btn"
+                    @click="
+                      showResetConfirm = true;
+                      scrollToResetWarn();
+                      showResetWarning();
+                    "
+                  >
+                    确认
+                  </span>
+                </div>
+              </div>
+              <Transition name="fade-up">
+                <div
+                  v-if="showResetConfirm"
+                  ref="resetWarnRef"
+                  class="set-warn"
+                  @click="showResetConfirm = false"
+                >
+                  <span class="warn-text"
+                    >你指的是要恢复默认配置吗，此操作将重置设置面板中的所有配置项</span
+                  >
+                  <span class="options" @click.stop="handleResetConfig">确认</span>
+                </div>
+              </Transition>
+              <div class="set-item">
+                <span class="set-label">清除所有数据</span>
+                <div class="set-options">
+                  <span
+                    v-if="!showClearAllConfirm"
+                    class="options reset-btn"
+                    @click="
+                      showClearAllConfirm = true;
+                      scrollToClearAllWarn();
+                      showClearAllWarning();
+                    "
+                  >
+                    确认
+                  </span>
+                </div>
+              </div>
+              <Transition name="fade-up">
+                <div
+                  v-if="showClearAllConfirm"
+                  ref="clearAllWarnRef"
+                  class="set-warn"
+                  @click="showClearAllConfirm = false"
+                >
+                  <span class="warn-text"
+                    >你指的是要清除所有数据吗，此操作将清空全部本地存储、缓存并注销 Service
+                    Worker，且无法恢复</span
+                  >
+                  <span class="options" @click.stop="handleClearAllData">确认</span>
+                </div>
+              </Transition>
             </div>
           </Transition>
         </div>
@@ -1796,11 +1841,17 @@ const clearPwaCache = async () => {
     const runtimeCaches = [
       "api-cache",
       "html-cache",
+      "json-cache",
+      "font-cache",
+      "css-cache",
+      "third-party-css-cache",
+      "image-cache",
+      "js-cache",
+      "third-party-js-cache",
+      // 兼容旧版本缓存名
       "page-cache",
       "post-cache",
       "static-assets-cache",
-      "image-cache",
-      "js-cache",
     ];
     let cleared = 0;
     for (const name of cacheNames) {
@@ -2021,6 +2072,8 @@ const confirmCustomIds = () => {
 };
 // 展开所有设置分组（开发模式启用时默认开启；手动关闭仅本会话有效，不写入 index.js）
 const aboutWebsiteExpanded = ref(false);
+// 「还原」合并菜单展开状态（收拢恢复默认配置 / 清除所有数据）
+const restoreSectionExpanded = ref(false);
 // 开发模式选项里「版本信息」合并菜单展开状态
 const versionFieldsExpanded = ref(false);
 const expandAllGroups = ref(store.devMode === 2);
@@ -2036,6 +2089,7 @@ const applyExpandAllGroups = () => {
   aboutWebsiteExpanded.value = true;
   branchStrategyExpanded.value = true;
   beautifyExpanded.value = true;
+  restoreSectionExpanded.value = true;
 };
 const applyCollapseAllGroups = () => {
   themeColorExpanded.value = false;
@@ -2049,6 +2103,7 @@ const applyCollapseAllGroups = () => {
   aboutWebsiteExpanded.value = false;
   branchStrategyExpanded.value = false;
   beautifyExpanded.value = false;
+  restoreSectionExpanded.value = false;
 };
 const handleExpandAllGroups = () => {
   expandAllGroups.value = true;
@@ -2375,21 +2430,52 @@ const scrollToResetWarn = () => {
     resetWarnRef.value?.scrollIntoView({ behavior: "smooth", block: "center" });
   });
 };
-const handleResetConfig = async () => {
+const handleResetConfig = () => {
   showResetConfirm.value = false;
   if (typeof $message !== "undefined") {
     $message.warning("配置已恢复默认，页面即将刷新");
   }
-  const dev = store.devMode;
-  // 站点版本/构建信息是构建期常量（不在 PERSIST_PATHS），无需保存/恢复
-  const savedVersion = localStorage.getItem("siteDataVersion");
+  // 仅重置设置面板：清除持久化配置键 siteData（承载全部 PERSIST_PATHS），
+  // 不触碰其它本地存储、Service Worker、缓存与 IndexedDB
+  localStorage.removeItem("siteData");
+  window.location.reload();
+};
+
+// 显示恢复默认配置警告
+const showResetWarning = () => {
+  if (typeof $message !== "undefined") {
+    $message.warning("即将恢复默认配置，请再次确认");
+  }
+};
+
+// 清除所有数据（比恢复默认配置更彻底：连同 Service Worker、Cache、IndexedDB 一并清除）
+const showClearAllConfirm = ref(false);
+const clearAllWarnRef = ref(null);
+const scrollToClearAllWarn = () => {
+  nextTick(() => {
+    clearAllWarnRef.value?.scrollIntoView({ behavior: "smooth", block: "center" });
+  });
+};
+const showClearAllWarning = () => {
+  if (typeof $message !== "undefined") {
+    $message.warning("即将清除所有数据，请再次确认");
+  }
+};
+const handleClearAllData = async () => {
+  showClearAllConfirm.value = false;
+  if (typeof $message !== "undefined") {
+    $message.warning("数据已清除，页面即将刷新");
+  }
+  // 清除前将开发模式写回默认值（清除所有数据包含开发模式状态）
   await saveStoreDefaults({
-    DEFAULT_DEV_MODE: dev,
+    DEFAULT_DEV_MODE: 1,
     bumpVersion: true,
   });
+
   // 清空 localStorage 和 sessionStorage
   localStorage.clear();
   sessionStorage.clear();
+
   // 注销所有 Service Worker
   if ("serviceWorker" in navigator) {
     const registrations = await navigator.serviceWorker.getRegistrations();
@@ -2397,6 +2483,7 @@ const handleResetConfig = async () => {
       await reg.unregister();
     }
   }
+
   // 清除所有 Cache API 缓存
   if ("caches" in window) {
     const names = await caches.keys();
@@ -2404,6 +2491,7 @@ const handleResetConfig = async () => {
       await caches.delete(name);
     }
   }
+
   // 清除所有 IndexedDB
   if ("indexedDB" in window) {
     const databases = await indexedDB.databases();
@@ -2413,15 +2501,7 @@ const handleResetConfig = async () => {
       }
     }
   }
-  if (savedVersion) localStorage.setItem("siteDataVersion", savedVersion);
   window.location.reload();
-};
-
-// 显示恢复默认配置警告
-const showResetWarning = () => {
-  if (typeof $message !== "undefined") {
-    $message.warning("即将恢复默认配置，请再次确认");
-  }
 };
 
 // 设置首页Banner高度
@@ -2861,6 +2941,7 @@ watch(
       themeColorExpanded.value = false;
       musicPlayerExpanded.value = false;
       widgetsSectionExpanded.value = false;
+      restoreSectionExpanded.value = false;
       playerCustomIdsInput.value = playerCustomIds.value;
       closeDevModeConfirmVisible.value = false;
       // 重置开发模式入口状态
@@ -2887,6 +2968,7 @@ watch(
     if (!val) {
       showResetConfirm.value = false;
       importConfirmVisible.value = false;
+      showClearAllConfirm.value = false;
       // 关闭设置面板时，如果字体大小被修改过，恢复默认
       if (fontSizeEditing.value) {
         resetFontSize();
