@@ -127,9 +127,9 @@ const NUMBER_RULES = {
 // 字符串格式字段
 const isTimeHm = (v) => typeof v === "string" && /^([01]\d|2[0-3]):[0-5]\d$/.test(v);
 const STRING_RULES = {
-  // 逗号分隔的数字歌单 ID，空串合法（Player.vue 会 split/trim/filter）
+  // 逗号分隔的数字歌单 ID；空串合法（允许清空），非空值不允许空段
   playerCustomIds: (v) =>
-    typeof v === "string" && v.split(",").every((s) => /^\d*$/.test(s.trim())),
+    typeof v === "string" && (!v.trim() || v.split(",").every((s) => /^\d+$/.test(s.trim()))),
   scheduledLightTime: isTimeHm,
   scheduledDarkTime: isTimeHm,
   weatherManualCity: (v) => typeof v === "string" && v.length <= 100,

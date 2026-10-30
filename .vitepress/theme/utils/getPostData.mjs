@@ -1,7 +1,12 @@
 import { globby } from "globby";
 import matter from "gray-matter";
 import fs from "fs-extra";
-import { toLocalDayTimestamp, toUTCMidnightTimestamp, toDateString } from "./dateAnchor.mjs";
+import {
+  toLocalDayTimestamp,
+  toLocalDateStringFromTimestamp,
+  toUTCMidnightTimestamp,
+  toDateString,
+} from "./dateAnchor.mjs";
 import { normalizeList } from "./normalizeList.mjs";
 
 // 重新导出，保持既有引用（如 `.dsh_baseline` 探针、外部脚本）不失效。
@@ -142,7 +147,9 @@ export const getAllPosts = async () => {
           const parsedDate = date ? toUTCMidnightTimestamp(date) : NaN;
           const dateValue = Number.isNaN(parsedDate) ? birthtimeMs : parsedDate;
           // date 缺失或解析失败时统一从 dateValue 取日历日，保证 dateYMD 与 date 一致
-          const dateYMD = toDateString(Number.isNaN(parsedDate) ? new Date(birthtimeMs) : date);
+          const dateYMD = Number.isNaN(parsedDate)
+            ? toLocalDateStringFromTimestamp(birthtimeMs)
+            : toDateString(date);
           if (date && Number.isNaN(parsedDate)) {
             console.warn(
               `文章 '${item}' 的 date 无法解析（${JSON.stringify(date)}），已回退到文件创建时间`,

@@ -76,6 +76,23 @@ export const toDateString = (value) => {
 };
 
 /**
+ * 把运行时 timestamp（birthtimeMs、page.lastUpdated 等）转换为**本地日历日**。
+ * 与 toDateString 不同：YAML 作者日期按 UTC 日历日解释，运行时时间戳则应按
+ * 执行/浏览机器的本地日期解释，避免 UTC 午夜附近错开一天。
+ *
+ * @param {Date|number|string} value 运行时时间戳或 Date
+ * @returns {string|null} "YYYY-MM-DD"，无法解析时返回 null
+ */
+export const toLocalDateStringFromTimestamp = (value) => {
+  const date = value instanceof Date ? value : new Date(value);
+  if (Number.isNaN(date.getTime())) return null;
+  const y = date.getFullYear();
+  const m = String(date.getMonth() + 1).padStart(2, "0");
+  const d = String(date.getDate()).padStart(2, "0");
+  return `${y}-${m}-${d}`;
+};
+
+/**
  * 把日历日锚定为 **UTC 零点** 时间戳（与机器时区无关，可安全序列化到 postData.json）。
  * 排序/比较用它；展示请用 `dateYMD` 或 `toLocalDateFromUTCAnchor`。
  *

@@ -185,7 +185,11 @@ import { usePostData } from "@/utils/usePostData.mjs";
 // 后者顶部 import 了 globby / fs-extra（Node-only），引入会把它们打进浏览器
 // 产物（globby@14 → @sindresorhus/merge-streams → node:stream），导致构建失败：
 //   "PassThrough" is not exported by "__vite-browser-external"
-import { toUTCMidnightTimestamp, toDateString } from "@/utils/dateAnchor.mjs";
+import {
+  toUTCMidnightTimestamp,
+  toDateString,
+  toLocalDateStringFromTimestamp,
+} from "@/utils/dateAnchor.mjs";
 // 同样必须从零依赖模块引入，理由同 dateAnchor.mjs
 import { normalizeList } from "@/utils/normalizeList.mjs";
 import PasswordProtect from "@/components/PasswordProtect.vue";
@@ -221,7 +225,9 @@ const postMetaData = computed(() => {
     id: postId.value,
     title: frontmatter.value.title || page.value.title,
     date,
-    dateYMD: frontmatter.value.date ? toDateString(frontmatter.value.date) : toDateString(date),
+    dateYMD: frontmatter.value.date
+      ? toDateString(frontmatter.value.date)
+      : toLocalDateStringFromTimestamp(date),
     lastModified: page.value.lastUpdated,
     tags: normalizeList(frontmatter.value.tags),
     categories: normalizeList(frontmatter.value.categories),
@@ -262,12 +268,15 @@ watch(
 const handleUnlocked = async (html) => {
   // 纵深防御：解密 HTML 仍走 v-html，先过一遍 DOMPurify
   // （默认已放行 data-* / class / style，此处补齐任务清单复选框）
-  if (html) {
-    decryptedHtml.value = DOMPurify.sanitize(html, {
-      ADD_TAGS: ["input"],
-      ADD_ATTR: ["checked", "disabled"],
-    });
-  }
+  // undefined 是旧版明文密码解锁，不提供解密 HTML，继续走 <Content />；
+  // "" 是加密文章的空正文，必须保留为空字符串，不能回落到 <Content />。
+  decryptedHtml.value =
+    html === undefined
+      ? null
+      : DOMPurify.sanitize(html ?? "", {
+          ADD_TAGS: ["input"],
+          ADD_ATTR: ["checked", "disabled"],
+        });
   isUnlocked.value = true;
   // 解密内容晚于首次挂载插入，代码高亮需要补一次
   await nextTick();

@@ -2042,8 +2042,21 @@ const setMobileWidgetsEnabled = (enabled) => {
 };
 // 自定义歌单 ID 临时输入值
 const playerCustomIdsInput = ref(playerCustomIds.value);
+const normalizeCustomIds = (value) => {
+  const raw = String(value ?? "").trim();
+  if (!raw) return "";
+  const ids = raw.split(",").map((item) => item.trim());
+  return ids.every((id) => /^\d+$/.test(id)) ? ids.join(",") : null;
+};
 const confirmCustomIds = () => {
-  playerCustomIds.value = playerCustomIdsInput.value;
+  const nextIds = normalizeCustomIds(playerCustomIdsInput.value);
+  if (nextIds === null) {
+    if (typeof $message !== "undefined") {
+      $message.error("歌单 ID 只能是数字，多个 ID 请用逗号分隔");
+    }
+    return;
+  }
+  playerCustomIds.value = nextIds;
   if (typeof $message !== "undefined") {
     $message.success("歌单 ID 已更新");
   }
