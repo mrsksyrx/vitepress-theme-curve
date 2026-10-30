@@ -227,26 +227,51 @@ export const copyImage = async (imageURL) => {
  * 下载图片
  * @param {string} imageUrl 要下载的图片的URL地址
  */
-export const downloadImage = (imageUrl) => {
+export const downloadImage = async (imageUrl) => {
   try {
-    // 获取当前日期并转换为字符串形式，作为文件名
-    const date = new Date();
-    const timestamp = date.toISOString().replace(/[:.]/g, "-");
+    // 同源或允许 CORS 的图片可以读取 Blob，此时 download 属性可稳定生效。
+    const response = await fetch(imageUrl);
+    if (!response.ok) throw new Error(`image request failed: ${response.status}`);
+    const blob = await response.blob();
+
+    // blob.type 是实际内容类型；URL 扩展名只作为无 MIME 或未知 MIME 时的兜底。
+    const timestamp = new Date().toISOString().replace(/[:.]/g, "-");
+    const isImageMime = blob.type.startsWith("image/");
+    const mimeSubtype = blob.type.split("/")[1]?.split(";")[0]?.toLowerCase();
+    const mimeExt = !isImageMime
+      ? ""
+      : mimeSubtype === "svg+xml"
+        ? "svg"
+        : mimeSubtype === "x-icon" || mimeSubtype === "vnd.microsoft.icon"
+          ? "ico"
+          : mimeSubtype;
     const extMatch = /\.([a-zA-Z0-9]+)(?:[?#]|$)/.exec(imageUrl);
-    const ext = extMatch ? extMatch[1].toLowerCase() : "jpg";
+    const urlExt = extMatch ? extMatch[1].toLowerCase() : "";
+    const ext = mimeExt && /^[a-z0-9]+$/.test(mimeExt) ? mimeExt : urlExt || "jpg";
     const imageName = `image-${timestamp}.${ext}`;
-    const anchor = document.createElement("a");
-    anchor.download = imageName;
-    anchor.href = imageUrl;
-    anchor.target = "_blank";
-    anchor.style.display = "none";
-    document.body.appendChild(anchor);
-    anchor.click();
-    document.body.removeChild(anchor);
-  } catch (error) {
-    console.error("下载图片出错：", error);
+
+    const objectUrl = URL.createObjectURL(blob);
+    try {
+      const anchor = document.createElement("a");
+      anchor.download = imageName;
+      anchor.href = objectUrl;
+      anchor.style.display = "none";
+      document.body.appendChild(anchor);
+      anchor.click();
+      anchor.remove();
+    } finally {
+      // 下载任务启动是异步的；Firefox 过早 revoke 会让 blob 下载直接失败。
+      setTimeout(() => URL.revokeObjectURL(objectUrl), 60000);
+    }
     if (typeof $message !== "undefined") {
-      $message.error("下载图片错误，请重试");
+      $message.success("图片已开始下载");
+    }
+  } catch (error) {
+    // 跨域图片若未开放 CORS，浏览器无法读取响应内容；只能安全地打开原图降级。
+    console.warn("无法直接下载图片，已降级为新标签页打开：", error);
+    window.open(imageUrl, "_blank", "noopener,noreferrer");
+    if (typeof $message !== "undefined") {
+      $message.warning("该图片受跨域限制，无法直接下载，已在新标签页打开");
     }
   }
 };
