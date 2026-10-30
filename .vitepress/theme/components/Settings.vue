@@ -1841,11 +1841,17 @@ const clearPwaCache = async () => {
     const runtimeCaches = [
       "api-cache",
       "html-cache",
+      "json-cache",
+      "font-cache",
+      "css-cache",
+      "third-party-css-cache",
+      "image-cache",
+      "js-cache",
+      "third-party-js-cache",
+      // 兼容旧版本缓存名
       "page-cache",
       "post-cache",
       "static-assets-cache",
-      "image-cache",
-      "js-cache",
     ];
     let cleared = 0;
     for (const name of cacheNames) {
