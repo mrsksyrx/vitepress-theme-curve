@@ -37,6 +37,7 @@
 
 <script setup>
 import { getGreetings } from "@/utils/helper";
+import { safeStorage } from "@/utils/safeStorage.mjs";
 
 const { theme } = useData();
 
@@ -76,14 +77,14 @@ const changeHello = () => {
 // 是否具有用户
 const isHasUser = () => {
   // 检查本地存储
-  const userData = localStorage.getItem("ArtalkUser");
+  const userData = safeStorage.getItem("ArtalkUser");
   if (!userData) return false;
   let nick;
   try {
     ({ nick } = JSON.parse(userData) || {});
   } catch {
     // [B30] 解析失败说明 ArtalkUser 已损坏，清理掉避免后续每次挂载都重复踩坑
-    localStorage.removeItem("ArtalkUser");
+    safeStorage.removeItem("ArtalkUser");
     console.warn("[Hello] ArtalkUser 解析失败，已清除损坏数据");
     return false;
   }

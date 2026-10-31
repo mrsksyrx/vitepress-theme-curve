@@ -154,6 +154,23 @@ export const shufflePost = (postData) => {
 };
 
 /**
+ * 安全地在新标签页打开外部 URL：只放行 http/https，拒绝 javascript: 等伪协议。
+ * @param {string} url
+ * @returns {boolean} 是否已打开
+ */
+export const openExternalUrl = (url) => {
+  if (typeof url !== "string" || !url.trim()) return false;
+  try {
+    const parsed = new URL(url, window.location.href);
+    if (parsed.protocol !== "http:" && parsed.protocol !== "https:") return false;
+    window.open(parsed.href, "_blank", "noopener,noreferrer");
+    return true;
+  } catch {
+    return false;
+  }
+};
+
+/**
  * 复制文本到剪贴板
  * @param {string} data 要复制到剪贴板的文本
  */
@@ -269,9 +286,13 @@ export const downloadImage = async (imageUrl) => {
   } catch (error) {
     // 跨域图片若未开放 CORS，浏览器无法读取响应内容；只能安全地打开原图降级。
     console.warn("无法直接下载图片，已降级为新标签页打开：", error);
-    window.open(imageUrl, "_blank", "noopener,noreferrer");
+    const opened = openExternalUrl(imageUrl);
     if (typeof $message !== "undefined") {
-      $message.warning("该图片受跨域限制，无法直接下载，已在新标签页打开");
+      if (opened) {
+        $message.warning("该图片受跨域限制，无法直接下载，已在新标签页打开");
+      } else {
+        $message.error("图片地址不受支持");
+      }
     }
   }
 };

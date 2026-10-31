@@ -248,7 +248,14 @@
 <script setup>
 import { storeToRefs } from "pinia";
 import { mainStore } from "@/store";
-import { smoothScrolling, shufflePost, copyText, copyImage, downloadImage } from "@/utils/helper";
+import {
+  smoothScrolling,
+  shufflePost,
+  copyText,
+  copyImage,
+  downloadImage,
+  openExternalUrl,
+} from "@/utils/helper";
 import { useIsMobileLayout } from "@/utils/layout.js";
 import { usePostData } from "@/utils/usePostData.mjs";
 
@@ -410,7 +417,9 @@ const rightMenuFunc = async (type) => {
         break;
       case "open-link": {
         const linkUrl = clickedTypeData.value?.href;
-        if (linkUrl) window.open(linkUrl, "_blank", "noopener,noreferrer");
+        if (linkUrl && !openExternalUrl(linkUrl) && typeof $message !== "undefined") {
+          $message.error("链接协议不受支持");
+        }
         break;
       }
       case "copy-link":
