@@ -1373,6 +1373,23 @@
               </span>
             </div>
           </div>
+          <div class="set-item">
+            <span class="set-label">繁體中文轉換（實驗性）</span>
+            <div class="set-options">
+              <span
+                :class="['options', { choose: !traditionalChineseEnabled }]"
+                @click="setTraditionalChineseEnabled(false)"
+              >
+                關閉
+              </span>
+              <span
+                :class="['options', { choose: traditionalChineseEnabled }]"
+                @click="setTraditionalChineseEnabled(true)"
+              >
+                開啟
+              </span>
+            </div>
+          </div>
           <!-- 开发中的功能（开发模式） -->
           <template v-if="store.devMode === 2">
             <div class="set-item">
@@ -1733,6 +1750,7 @@ import { mainStore, DEFAULT_FONT_SIZE } from "@/store";
 import { useConfigIO } from "@/utils/useConfigIO.mjs";
 import { useIsMobileLayout } from "@/utils/layout.js";
 import { safeStorage } from "@/utils/safeStorage.mjs";
+import { markStorageReset, RESET_MODE_ALL, RESET_MODE_CONFIG } from "@/utils/storageReset.mjs";
 
 const store = mainStore();
 const { theme } = useData();
@@ -1797,6 +1815,7 @@ const {
   readingProgressEnabled,
   hoverLineEnabled,
   imageWebpEnabled,
+  traditionalChineseEnabled,
   weatherProvider,
   weatherLocationMode,
   weatherManualCity,
@@ -2031,6 +2050,11 @@ const setReadingHistoryLimit = (limit) => {
 const setImageWebpEnabled = (enabled) => {
   imageWebpEnabled.value = enabled;
   showSettingSuccess(`WebP 自动转换已${enabled ? "开启" : "关闭"}`);
+};
+
+const setTraditionalChineseEnabled = (enabled) => {
+  traditionalChineseEnabled.value = enabled;
+  showSettingSuccess(`页面语言已切换为${enabled ? "繁體中文" : "简体中文"}`);
 };
 // 移动端小组件面板：关闭时同步收起已打开的浮层
 const setMobileWidgetsEnabled = (enabled) => {
@@ -2369,36 +2393,74 @@ const randomizePersistVersion = async () => {
   }
 };
 
-// 清除所有 IndexedDB（“清除数据”与“清除所有数据”两条流程共用）
-// databases() 并非标准 API（Safari 等不支持枚举数据库），不支持时直接跳过，
-// 不阻断 localStorage、缓存与 Service Worker 的清理；
-// deleteDatabase 可能被已打开的连接 block，统一等待成功/失败/被阻塞后再返回
-const clearIndexedDb = async () => {
-  if (typeof indexedDB === "undefined" || typeof indexedDB.databases !== "function") return;
-  let dbs = [];
+// 浏览器数据清理。各项独立兜底：任一 API 权限错误/不支持都不得阻断其它清理。
+const unregisterServiceWorkers = async () => {
+  if (typeof navigator === "undefined" || !("serviceWorker" in navigator)) return;
   try {
-    dbs = (await indexedDB.databases()) || [];
-  } catch {
-    // 枚举失败（权限或实现差异）时跳过，不阻断其余清理
-    return;
+    const registrations = (await navigator.serviceWorker.getRegistrations()) || [];
+    await Promise.allSettled(registrations.map((registration) => registration.unregister()));
+  } catch (error) {
+    console.warn("Service Worker 注销失败：", error);
   }
-  await Promise.all(
-    dbs
-      .filter((db) => db && db.name)
-      .map(
-        (db) =>
-          new Promise((resolve) => {
-            try {
-              const req = indexedDB.deleteDatabase(db.name);
-              req.onsuccess = resolve;
-              req.onerror = resolve;
-              req.onblocked = resolve;
-            } catch {
-              resolve();
-            }
-          }),
-      ),
-  );
+};
+
+const clearCacheStorage = async () => {
+  if (typeof window === "undefined" || !("caches" in window)) return;
+  try {
+    const names = (await caches.keys()) || [];
+    await Promise.allSettled(names.map((name) => caches.delete(name)));
+  } catch (error) {
+    console.warn("Cache Storage 清理失败：", error);
+  }
+};
+
+// databases() 并非标准 API（Safari 等不支持枚举），因此除枚举结果外，
+// 还要删除本项目依赖可能创建的固定库名，避免“不支持枚举 = 整个 IDB 不清理”
+const KNOWN_INDEXED_DB_NAMES = ["workbox-expiration", "workbox-background-sync", "keyval-store"];
+const deleteIndexedDb = (name) =>
+  new Promise((resolve) => {
+    try {
+      const request = indexedDB.deleteDatabase(name);
+      // blocked 时旧连接仍占着库；不无限等待，但要让调用方知道未确认删除
+      request.onsuccess = () => resolve(true);
+      request.onerror = () => resolve(false);
+      request.onblocked = () => resolve(false);
+    } catch {
+      resolve(false);
+    }
+  });
+
+const clearIndexedDb = async () => {
+  if (typeof indexedDB === "undefined") return;
+  const names = new Set(KNOWN_INDEXED_DB_NAMES);
+  if (typeof indexedDB.databases === "function") {
+    try {
+      const dbs = (await indexedDB.databases()) || [];
+      dbs.filter((db) => db && db.name).forEach((db) => names.add(db.name));
+    } catch (error) {
+      // 枚举失败（权限或实现差异）时继续删除固定库名，不阻断其余清理
+      console.warn("IndexedDB 枚举失败：", error);
+    }
+  }
+  await Promise.allSettled([...names].map(deleteIndexedDb));
+};
+
+const clearBrowserData = async () => {
+  // 先注销 SW，避免清理 Cache/IDB 后又被运行中的 worker 重新写入
+  await unregisterServiceWorkers();
+  await Promise.allSettled([clearCacheStorage(), clearIndexedDb()]);
+};
+
+// 清空 Web Storage 后进入跨刷新写保护，防止 reload 未提交前被订阅写回
+const clearWebStorageAndReload = (mode) => {
+  safeStorage.clear();
+  try {
+    sessionStorage.clear();
+  } catch {
+    // Safari 隐私模式等环境的 sessionStorage.clear() 可能抛异常
+  }
+  markStorageReset(mode);
+  window.location.reload();
 };
 
 // 清除数据但保留开发模式选项
@@ -2407,44 +2469,22 @@ const handleClearDataKeepDevMode = async () => {
     $message.warning("数据已清除，页面即将刷新");
   }
   const dev = store.devMode;
-  // 站点版本/构建信息是构建期常量（不在 PERSIST_PATHS），无需保存/恢复
   const savedVersion = safeStorage.getItem("siteDataVersion");
   await saveStoreDefaults({
     DEFAULT_DEV_MODE: dev,
     bumpVersion: true,
   });
+  await clearBrowserData();
 
-  // 清除 localStorage 和 sessionStorage
   safeStorage.clear();
-  // Safari 隐私模式等环境下 sessionStorage.clear() 会抛异常，
-  // 必须兜住，否则后面的 SW 注销/版本恢复/reload 会被跳过
   try {
     sessionStorage.clear();
   } catch {
     // 存储不可用时跳过
   }
-
-  // 注销所有 Service Worker
-  if ("serviceWorker" in navigator) {
-    const registrations = await navigator.serviceWorker.getRegistrations();
-    for (const reg of registrations) {
-      await reg.unregister();
-    }
-  }
-
-  // 清除所有 Cache API 缓存
-  if ("caches" in window) {
-    const names = await caches.keys();
-    for (const name of names) {
-      await caches.delete(name);
-    }
-  }
-
-  // 清除所有 IndexedDB
-  await clearIndexedDb();
-
   // 恢复版本标记（siteData 无需恢复，版本常量直取构建值）
   if (savedVersion) safeStorage.setItem("siteDataVersion", savedVersion);
+  markStorageReset(RESET_MODE_ALL);
   window.location.reload();
 };
 
@@ -2464,6 +2504,7 @@ const handleResetConfig = () => {
   // 仅重置设置面板：清除持久化配置键 siteData（承载全部 PERSIST_PATHS），
   // 不触碰其它本地存储、Service Worker、缓存与 IndexedDB
   safeStorage.removeItem("siteData");
+  markStorageReset(RESET_MODE_CONFIG);
   window.location.reload();
 };
 
@@ -2490,41 +2531,13 @@ const showClearAllWarning = () => {
 const handleClearAllData = async () => {
   showClearAllConfirm.value = false;
 
-  // 先完成所有异步清理，避免在清空本地存储后仍交还事件循环，
-  // 导致 pinia 持久化插件把内存中的配置写回 localStorage
-  // 注销所有 Service Worker
-  if ("serviceWorker" in navigator) {
-    const registrations = await navigator.serviceWorker.getRegistrations();
-    for (const reg of registrations) {
-      await reg.unregister();
-    }
-  }
+  // 先完成所有异步清理；Storage 的清空与刷新之间由跨刷新写保护挡住 Pinia 写回
+  await clearBrowserData();
 
-  // 清除所有 Cache API 缓存
-  if ("caches" in window) {
-    const names = await caches.keys();
-    for (const name of names) {
-      await caches.delete(name);
-    }
-  }
-
-  // 清除所有 IndexedDB
-  await clearIndexedDb();
-
-  // 最后同步清空本地存储并立即刷新，期间不再交还事件循环，
-  // 确保持久化插件没有机会把配置写回
   if (typeof $message !== "undefined") {
     $message.warning("数据已清除，页面即将刷新");
   }
-  safeStorage.clear();
-  // Safari 隐私模式等环境下 sessionStorage.clear() 会抛异常，
-  // 必须兜住，否则后面的 SW 注销/版本恢复/reload 会被跳过
-  try {
-    sessionStorage.clear();
-  } catch {
-    // 存储不可用时跳过
-  }
-  window.location.reload();
+  clearWebStorageAndReload(RESET_MODE_ALL);
 };
 
 // 设置首页Banner高度

@@ -189,6 +189,8 @@ export const mainStore = defineStore("main", {
       hoverLineEnabled: !isMobile,
       // 图片功能开关
       imageWebpEnabled: false,
+      // 运行时将页面文字转换为繁体中文
+      traditionalChineseEnabled: false,
       // 天气小组件开关
       weatherWidgetEnabled: true,
       // HelloGithub 热榜开关
@@ -216,8 +218,8 @@ export const mainStore = defineStore("main", {
       siteVersion: "V1.5",
       siteVersionDate: "2026.10.22",
       // 分支版本（自动递增）
-      branchVersion: 252,
-      branchBuildTime: "2026.10.29 21:28:39",
+      branchVersion: 268,
+      branchBuildTime: "2026.11.01 15:08:45",
     };
   },
   actions: {

@@ -462,6 +462,8 @@ export default withPwa(
     // PWA
     pwa: {
       registerType: "autoUpdate",
+      // 注册逻辑由 .vitepress/theme/index.mjs 接管，便于清除数据后跳过一次重装
+      injectRegister: false,
 
       workbox: {
         clientsClaim: true,
