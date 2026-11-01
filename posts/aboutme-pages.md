@@ -47,6 +47,7 @@ Zukicy / SereinCycle / mrsksyrx
 PJSK / EndField / **maimaiDX** / Minecraft / STEAM
 
 #### 对于作品的题材与偏好
+
 百合 / 软萌 / 治愈 / 日常 / 纯爱 / 贴贴 / 救赎  
 **与**  
 暗黑 / 妄想 / 强关系性 / 致郁 / 扭百 / 病娇
@@ -87,11 +88,11 @@ DECO / 小绵羊
 **其他见上吧**
 
 ### 头像
+
 ::: image-row align-left
 ![是自家小女孩泠潆](/images/logo/favicon-256.png){.avatar-lg}
 ![请不要盗用哦qwq](/images/logo/lsc2.jpg){.avatar-lg}
 :::
-
 
 ## <span style="color: var(--main-color)">自介原稿</span>
 

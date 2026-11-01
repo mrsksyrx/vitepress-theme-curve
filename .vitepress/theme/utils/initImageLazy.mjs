@@ -26,6 +26,21 @@ const checkWebpSupport = () => {
 };
 
 /**
+ * 根据当前图片状态设置最终显示状态。
+ * 浏览器可能在脚本监听 load 之前就从缓存完成图片加载，
+ * 因此不能只依赖异步事件，必须同时检查 complete / naturalWidth。
+ */
+const settleImage = (img) => {
+  if (img.naturalWidth > 0) {
+    img.classList.add("loaded");
+    img.classList.remove("error");
+  } else if (img.complete && img.currentSrc) {
+    img.classList.add("error");
+    img.classList.remove("loaded");
+  }
+};
+
+/**
  * 尝试加载 WebP 版本
  */
 const tryLoadWebp = (img, webpEnabled) => {
@@ -40,6 +55,7 @@ const tryLoadWebp = (img, webpEnabled) => {
     if (settled) return;
     settled = true;
     clearTimeout(timer);
+    settleImage(img);
   };
 
   tempImg.onload = () => {
@@ -47,19 +63,15 @@ const tryLoadWebp = (img, webpEnabled) => {
     // WebP 加载成功，替换原图
     img.src = webpSrc;
     img.classList.add("loaded");
+    img.classList.remove("error");
   };
   tempImg.onerror = () => {
     onSettled();
-    // WebP 不存在，保持原图，标记为已加载
-    img.classList.add("loaded");
   };
 
   // 超时兜底：WebP 文件不存在时不会触发 onerror（某些浏览器），
   // 用超时避免原图一直卡在 opacity: 0
-  const timer = setTimeout(() => {
-    onSettled();
-    img.classList.add("loaded");
-  }, 3000);
+  const timer = setTimeout(onSettled, 3000);
 
   tempImg.src = webpSrc;
 };
@@ -72,53 +84,14 @@ const handleImage = (img, config = defaultConfig) => {
   if (img.dataset.lazyEnhanced) return;
   img.dataset.lazyEnhanced = "true";
 
+  img.addEventListener("load", () => settleImage(img), { once: true });
+  img.addEventListener("error", () => settleImage(img), { once: true });
+
+  // 图片可能在本次脚本运行前就已加载或失败，立即结算当前状态
+  settleImage(img);
+
   // 尝试加载 WebP 版本
-  if (img.dataset.webp) {
-    // 先设置 opacity 为 0（CSS 已处理），等 WebP 或原图加载完再显示
-    img.addEventListener(
-      "load",
-      () => {
-        img.classList.add("loaded");
-      },
-      { once: true },
-    );
-
-    img.addEventListener(
-      "error",
-      () => {
-        img.classList.add("error");
-      },
-      { once: true },
-    );
-
-    // 异步尝试加载 WebP
-    tryLoadWebp(img, config.webpEnabled);
-    return;
-  }
-
-  // 如果图片已经加载完成（来自缓存），直接添加 loaded 类
-  if (img.complete && img.naturalWidth > 0) {
-    img.classList.add("loaded");
-    return;
-  }
-
-  // 监听加载完成事件
-  img.addEventListener(
-    "load",
-    () => {
-      img.classList.add("loaded");
-    },
-    { once: true },
-  );
-
-  // 监听加载失败事件
-  img.addEventListener(
-    "error",
-    () => {
-      img.classList.add("error");
-    },
-    { once: true },
-  );
+  if (img.dataset.webp) tryLoadWebp(img, config.webpEnabled);
 };
 
 /**
