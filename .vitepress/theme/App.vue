@@ -172,6 +172,9 @@ const startImportCheck = () => {
 const isPostPage = computed(() => {
   // 不要 decodeURIComponent：文件名含裸 %（如 100%_done）时会抛 URIError 白屏。
   // pathname 里 "/posts/" 是字面量，直接 includes 即可。
+  // 404 也可能落在 posts/ 路径下（如 /posts/不存在的文件），必须先排除，
+  // 否则 NotFound 与 Post 会同时挂载，把 404 页当成文章渲染。
+  if (page.value.isNotFound) return false;
   return route.path.includes("/posts/") || frontmatter.value.layout === "post";
 });
 

@@ -17,7 +17,7 @@ import { safeStorage } from "@/utils/safeStorage.mjs";
 const store = mainStore();
 const { readingProgressEnabled, readingHistoryLimit } = storeToRefs(store);
 const route = useRoute();
-const { frontmatter } = useData();
+const { frontmatter, page } = useData();
 
 // 配置
 defineProps({
@@ -169,7 +169,10 @@ const schedulePersist = () => {
 // 检查是否为文章页面（posts/ 路径，或 frontmatter 声明 layout: post）
 const checkIsPostPage = () => {
   // 不要 decodeURIComponent：裸 % 会抛 URIError（同 App.vue isPostPage）
-  isPostPage.value = route.path.includes("/posts/") || frontmatter.value.layout === "post";
+  // 404 也可能命中 /posts/ 路径，此时不算文章页（否则进度条会挂在 404 上）
+  isPostPage.value =
+    !page.value.isNotFound &&
+    (route.path.includes("/posts/") || frontmatter.value.layout === "post");
   isVisible.value = isPostPage.value;
 };
 
