@@ -142,6 +142,45 @@
     flex-direction: column;
     align-items: center;
     color: var(--main-font-color);
+
+    &.align-left {
+      align-items: flex-start;
+
+      .post-img {
+        margin-right: auto;
+        margin-left: 0;
+      }
+
+      .post-img-tip {
+        justify-content: flex-start;
+      }
+    }
+
+    &.align-right {
+      align-items: flex-end;
+
+      .post-img {
+        margin-right: 0;
+        margin-left: auto;
+      }
+
+      .post-img-tip {
+        justify-content: flex-end;
+      }
+    }
+
+    &.align-center {
+      align-items: center;
+
+      .post-img {
+        margin-right: auto;
+        margin-left: auto;
+      }
+
+      .post-img-tip {
+        justify-content: center;
+      }
+    }
     .post-img {
       width: auto;
       max-height: 450px;
@@ -154,6 +193,29 @@
         filter 0.3s;
       &:hover {
         filter: blur(0) brightness(0.8);
+      }
+
+      &.avatar,
+      &.avatar-sm,
+      &.avatar-lg {
+        max-height: none;
+        object-fit: cover;
+        border-radius: 16px;
+      }
+
+      &.avatar {
+        width: 128px;
+        height: 128px;
+      }
+
+      &.avatar-sm {
+        width: 96px;
+        height: 96px;
+      }
+
+      &.avatar-lg {
+        width: 160px;
+        height: 160px;
       }
     }
     .post-img-tip {
@@ -170,6 +232,56 @@
     }
     &:hover {
       color: var(--main-font-color);
+    }
+  }
+
+  // 横向图片组
+  .image-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    gap: 1.25rem;
+    width: 100%;
+    margin: 1.25rem 0;
+
+    &.align-left {
+      justify-content: flex-start;
+    }
+
+    &.align-right {
+      justify-content: flex-end;
+    }
+
+    &.align-center {
+      justify-content: center;
+    }
+
+    &.nowrap {
+      flex-wrap: nowrap;
+      overflow-x: auto;
+      padding-bottom: 0.5rem;
+    }
+
+    > p {
+      display: contents;
+    }
+
+    .img-fancybox {
+      width: auto;
+      min-width: 0;
+      max-width: 100%;
+      flex: 0 1 auto;
+    }
+
+    .post-img {
+      max-height: 320px;
+      margin: 0;
+    }
+
+    .post-img-tip {
+      width: auto;
+      min-width: 100%;
+      margin: 0.65rem 0 0;
     }
   }
   // 代码块

@@ -136,7 +136,7 @@ export const getAllPosts = async () => {
           const { birthtimeMs, mtimeMs } = stat;
           // 解析 front matter
           const { data, content: markdownBody } = matter(content);
-          const { title, date, categories, description, tags, top, cover } = data;
+          const { title, date, categories, description, tags, top, cover, hideHome } = data;
           // 统计字数和阅读时间
           const wordCount = countWords(markdownBody);
           const readTime = calcReadTime(wordCount);
@@ -183,6 +183,7 @@ export const getAllPosts = async () => {
             regularPath: `/${item.replace(/\.md$/, "")}`,
             top,
             cover,
+            hideHome: hideHome === true,
             wordCount,
             readTime,
           };

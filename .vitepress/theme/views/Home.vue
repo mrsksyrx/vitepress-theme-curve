@@ -73,6 +73,9 @@ const props = defineProps({
 // 每页文章数（钳制下界与 page/[num].paths.mjs 一致：0 会让 totalPages 变 Infinity，NaN 会让分页失效）
 const postSize = Math.max(1, Number(theme.value.postSize) || 1);
 
+// 首页排除 hideHome 文章；分类 / 标签列表继续使用完整文章索引
+const homePosts = computed(() => allPosts.value.filter((post) => !post.hideHome));
+
 // 当前页数（分类 / 标签页的静态 /page/N 与旧 ?page= 链接都需要手动保持响应式）
 const currentPage = ref(props.page || 1);
 
@@ -82,7 +85,7 @@ const allListTotal = computed(() => {
     ? categoriesData.value[props.showCategories]?.articles
     : props.showTags
       ? tagsData.value[props.showTags]?.articles
-      : allPosts.value;
+      : homePosts.value;
   // 返回数量
   return data ? data.length : 0;
 });
@@ -141,7 +144,7 @@ const postData = computed(() => {
   }
   // 文章数据
   else {
-    data = allPosts.value;
+    data = homePosts.value;
   }
   // 返回列表
   return data ? data.slice(page * postSize, page * postSize + postSize) : [];

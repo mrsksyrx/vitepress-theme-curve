@@ -1,7 +1,7 @@
 import { getAllPosts } from "../.vitepress/theme/utils/getPostData.mjs";
 import { getThemeConfig } from "../.vitepress/init.mjs";
 
-const postData = await getAllPosts();
+const postData = (await getAllPosts()).filter((post) => !post.hideHome);
 const themeConfig = await getThemeConfig();
 
 // 每页文章数
