@@ -86,6 +86,7 @@ import { mainStore, initializeCursor, DEFAULT_FONT_SIZE } from "@/store";
 import { calculateScroll, specialDayGray } from "@/utils/helper";
 import { ensureGlobalFontsLoaded } from "@/utils/fontLoader.mjs";
 import { safeStorage } from "@/utils/safeStorage.mjs";
+import { finishStorageReset, isStorageWriteBlocked } from "@/utils/storageReset.mjs";
 import { applyTraditionalChinese } from "@/utils/traditionalChinese.mjs";
 
 // const screenWidth = ref(0);
@@ -348,6 +349,12 @@ onMounted(() => {
   // 检查是否需要显示导入后检查弹窗
   if (safeStorage.getItem("importJustCompleted") === "true") {
     startImportCheck();
+  }
+  // 清除数据后的首次加载：等组件初始化和 Pinia 订阅都 flush 完，再恢复持久化写入
+  if (isStorageWriteBlocked()) {
+    nextTick(() => {
+      requestAnimationFrame(() => finishStorageReset());
+    });
   }
 });
 

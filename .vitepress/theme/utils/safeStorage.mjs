@@ -9,6 +9,8 @@
 //   会被旧值覆盖（set v1 成功、set v2 失败后 get 必须得到 v2）。
 // - removeItem / clear 两边同时清理。
 // 存储完全不可用时，读写退化为会话内内存；getItem 失败按缺失处理，不向调用方抛异常。
+import { isStorageWriteBlocked } from "./storageReset.mjs";
+
 const memoryFallback = new Map();
 
 // 访问 localStorage 属性本身可能抛 SecurityError，只能包在 try 里取
@@ -37,6 +39,9 @@ export const safeStorage = {
    * @returns {boolean} true = 已写入持久化存储；false = 仅落在会话内存挂账
    */
   setItem(key, value) {
+    // 清除数据后的 reload 并非同步卸载；这期间必须挡住 Pinia 等订阅写回，
+    // 下一次加载的初始化写入也由同一个跨刷新保护窗口继续挡住
+    if (isStorageWriteBlocked()) return false;
     const str = String(value);
     const storage = getStorage();
     if (storage) {
