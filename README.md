@@ -116,12 +116,15 @@ tags: [VitePress, Vue]
 | `categories`  | 分类，可以是字符串或数组                  |
 | `tags`        | 标签，可以是字符串或数组                  |
 | `top`         | 置顶权重，数字越大越靠前，`true` 表示置顶 |
+| `hideHome`    | 设为 `true` 时不在首页列表显示            |
 | `cover`       | 封面图片地址，需要开启封面显示功能后生效  |
 | `articleGPT`  | AI 摘要卡片内容                           |
 | `references`  | 参考资料列表，每项包含标题和链接          |
 | `password`    | 文章密码，设置后正文会在构建时加密        |
 | `comment`     | 是否显示评论区，布尔值                    |
 | `copyright`   | 是否显示版权声明，布尔值                  |
+
+`hideHome` 只影响首页文章列表和首页分页；文章详情、分类、标签、归档、搜索和 RSS 仍然保留该文章。
 
 例如：
 
@@ -257,8 +260,49 @@ _斜体文字_
 - 图片会自动启用懒加载。
 - 站内图片会尝试使用 WebP 版本。
 - 开启 Fancybox 后，点击图片可以放大查看。
-- 表格会自动包裹在可横向滚动的容器中，宽表格不会撑破页面。
 - 图片可以放在普通 Markdown 链接中，主题会避免重复嵌套链接。
+- 表格会自动包裹在可横向滚动的容器中，宽表格不会撑破页面。
+
+头像等小图可以使用专用 class，不会影响普通正文图片：
+
+```markdown
+![小头像](/images/avatar.png){.avatar-sm}
+![头像](/images/avatar.png){.avatar}
+![大头像](/images/avatar.png){.avatar-lg}
+```
+
+三个尺寸分别为 `96px`、`128px` 和 `160px`，统一使用正方形裁剪和圆角矩形边框。
+
+图片还可以通过 `align-left`、`align-center`、`align-right` 自定义左、中、右对齐；对齐类可以与头像尺寸组合，也可以用于普通图片：
+
+```markdown
+![左对齐头像](/images/avatar.png){.avatar-sm .align-left}
+![居中头像](/images/avatar.png){.avatar .align-center}
+![右对齐头像](/images/avatar.png){.avatar-lg .align-right}
+![左对齐图片](/images/example.png){.align-left}
+```
+
+未指定对齐类时，图片默认居中显示。
+
+多张图片需要横向排列时，可以使用 `image-row`：
+
+```markdown
+::: image-row align-left
+![头像一](/images/avatar-1.png){.avatar-sm}
+![头像二](/images/avatar-2.png){.avatar-sm}
+![头像三](/images/avatar-3.png){.avatar-sm}
+:::
+```
+
+`image-row` 支持 `align-left`、`align-center`、`align-right`。默认空间不足时自动换行；追加 `nowrap` 可保持单行并允许横向滚动：
+
+```markdown
+::: image-row nowrap
+![截图一](/images/example-1.png)
+![截图二](/images/example-2.png)
+![截图三](/images/example-3.png)
+:::
+```
 
 ### 加密文章
 

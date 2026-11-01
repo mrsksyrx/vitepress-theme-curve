@@ -6,6 +6,7 @@ tags: [归档]
 description: 二次元扩列卡
 top: false
 layout: post
+hideHome: true
 ---
 
 ::: tip Tips
@@ -29,7 +30,7 @@ layout: post
 ### 标识
 
 **SGeXiLQ**  
-Zukicy、mrsksyrx
+Zukicy / SereinCycle / mrsksyrx
 
 ### 性格
 
@@ -37,33 +38,39 @@ Zukicy、mrsksyrx
 
 包容性极强  
 有些社恐…但是熟了会非常非常黏人（x  
-喜欢疯狂分享一堆没什么意义但自己觉得很可爱的东西  
+喜欢疯狂分享一堆各种各样的东西  
 回复速度与态度会取决于你和当时的精神状态
 
 ### 坑/成分
 
-**VOCALOID**、二次元、百合、番剧、漫画  
-PJSK、EndField、maimaiDX、Minecraft、STEAM独立游戏
+**VOCALOID** / 二次元 / 番剧 / 漫画  
+PJSK / EndField / **maimaiDX** / Minecraft / STEAM
+
+#### 对于作品的题材与偏好
+百合 / 软萌 / 治愈 / 日常 / 纯爱 / 贴贴 / 救赎  
+**与**  
+暗黑 / 妄想 / 强关系性 / 致郁 / 扭百 / 病娇
 
 ### 喜欢的P主
 
-**牙姐、存娘、霾大、雷子**  
-DECO、小绵羊  
-奥利安多幻想曲、Mara_然、彼岸的栗子、MaxXSoft
+**牙姐 / 存娘 / 霾大 / 雷子**  
+DECO / 小绵羊  
+奥利安多幻想曲 / Mara_然 / 彼岸的栗子 / MaxXSoft
 
 ### 推
 
-**洛天依**、初音未来、晓山瑞希  
-糖画、南北组
+**洛天依** / 初音未来 / 晓山瑞希  
+糖画 / 南北组
 
 ### 喜好
 
-甜甜的、软软的、可爱的、亮晶晶的东西  
+甜甜的 软软的 可爱的 亮晶晶的东西  
 最喜欢的颜色是粉色与紫色
 
 ### 诞生日
 
-2009.10.10
+**2009.10.10**  
+2026.10.5开始HRT
 
 ### 坐标
 
@@ -74,16 +81,21 @@ DECO、小绵羊
 跨女（生男心女）  
 双性恋
 
-### 一言
-
-谢谢你，让我做了一场甜甜的梦  
-——致lan
-
 ### 猜你会雷
 
-生心不一/Trans.MtF/adhd/精神问题微负/女性主义(非极端)
+生心不一/Trans.MtF/adhd/精神问题微负  
+**其他见上吧**
 
-## <span style="color: var(--main-color)">二次元扩列卡</span>
+### 头像
+::: image-row align-left
+![是自家小女孩泠潆](/images/logo/favicon-256.png){.avatar-lg}
+![请不要盗用哦qwq](/images/logo/lsc2.jpg){.avatar-lg}
+:::
+
+
+## <span style="color: var(--main-color)">自介原稿</span>
+
+### 二次元扩列卡
 
 <div class="card">
 
@@ -106,7 +118,7 @@ INFP-T，生男心女，性取向双，高一休学
 
 </div>
 
-## <span style="color: var(--main-color)">𝕏 自介</span>
+### 𝕏（🏳️‍⚧️）
 
 <div class="card">
 
@@ -122,13 +134,13 @@ INFP-T｜双｜二次元｜音游｜百合｜术力口
 
 <br>
 
-## <span style="color: var(--main-color)">各种账号</span>
+## <span style="color: var(--main-color)">找到泠泠</span>
 
 ### 建议
 
 泠の花园（QQ群）：<a href="https://myat-qm.20091010.xyz" target="_blank" rel="noopener noreferrer" style="color: var(--main-color)"><strong>1124267326</strong></a>  
 QQ：<a href="https://myat-qq.20091010.xyz" target="_blank" rel="noopener noreferrer" style="color: var(--main-color)"><strong>泠诗尘</strong></a>  
-邮箱：<a href="mailto:lsc@sgexilq.com" target="_blank" rel="noopener noreferrer" style="color: var(--main-color)"><strong>lsc@sgexilq.com</strong></a>
+Email：<a href="mailto:hi@sgexilq.com" target="_blank" rel="noopener noreferrer" style="color: var(--main-color)"><strong>hi@sgexilq.com</strong></a>
 /
 <a href="mailto:sgexilq@qq.com" target="_blank" rel="noopener noreferrer" style="color: var(--main-color)"><strong>sgexilq@qq.com</strong></a>  
 Twitter：<a href="https://myat-twitter.20091010.xyz" target="_blank" rel="noopener noreferrer" style="color: var(--main-color)"><strong>@mrsksyrx_xl</strong></a>  
@@ -139,7 +151,6 @@ Telegram：<a href="https://myat-telegram.20091010.xyz" target="_blank" rel="noo
 Github：<a href="https://myat-github.20091010.xyz" target="_blank" rel="noopener noreferrer" style="color: var(--main-color)"><strong>@mrsksyrx</strong></a>  
 Bilibili：<a href="https://myat-bilibili.20091010.xyz" target="_blank" rel="noopener noreferrer" style="color: var(--main-color)"><strong>泠诗尘</strong></a>  
 网易云音乐：<a href="https://myat-neteasecloudmusic.20091010.xyz" target="_blank" rel="noopener noreferrer" style="color: var(--main-color)"><strong>泠诗尘</strong></a>  
-小红书：<a href="https://myat-rednote.20091010.xyz" target="_blank" rel="noopener noreferrer" style="color: var(--main-color)"><strong>mzsecy</strong></a>  
 STEAM：<a href="https://myat-steam.20091010.xyz" target="_blank" rel="noopener noreferrer" style="color: var(--main-color)"><strong>泠酱</strong></a>
 
 ### 标识
@@ -149,8 +160,6 @@ STEAM：<a href="https://myat-steam.20091010.xyz" target="_blank" rel="noopener 
 
 <hr style="border: none; border-bottom: 1px dashed var(--main-color-bg); height: 0; background: none; margin: 1.5rem 0" />
 
-关于自己的主页面：<a href="/pages/about-me" style="color: var(--main-color)"><strong>关于泠酱 - i.sgexilq.com</strong></a>
-
 继续探索小站：<a href="/" style="color: var(--main-color)"><strong>回到主页 - sgexilq.com</strong></a>
 
 向我匿名提问！：<a href="https://ngl.sgexilq.com" target="_blank" rel="noopener noreferrer" style="color: var(--main-color)"><strong>NGL.Link</strong></a>（会在Twitter回复） / <a href="/pages/hide/message" style="color: var(--main-color)"><strong>留言板 - sgexilq.com</strong></a>
@@ -159,10 +168,13 @@ STEAM：<a href="https://myat-steam.20091010.xyz" target="_blank" rel="noopener 
 
 ### 如何在线下捕捉一只泠酱
 
-让我想想哇…泠酱的特征…  
-泠酱总是抱着一台小米笔记本，戴着一个头戴式耳机…  
-会背着一个双肩包，和一只小洛…  
+泠泠总是抱着一台笔记本，戴着耳机…  
+好多好多天依…很喜欢天依的ww  
 还会有些yn刻板印象（？
+
+### 想对lan说的
+
+谢谢你，让我做了一场甜甜的梦
 
 ## <span style="color: var(--main-color)">碎碎念</span>
 
@@ -190,3 +202,9 @@ STEAM：<a href="https://myat-steam.20091010.xyz" target="_blank" rel="noopener 
 
 **愿每个人都被世界温柔以待**  
 **我爱你们**
+
+<hr style="border: none; border-bottom: 1px dashed var(--main-color-bg); height: 0; background: none; margin: 1.5rem 0" />
+
+**我们的存在，就是对恶意最大的反抗。**  
+<span style="color: var(--main-accent); opacity: 0.8"><b>Our existence is resistance.</b></span>  
+<a href="https://project-trans.org/" target="_blank" rel="noopener noreferrer" style="color: var(--main-color)"><strong>by PROJECT TRANS</strong></a>

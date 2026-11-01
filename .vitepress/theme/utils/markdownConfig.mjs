@@ -3,6 +3,17 @@ import markdownItAttrs from "markdown-it-attrs";
 import container from "markdown-it-container";
 import { encryptPostHtml } from "./mdEncrypt.mjs";
 
+const IMAGE_CLASS_NAMES = new Set(["avatar", "avatar-sm", "avatar-lg"]);
+const IMAGE_ALIGNMENT_CLASS_NAMES = new Set(["align-left", "align-center", "align-right"]);
+const IMAGE_ROW_MODIFIERS = new Set([...IMAGE_ALIGNMENT_CLASS_NAMES, "nowrap"]);
+
+const getTokenClasses = (token, allowedClassNames) =>
+  (token.attrGet("class") ?? "")
+    .split(/\s+/)
+    .filter((className) => allowedClassNames.has(className));
+
+const getClassAttr = (classNames) => (classNames.length ? ` ${classNames.join(" ")}` : "");
+
 // markdown-it
 const markdownConfig = (md, themeConfig) => {
   // 插件
@@ -79,6 +90,21 @@ const markdownConfig = (md, themeConfig) => {
       }
     },
   });
+  // 横向图片组
+  md.use(container, "image-row", {
+    render: (tokens, idx) => {
+      const token = tokens[idx];
+      if (token.nesting === 1) {
+        const modifiers = token.info
+          .trim()
+          .split(/\s+/)
+          .slice(1)
+          .filter((modifier) => IMAGE_ROW_MODIFIERS.has(modifier));
+        return `<div class="image-row${getClassAttr(modifiers)}">`;
+      }
+      return "</div>";
+    },
+  });
   // 表格
   md.renderer.rules.table_open = () => {
     return '<div class="table-container"><table>';
@@ -112,6 +138,8 @@ const markdownConfig = (md, themeConfig) => {
     // 不转义时 `![a" onerror="alert(1)](x.png)` 会撑开 alt 属性并注入事件。
     const src = md.utils.escapeHtml(token.attrs?.[token.attrIndex("src")]?.[1] ?? "");
     const alt = md.utils.escapeHtml(token.content);
+    const imageClassAttr = getClassAttr(getTokenClasses(token, IMAGE_CLASS_NAMES));
+    const wrapperClassAttr = getClassAttr(getTokenClasses(token, IMAGE_ALIGNMENT_CLASS_NAMES));
 
     // 只为站内图片生成 WebP 探测属性：外链图床常忽略扩展名直接返回原图，
     // 探测会被 initImageLazy 当成"webp 加载成功"，等于同一张图拉两次。
@@ -128,10 +156,10 @@ const markdownConfig = (md, themeConfig) => {
     // 改为把灯箱属性挂到 <img>（Fancybox.bind("[data-fancybox]") 直接命中 img），
     // 并用 <span class="img-fancybox"> 保留 .img-fancybox / .post-img / .post-img-tip 的样式挂钩。
     if (insideLink(tokens, idx)) {
-      return `<span class="img-fancybox"><img class="post-img" src="${src}" alt="${alt}" loading="lazy"${webpAttr} data-fancybox="gallery" data-caption="${alt}" /><span class="post-img-tip">${alt}</span></span>`;
+      return `<span class="img-fancybox${wrapperClassAttr}"><img class="post-img${imageClassAttr}" src="${src}" alt="${alt}" loading="lazy"${webpAttr} data-fancybox="gallery" data-caption="${alt}" /><span class="post-img-tip">${alt}</span></span>`;
     }
-    return `<a class="img-fancybox" href="${src}" data-fancybox="gallery" data-caption="${alt}">
-                <img class="post-img" src="${src}" alt="${alt}" loading="lazy"${webpAttr} />
+    return `<a class="img-fancybox${wrapperClassAttr}" href="${src}" data-fancybox="gallery" data-caption="${alt}">
+                <img class="post-img${imageClassAttr}" src="${src}" alt="${alt}" loading="lazy"${webpAttr} />
                 <span class="post-img-tip">${alt}</span>
               </a>`;
   };
