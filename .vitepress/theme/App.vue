@@ -86,6 +86,7 @@ import { mainStore, initializeCursor, DEFAULT_FONT_SIZE } from "@/store";
 import { calculateScroll, specialDayGray } from "@/utils/helper";
 import { ensureGlobalFontsLoaded } from "@/utils/fontLoader.mjs";
 import { safeStorage } from "@/utils/safeStorage.mjs";
+import { applyTraditionalChinese } from "@/utils/traditionalChinese.mjs";
 
 // const screenWidth = ref(0);
 const route = useRoute();
@@ -106,6 +107,7 @@ const {
   siteLayoutPending,
   messagePosition,
   removeAnimations,
+  traditionalChineseEnabled,
 } = storeToRefs(store);
 let fontSwitchTaskId = 0;
 
@@ -270,6 +272,10 @@ watch(
   () => siteLayout.value,
   () => changeSiteLayout(),
 );
+watch(
+  () => traditionalChineseEnabled.value,
+  (enabled) => applyTraditionalChinese(enabled),
+);
 
 onMounted(() => {
   initializeCursor();
@@ -295,6 +301,8 @@ onMounted(() => {
   changeSiteFont();
   // 切换站点布局
   changeSiteLayout();
+  // 恢复繁体中文实验性功能
+  applyTraditionalChinese(traditionalChineseEnabled.value);
   // 根据当前窗口宽度初始化消息位置
   if (siteLayout.value === "auto" || siteLayout.value === "mobile") {
     const isMobileView = window.innerWidth <= 768;

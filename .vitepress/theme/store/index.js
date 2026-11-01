@@ -189,6 +189,8 @@ export const mainStore = defineStore("main", {
       hoverLineEnabled: !isMobile,
       // 图片功能开关
       imageWebpEnabled: false,
+      // 运行时将页面文字转换为繁体中文
+      traditionalChineseEnabled: false,
       // 天气小组件开关
       weatherWidgetEnabled: true,
       // HelloGithub 热榜开关

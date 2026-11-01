@@ -1373,6 +1373,23 @@
               </span>
             </div>
           </div>
+          <div class="set-item">
+            <span class="set-label">繁體中文轉換（實驗性）</span>
+            <div class="set-options">
+              <span
+                :class="['options', { choose: !traditionalChineseEnabled }]"
+                @click="setTraditionalChineseEnabled(false)"
+              >
+                關閉
+              </span>
+              <span
+                :class="['options', { choose: traditionalChineseEnabled }]"
+                @click="setTraditionalChineseEnabled(true)"
+              >
+                開啟
+              </span>
+            </div>
+          </div>
           <!-- 开发中的功能（开发模式） -->
           <template v-if="store.devMode === 2">
             <div class="set-item">
@@ -1797,6 +1814,7 @@ const {
   readingProgressEnabled,
   hoverLineEnabled,
   imageWebpEnabled,
+  traditionalChineseEnabled,
   weatherProvider,
   weatherLocationMode,
   weatherManualCity,
@@ -2031,6 +2049,11 @@ const setReadingHistoryLimit = (limit) => {
 const setImageWebpEnabled = (enabled) => {
   imageWebpEnabled.value = enabled;
   showSettingSuccess(`WebP 自动转换已${enabled ? "开启" : "关闭"}`);
+};
+
+const setTraditionalChineseEnabled = (enabled) => {
+  traditionalChineseEnabled.value = enabled;
+  showSettingSuccess(`页面语言已切换为${enabled ? "繁體中文" : "简体中文"}`);
 };
 // 移动端小组件面板：关闭时同步收起已打开的浮层
 const setMobileWidgetsEnabled = (enabled) => {
