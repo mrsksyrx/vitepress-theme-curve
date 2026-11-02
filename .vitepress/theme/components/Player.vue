@@ -267,6 +267,25 @@ const safePlay = () => {
 // Meting type=url 是 302 链，最终落到 http:// 网易 CDN，HTTPS 页面会按混合内容
 // 拦截导致 net::ERR_FAILED。浏览器读不到跳转 Location（跨域无 CORS），
 // 走同源 /api/music-url 在服务端解析成 https 直链再交给 <audio>。
+// 只接受明确的 HTTPS 音频直链；音乐接口偶发返回 HTML/404 时不能塞给 <audio>。
+const isSafeResolvedAudioUrl = (value) => {
+  try {
+    const u = new URL(value, window.location.href);
+    const isNetease404 =
+      u.hostname === "music.163.com" && u.pathname.replace(/\/+$/, "") === "/404";
+    return u.protocol === "https:" && !isNetease404;
+  } catch {
+    return false;
+  }
+};
+
+const createTimeoutSignal = (ms) => {
+  if (typeof AbortSignal.timeout === "function") return AbortSignal.timeout(ms);
+  const controller = new AbortController();
+  setTimeout(() => controller.abort(), ms);
+  return controller.signal;
+};
+
 const resolveCache = new Map();
 const RESOLVE_CACHE_TTL = 30 * 1000;
 const resolveAudioUrl = async (rawUrl) => {
@@ -276,12 +295,19 @@ const resolveAudioUrl = async (rawUrl) => {
   resolveCache.delete(rawUrl);
   let resolved = String(rawUrl).replace(/^http:\/\//i, "https://");
   try {
-    const res = await fetch(`/api/music-url?url=${encodeURIComponent(rawUrl)}`, {
-      signal: AbortSignal.timeout(8000),
-    });
+    const res = await fetch(
+      `/api/music-url?url=${encodeURIComponent(rawUrl)}&server=${encodeURIComponent(server || "")}`,
+      {
+        signal: createTimeoutSignal(8000),
+      },
+    );
     if (res.ok) {
       const data = await res.json();
-      if (data?.url) resolved = data.url;
+      if (data?.url && isSafeResolvedAudioUrl(data.url)) {
+        resolved = data.url;
+      } else if (data?.url) {
+        console.warn("音频直链解析返回无效地址，使用回退地址");
+      }
     }
   } catch (e) {
     console.warn("解析音频直链失败，回退原始地址：", e);

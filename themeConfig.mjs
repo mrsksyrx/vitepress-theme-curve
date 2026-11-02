@@ -122,7 +122,7 @@ export const themeConfig = {
         text: "页面",
         items: [
           { text: "畅所欲言", link: "/pages/hide/message" },
-          { text: "关于泠泠", link: "/aboutme-pages" },
+          { text: "关于泠泠", link: "/posts/aboutme-pages" },
           { text: "隐私政策", link: "/pages/privacy" },
           { text: "版权协议", link: "/pages/cc" },
           // { text: "TO DO", link: "/pages/todo" },
@@ -146,6 +146,8 @@ export const themeConfig = {
     type: "twikoo",
     twikoo: {
       js: "https://cdn.jsdelivr.net/npm/twikoo@1.6.42/dist/twikoo.all.min.js",
+      // jsDelivr 偶发不可用时自动回退到 npmmirror
+      jsFallback: ["https://registry.npmmirror.com/twikoo/1.6.42/files/dist/twikoo.all.min.js"],
       envId: "https://twikoo.20091010.xyz",
       region: "",
       lang: "zh-CN",

@@ -4,6 +4,34 @@ import { loadScript, loadCSS } from "./commonTools.mjs";
 // 兼容 object / function 两种导出形态
 const isReady = (lib) => !!lib && typeof lib.init === "function";
 
+const normalizeSources = (...values) => [
+  ...new Set(
+    values
+      .flat(Infinity)
+      .filter((source) => typeof source === "string" && source.trim())
+      .map((source) => source.trim()),
+  ),
+];
+
+// 主源失败或加载后未导出对象时，自动尝试配置中的备用源。
+// loadScript 自带超时清理，不会让网络挂起的标签永久占住缓存。
+const loadFirstLibrary = async (sources, name) => {
+  let lastError = null;
+  for (let index = 0; index < sources.length; index += 1) {
+    const source = sources[index];
+    try {
+      await loadScript(source);
+      const library = globalThis[name];
+      if (isReady(library)) return library;
+      lastError = new Error(`${name} 初始化失败`);
+    } catch (error) {
+      lastError = error;
+      console.warn(`${name} 脚本加载失败：${source}`, error);
+    }
+  }
+  throw lastError ?? new Error(`${name} 没有可用的脚本源`);
+};
+
 const initComments = async (themeConfig) => {
   try {
     // 必要数据
@@ -21,10 +49,8 @@ const initComments = async (themeConfig) => {
         throw new Error("Artalk 初始化失败");
       }
       case "twikoo": {
-        // 引入资源
-        await loadScript(option.twikoo.js);
-        if (isReady(globalThis.twikoo)) return globalThis.twikoo;
-        throw new Error("Twikoo 初始化失败");
+        const sources = normalizeSources(option.twikoo.js, option.twikoo.jsFallback);
+        return await loadFirstLibrary(sources, "twikoo");
       }
       default:
         console.warn(`未知的评论服务类型：${commentType}，已跳过初始化`);

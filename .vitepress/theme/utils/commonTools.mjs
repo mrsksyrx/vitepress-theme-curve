@@ -12,7 +12,7 @@ const styleLoads = new Map();
  */
 export const loadScript = (src, option = {}) => {
   // 获取配置
-  const { async = false, reload = false, callback } = option;
+  const { async = false, reload = false, timeout = 15000, callback } = option;
   if (typeof document === "undefined" || !src) {
     // 早退也要 settle：callback 型调用方拿到具体原因，await 型调用方靠
     // rejected Promise 拿到同一原因。空 catch 兼容忽略返回值的调用点。
@@ -46,9 +46,25 @@ export const loadScript = (src, option = {}) => {
       //    文档已过加载期即可视为就绪；仍在加载期则挂 DOMContentLoaded 兜底；
       // 3) 其余（动态插入 / async）挂 load/error 事件等待。
       const promise = new Promise((resolve, reject) => {
-        const settle = () => {
+        let timer = null;
+        let settle = null;
+        let fail = null;
+        const cleanup = () => {
+          clearTimeout(timer);
+          existingScript.removeEventListener("load", settle);
+          existingScript.removeEventListener("error", fail);
+          document.removeEventListener("DOMContentLoaded", settle);
+        };
+        settle = () => {
+          cleanup();
           existingScript.dataset.loaded = "true";
           resolve(existingScript);
+        };
+        fail = (error) => {
+          cleanup();
+          existingScript.remove();
+          if (scriptLoads.get(src) === promise) scriptLoads.delete(src);
+          reject(error instanceof Error ? error : new Error(`loadScript 加载失败（${src}）`));
         };
         if (existingScript.dataset.loaded === "true") return settle();
         const isClassic =
@@ -58,9 +74,12 @@ export const loadScript = (src, option = {}) => {
           existingScript.getAttribute("defer") === null;
         if (isClassic && document.readyState !== "loading") return settle();
         existingScript.addEventListener("load", settle, { once: true });
-        existingScript.addEventListener("error", (error) => reject(error), { once: true });
+        existingScript.addEventListener("error", fail, { once: true });
         if (isClassic) {
           document.addEventListener("DOMContentLoaded", settle, { once: true });
+        }
+        if (timeout > 0) {
+          timer = setTimeout(() => fail(new Error(`loadScript 加载超时（${src}）`)), timeout);
         }
       });
       // 与新插入路径一致：登记共享加载状态，后续调用挂到同一 Promise
@@ -77,15 +96,18 @@ export const loadScript = (src, option = {}) => {
   }
   // 创建一个新的script标签并加载
   const promise = new Promise((resolve, reject) => {
+    let timer = null;
     const script = document.createElement("script");
     script.src = src;
     if (async) script.async = true;
     script.onload = () => {
+      clearTimeout(timer);
       // 打就绪标记：标签若被外部再次命中（既有标签分支）可据此判定已执行完
       script.dataset.loaded = "true";
       resolve(script);
     };
     script.onerror = (error) => {
+      clearTimeout(timer);
       // 清掉残留标签，否则下次调用会命中死标签、永远无法重试
       script.remove();
       // 只清掉自己这一条：若期间发生过 reload，缓存里已是更新的 Promise，
@@ -94,6 +116,15 @@ export const loadScript = (src, option = {}) => {
       reject(error);
     };
     document.head.appendChild(script);
+    if (timeout > 0) {
+      timer = setTimeout(() => {
+        script.onload = null;
+        script.onerror = null;
+        script.remove();
+        if (scriptLoads.get(src) === promise) scriptLoads.delete(src);
+        reject(new Error(`loadScript 加载超时（${src}）`));
+      }, timeout);
+    }
   });
   scriptLoads.set(src, promise);
   // callback-only 的调用方不 await 该 Promise，先挂空 catch 避免 unhandled rejection
@@ -114,7 +145,7 @@ export const loadScript = (src, option = {}) => {
  */
 export const loadCSS = (href, option = {}) => {
   // 获取配置
-  const { reload = false, callback } = option;
+  const { reload = false, timeout = 15000, callback } = option;
   if (typeof document === "undefined" || !href) {
     // 与 loadScript 同理：早退也要 settle，保持通道完整
     const error = new Error(`loadCSS: 无效的 href（${href}）或非浏览器环境`);
@@ -136,23 +167,71 @@ export const loadCSS = (href, option = {}) => {
   } else {
     const existingLink = document.querySelector(`link[href="${href}"]`);
     if (existingLink) {
-      callback && callback(null, existingLink);
-      return false;
+      const promise = new Promise((resolve, reject) => {
+        let timer = null;
+        let settle = null;
+        let fail = null;
+        const cleanup = () => {
+          clearTimeout(timer);
+          existingLink.removeEventListener("load", settle);
+          existingLink.removeEventListener("error", fail);
+        };
+        settle = () => {
+          cleanup();
+          existingLink.dataset.loaded = "true";
+          resolve(existingLink);
+        };
+        fail = (error) => {
+          cleanup();
+          existingLink.remove();
+          if (styleLoads.get(href) === promise) styleLoads.delete(href);
+          reject(error instanceof Error ? error : new Error(`loadCSS 加载失败（${href}）`));
+        };
+        if (existingLink.dataset.loaded === "true") return settle();
+        existingLink.addEventListener("load", settle, { once: true });
+        existingLink.addEventListener("error", fail, { once: true });
+        if (timeout > 0) {
+          timer = setTimeout(() => fail(new Error(`loadCSS 加载超时（${href}）`)), timeout);
+        }
+      });
+      styleLoads.set(href, promise);
+      promise.catch(() => {});
+      if (callback) {
+        promise.then(
+          (l) => callback(null, l),
+          (e) => callback(e),
+        );
+      }
+      return promise;
     }
   }
   // 创建新的link标签并设置属性
   const promise = new Promise((resolve, reject) => {
+    let timer = null;
     const link = document.createElement("link");
     link.href = href;
     link.rel = "stylesheet";
     link.type = "text/css";
-    link.onload = () => resolve(link);
+    link.onload = () => {
+      clearTimeout(timer);
+      resolve(link);
+    };
     link.onerror = (error) => {
+      clearTimeout(timer);
       link.remove();
       if (styleLoads.get(href) === promise) styleLoads.delete(href);
       reject(error);
     };
     document.head.appendChild(link);
+    if (timeout > 0) {
+      timer = setTimeout(() => {
+        link.onload = null;
+        link.onerror = null;
+        link.remove();
+        if (styleLoads.get(href) === promise) styleLoads.delete(href);
+        reject(new Error(`loadCSS 加载超时（${href}）`));
+      }, timeout);
+    }
   });
   styleLoads.set(href, promise);
   promise.catch(() => {});
