@@ -146,6 +146,8 @@ export const themeConfig = {
     type: "twikoo",
     twikoo: {
       js: "https://cdn.jsdelivr.net/npm/twikoo@1.6.42/dist/twikoo.all.min.js",
+      // jsDelivr 偶发不可用时自动回退到 npmmirror
+      jsFallback: ["https://registry.npmmirror.com/twikoo/1.6.42/files/dist/twikoo.all.min.js"],
       envId: "https://twikoo.20091010.xyz",
       region: "",
       lang: "zh-CN",
