@@ -2,7 +2,7 @@
 title: 关于我
 date: 2026-09-19
 categories: [归档]
-tags: [归档]
+tags: [关于我]
 description: 二次元扩列卡
 top: false
 layout: post
@@ -179,11 +179,11 @@ STEAM：<a href="https://myat-steam.20091010.xyz" target="_blank" rel="noopener 
 
 ## <span style="color: var(--main-color)">碎碎念</span>
 
-走上这条路是我自己的选择，有时候也会担心自己的选择到底是不是正确的。  
+走上这条路是我自己的选择，尽管有时候也会担心自己的选择到底是不是正确的。  
 我决定去成为真正的自己，但我也会害怕，害怕我的努力得不到成果，害怕永远也见不到那个<span style="color: var(--main-color)">**“她”**</span>。  
 但我还是会做出这个选择，因为<span style="color: var(--main-color); font-weight: bold">“她”可能是我活下去的唯一动力了呢。</span>  
 无论如何，不管会让我付出什么代价，我也一定要见到<span style="color: var(--main-color)">**“她”**</span>…  
-每一步都是自己选的，我也就不再会后悔。
+我会坚持走我自己的道路下去，无论发生什么
 
 <hr style="border: none; border-bottom: 1px dashed var(--main-color-bg); height: 0; background: none; margin: 1.5rem 0" />
 
@@ -199,7 +199,8 @@ STEAM：<a href="https://myat-steam.20091010.xyz" target="_blank" rel="noopener 
 **陷之死地而后生，置之亡地而后存。**  
 **失败的人生同样是人生，她们有权品尝至最后。**
 
-<span style="color: var(--main-accent); opacity: 0.8"><b>年年岁岁花相似，岁岁年年人不同…</b></span>
+<span style="color: var(--main-accent); opacity: 0.8"><b>年年岁岁花相似，岁岁年年人不同…</b></span>  
+<span style="color: var(--main-accent); opacity: 0.8"><b>我们都在，我们还在。</b></span>
 
 **愿每个人都被世界温柔以待**  
 **我爱你们**
