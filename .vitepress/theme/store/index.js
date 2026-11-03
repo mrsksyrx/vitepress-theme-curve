@@ -199,6 +199,8 @@ export const mainStore = defineStore("main", {
       tagsWidgetEnabled: true,
       // 移动端小组件面板入口开关（关闭后隐藏首页左上角入口）
       mobileWidgetsEnabled: true,
+      // 文章末尾「相关推荐」组件开关（默认开启）
+      relatedPostEnabled: true,
       // 天气小组件折叠状态
       weatherSectionExpanded: false,
       // 天气数据源（amap = 高德，wttr = wttr.in，openmeteo = Open-Meteo）

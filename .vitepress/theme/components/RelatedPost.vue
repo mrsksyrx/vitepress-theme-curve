@@ -1,6 +1,6 @@
 <!-- 相关文章 -->
 <template>
-  <div v-if="relatedData" class="related-post">
+  <div v-if="relatedPostEnabled && relatedData" class="related-post">
     <div class="title">
       <span class="name">
         <i class="iconfont icon-star"></i>
@@ -14,11 +14,14 @@
 </template>
 
 <script setup>
+import { storeToRefs } from "pinia";
 import { shufflePost } from "@/utils/helper";
 import { usePostData } from "@/utils/usePostData.mjs";
 import { normalizeList } from "@/utils/normalizeList.mjs";
+import { mainStore } from "@/store";
 
 const router = useRouter();
+const { relatedPostEnabled } = storeToRefs(mainStore());
 const { page, frontmatter } = useData();
 const { postData, categoriesData, loadPostData } = usePostData();
 

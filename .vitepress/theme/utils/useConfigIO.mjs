@@ -106,6 +106,7 @@ const BOOLEAN_KEYS = [
   "readingProgressEnabled",
   "hoverLineEnabled",
   "imageWebpEnabled",
+  "relatedPostEnabled",
   "weatherWidgetEnabled",
   "helloGithubWidgetEnabled",
   "tagsWidgetEnabled",
