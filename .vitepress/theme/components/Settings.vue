@@ -1140,6 +1140,23 @@
           </div>
         </div>
         <div class="set-item">
+          <span class="set-label">相关文章推荐</span>
+          <div class="set-options">
+            <span
+              :class="['options', { choose: !relatedPostEnabled }]"
+              @click="setRelatedPostEnabled(false)"
+            >
+              关闭
+            </span>
+            <span
+              :class="['options', { choose: relatedPostEnabled }]"
+              @click="setRelatedPostEnabled(true)"
+            >
+              开启
+            </span>
+          </div>
+        </div>
+        <div class="set-item">
           <span class="set-label">天气小组件选项</span>
           <div class="set-options">
             <span
@@ -1816,6 +1833,7 @@ const {
   hoverLineEnabled,
   imageWebpEnabled,
   traditionalChineseEnabled,
+  relatedPostEnabled,
   weatherProvider,
   weatherLocationMode,
   weatherManualCity,
@@ -2055,6 +2073,11 @@ const setImageWebpEnabled = (enabled) => {
 const setTraditionalChineseEnabled = (enabled) => {
   traditionalChineseEnabled.value = enabled;
   showSettingSuccess(`页面语言已切换为${enabled ? "繁體中文" : "简体中文"}`);
+};
+
+const setRelatedPostEnabled = (enabled) => {
+  relatedPostEnabled.value = enabled;
+  showSettingSuccess(`相关文章推荐已${enabled ? "开启" : "关闭"}`);
 };
 // 移动端小组件面板：关闭时同步收起已打开的浮层
 const setMobileWidgetsEnabled = (enabled) => {

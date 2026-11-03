@@ -45,6 +45,7 @@ export const PERSIST_PATHS = [
   "hoverLineEnabled",
   "imageWebpEnabled",
   "traditionalChineseEnabled",
+  "relatedPostEnabled",
   "weatherProvider",
   "weatherLocationMode",
   "weatherManualCity",
