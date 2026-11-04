@@ -106,7 +106,7 @@ export const themeConfig = {
           { text: "近期文章", link: "/" },
           { text: "全部分类", link: "/pages/categories" },
           { text: "全部标签", link: "/pages/tags" },
-          { text: "文章归档", link: "/pages/archives", newTab: true },
+          { text: "文章归档", link: "/pages/archives" },
         ],
       },
       {

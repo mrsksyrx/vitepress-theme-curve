@@ -57,6 +57,8 @@
   </Teleport>
   <!-- 右键菜单 -->
   <RightMenu ref="rightMenuRef" />
+  <!-- 外链中转安全中心弹窗 -->
+  <JumpRedirectModal />
   <!-- 全局分享面板 -->
   <SharePanel />
   <!-- 全局消息 -->

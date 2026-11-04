@@ -168,15 +168,20 @@ let lyricRequestId = 0;
 const hasPlayedOnce = ref(false);
 const prevCover = ref("");
 
-// 胶囊宽度：未播放时基于"Player"文本，播放后取最长歌词并固定
+// 胶囊宽度：未播放时基于"Player"文本。歌词就绪后按当前歌曲最长歌词行定宽（随切歌
+// 平滑变化）；歌词重载的间隙沿用旧宽度，避免暂停后恢复播放、切歌时瞬间缩回默认宽度
+const lyricFitWidth = computed(() => {
+  if (!pillLyrics.value.length) return 0;
+  const maxLen = Math.max(...pillLyrics.value.map((l) => l.text.length));
+  return Math.min(maxLen, 30) * 14 + 32;
+});
+const lastFitWidth = ref(0);
+watch(lyricFitWidth, (width) => {
+  if (width > 0) lastFitWidth.value = width;
+});
 const pillLyricWidth = computed(() => {
   if (!hasPlayedOnce.value) return "Player".length * 14 + 32;
-  if (pillLyrics.value.length) {
-    const maxLen = Math.max(...pillLyrics.value.map((l) => l.text.length));
-    const capped = Math.min(maxLen, 30);
-    return capped * 14 + 32;
-  }
-  return "Player".length * 14 + 32;
+  return lyricFitWidth.value || lastFitWidth.value || "Player".length * 14 + 32;
 });
 
 const pillLyricStyle = computed(() => {
@@ -232,16 +237,19 @@ const parseLrc = (text) => {
   return result;
 };
 
-// 加载歌词
+// 加载歌词：保留旧歌词直到新歌词就绪，避免恢复播放/切歌瞬间内容闪空；
+// requestId 丢弃过期响应，防止快速切歌后歌词错位
 const loadLyrics = async () => {
-  // 先清空并用序号标记本次请求，避免旧歌词残留或快速切歌后返回错位
   const requestId = ++lyricRequestId;
-  pillLyrics.value = [];
-  pillLyricIdx.value = -1;
   const p = window.$player;
   if (!p) return;
   const song = allSongs.value[currentSongIdx.value];
-  if (!song?.lrc) return;
+  if (!song?.lrc) {
+    // 新歌确实没有歌词时才清空
+    pillLyrics.value = [];
+    pillLyricIdx.value = -1;
+    return;
+  }
   try {
     const res = await fetch(song.lrc);
     const text = await res.text();

@@ -436,7 +436,7 @@ const ALWAYS_EXCLUDE_DOMAINS = ["sgexilq.com", "sgexilq.top", "mrsksyrx.top", "2
  * 判断链接是否应跳过中转（相对路径/同源、非 http(s) 协议，或命中始终排除的域名）
  * @param {string} href
  */
-const shouldSkipRedirect = (href) => {
+export const shouldSkipRedirect = (href) => {
   try {
     const url = new URL(href, "https://placeholder.local");
     // 相对路径解析为 placeholder.local 即同源

@@ -99,12 +99,51 @@ const store = mainStore();
 const router = useRouter();
 const { theme } = useData();
 
-const closeMenu = () => store.changeShowStatus("mobileMenuShow");
-
 // 右滑关闭手势（侧边栏从右侧滑入）
 const menuContentEl = ref(null);
 const menuMaskEl = ref(null);
 const gestureClosing = ref(false);
+let closeTimer = null;
+
+const finishClose = () => {
+  // 忽略已过期的收起任务，避免快速重开后再切换状态
+  if (!store.mobileMenuShow || !gestureClosing.value) return;
+  store.changeShowStatus("mobileMenuShow");
+};
+
+// 关闭按钮、遮罩与手势共用同一套收起动画，避免状态提前切换导致背景/过渡不同步
+const startCloseAnimation = () => {
+  if (!store.mobileMenuShow || gestureClosing.value) return;
+  gestureClosing.value = true;
+  if (closeTimer) {
+    clearTimeout(closeTimer);
+    closeTimer = null;
+  }
+
+  const panel = menuContentEl.value;
+  const mask = menuMaskEl.value;
+  if (!panel && !mask) {
+    finishClose();
+    return;
+  }
+
+  if (panel) {
+    panel.style.transition = "transform 0.3s ease-out, opacity 0.3s ease-out";
+    panel.style.transform = "translateX(100%)";
+    panel.style.opacity = "0";
+  }
+  if (mask) {
+    mask.style.transition = "opacity 0.3s ease-out";
+    mask.style.opacity = "0";
+  }
+
+  closeTimer = setTimeout(() => {
+    closeTimer = null;
+    finishClose();
+  }, 300);
+};
+
+const closeMenu = () => startCloseAnimation();
 
 let touchStartX = 0;
 let touchStartY = 0;
@@ -173,20 +212,7 @@ const onTouchEnd = () => {
   const shouldClose = diff > 80;
 
   if (shouldClose) {
-    // 标记后关闭：跳过 toLeft leave，避免从原位再播一次
-    gestureClosing.value = true;
-    if (panel) {
-      panel.style.transition = "transform 0.3s ease-out, opacity 0.3s ease-out";
-      panel.style.transform = "translateX(100%)";
-      panel.style.opacity = "0";
-    }
-    if (mask) {
-      mask.style.transition = "opacity 0.3s ease-out";
-      mask.style.opacity = "0";
-    }
-    setTimeout(() => {
-      closeMenu();
-    }, 300);
+    startCloseAnimation();
   } else {
     if (panel) {
       panel.style.transition = "transform 0.25s ease-out, opacity 0.25s ease-out";
@@ -212,6 +238,10 @@ watch(
   (val) => {
     if (!val) return;
     gestureClosing.value = false;
+    if (closeTimer) {
+      clearTimeout(closeTimer);
+      closeTimer = null;
+    }
     const panel = menuContentEl.value;
     const mask = menuMaskEl.value;
     if (panel) {
