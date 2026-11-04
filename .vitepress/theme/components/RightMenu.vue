@@ -416,7 +416,10 @@ const rightMenuFunc = async (type) => {
         window.location.reload();
         break;
       case "open-link": {
-        const linkUrl = clickedTypeData.value?.href;
+        const linkEl = clickedTypeData.value;
+        // 改写过的链接取 original-href，其余取真实 href；与左键一致优先走安全中心弹窗
+        const linkUrl = linkEl?.getAttribute?.("original-href") || linkEl?.href;
+        if (linkUrl && window.$jump?.open?.(linkUrl, linkEl)) break;
         if (linkUrl && !openExternalUrl(linkUrl) && typeof $message !== "undefined") {
           $message.error("链接协议不受支持");
         }
