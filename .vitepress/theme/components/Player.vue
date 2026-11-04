@@ -264,6 +264,14 @@ const safePlay = () => {
   }
 };
 
+// 浏览器拦截自动播放时 play() 会以 NotAllowedError reject：APlayer 的 UI 和
+// store 的播放状态都要拨回暂停，否则按钮/封面卡在“播放中”、实际没声音
+const handlePlayRejection = (error) => {
+  if (error?.name !== "NotAllowedError") return;
+  player.value?.setUIPaused?.();
+  playState.value = false;
+};
+
 // Meting type=url 是 302 链，最终落到 http:// 网易 CDN，HTTPS 页面会按混合内容
 // 拦截导致 net::ERR_FAILED。浏览器读不到跳转 Location（跨域无 CORS），
 // 走同源 /api/music-url 在服务端解析成 https 直链再交给 <audio>。
@@ -353,6 +361,12 @@ const initAPlayer = async (list, requestId) => {
       customAudioType: {
         meting: (media, song) => {
           const targetUrl = song.url;
+          // APlayer setAudio 在本回调返回后会立刻 seek(0) + play()。若此刻还挂着
+          // 上一首的 src，旧曲会被从头播出来（切歌必现的串歌/爆音）。这里同步卸掉
+          // 旧曲，让 setAudio 后续的 play() 落在“无源窗口期”（被 play 补丁吞掉拒绝），
+          // 直链解析完成后再挂新源播放。
+          media.removeAttribute("src");
+          media.load();
           resolveAudioUrl(targetUrl)
             .then((resolved) => {
               if (disposed || !player.value) return;
@@ -364,20 +378,27 @@ const initAPlayer = async (list, requestId) => {
               media.src = resolved;
               if (shouldPlay) {
                 const p = media.play();
-                if (p && typeof p.catch === "function") p.catch(() => {});
+                if (p && typeof p.catch === "function") p.catch(handlePlayRejection);
               }
             })
             .catch((error) => console.warn("解析音频直链失败：", error));
         },
       },
     });
-    // APlayer setAudio 会在 customAudioType 异步设好 src 之前调 audio.play()，
-    // 那次 play() 必然 reject，吞掉以免 unhandledrejection 刷屏
+    // 切歌窗口期（旧 src 已卸载、新直链未挂上）的 play() 必然失败，吞掉以免
+    // unhandledrejection 刷屏；已有 src 时把拒绝透传给 APlayer，让它在浏览器
+    // 拦截自动播放（NotAllowedError）时把 UI 拨回暂停，避免状态卡在“播放中”。
     if (player.value?.audio?.play) {
-      const rawPlay = player.value.audio.play.bind(player.value.audio);
-      player.value.audio.play = () => {
+      const media = player.value.audio;
+      const rawPlay = media.play.bind(media);
+      media.play = () => {
         const p = rawPlay();
-        return p && typeof p.catch === "function" ? p.catch(() => {}) : p;
+        if (!p || typeof p.catch !== "function") return p;
+        return p.catch((error) => {
+          if (!media.getAttribute("src")) return;
+          handlePlayRejection(error);
+          throw error;
+        });
       };
     }
     // 同步单曲循环到底层 audio 元素
@@ -398,6 +419,11 @@ const initAPlayer = async (list, requestId) => {
       if (playerAutoPlay.value && !hasPlayed.value) {
         safePlay();
       }
+      // 预解析下一首的 HTTPS 直链：自动连播/手动下一首命中 30s 缓存，切歌不再等网络
+      const p = player.value;
+      const nextIdx = p?.nextIndex?.() ?? -1;
+      const nextUrl = p?.list?.audios?.[nextIdx]?.url;
+      if (nextUrl) resolveAudioUrl(nextUrl).catch(() => {});
     });
     player.value?.on("play", () => {
       if (!hasPlayed.value) {
@@ -410,21 +436,31 @@ const initAPlayer = async (list, requestId) => {
     player.value?.on("pause", () => {
       playState.value = false;
     });
-    // APlayer 内置 error 处理器会在 2 秒后 skipForward + play，
-    // 音频连续加载失败时会变成“整本歌单不停轮换”的死循环。这里做熔断。
+    // 切歌瞬间同步索引：播放中切歌（audio 已在播）不会再触发 play 事件，暂停态
+    // 切歌也不触发，只靠 play 事件会让歌词/封面/列表高亮停留在上一首
+    player.value?.on("listswitch", ({ index }) => {
+      if (typeof index !== "number") return;
+      currentIdx.value = index;
+      // listswitch 在 APlayer 更新 DOM 标题之前触发，下一帧再取歌名/封面
+      nextTick(getMusicData);
+    });
+    // 重建后把索引拉回实际首曲（随机模式首曲不一定是 0），避免高亮/歌词停在旧索引
+    currentIdx.value = player.value.list.index;
+    // APlayer 内置 error 处理器会在 2 秒后 skipForward + play，连续加载失败时
+    // 会变成“整本歌单不停轮换”的死循环。熔断时不去劫持 skipForward（那会让手动
+    // 下一首一起失灵），而是发一次同索引 listswitch —— APlayer 正是在 listswitch
+    // 里清掉那个 2 秒自动切歌定时器的，手动切歌能力保持完好。
     let consecutiveAudioErrors = 0;
-    const originalSkipForward = player.value?.skipForward?.bind(player.value);
     player.value?.on("error", () => {
       consecutiveAudioErrors += 1;
-      if (consecutiveAudioErrors >= 3 && originalSkipForward) {
-        player.value.skipForward = () => {};
+      if (consecutiveAudioErrors >= 3 && player.value) {
+        player.value.events?.trigger?.("listswitch", { index: player.value.list.index });
         player.value.pause?.();
         console.error("音频连续加载失败，已停止自动切歌");
       }
     });
     player.value?.on("playing", () => {
       consecutiveAudioErrors = 0;
-      if (originalSkipForward) player.value.skipForward = originalSkipForward;
     });
     getMusicData();
     if (!playerAutoPlay.value) {
@@ -449,8 +485,9 @@ const getMusicData = () => {
       audio?.artist ||
       ""
     ).replace(" - ", "");
-    const songCover = allSongs.value[currentIdx.value]?.cover || "";
-    const songLrc = allSongs.value[currentIdx.value]?.lrc || "";
+    const audioIdx = player.value?.list?.index ?? currentIdx.value;
+    const songCover = allSongs.value[audioIdx]?.cover || "";
+    const songLrc = allSongs.value[audioIdx]?.lrc || "";
     playerData.value = {
       name: songName || "未知曲目",
       artist: songArtist || "未知艺术家",
