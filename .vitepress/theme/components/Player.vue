@@ -60,7 +60,7 @@
       <div class="player-capsule" @click="toggleFold">
         <div ref="playerDom" class="player-content" />
       </div>
-      <button v-show="!isFolded" class="ctrl-btn" @click.stop="player?.skipBack()">
+      <button v-show="!isFolded" class="ctrl-btn" @click.stop="switchSong('back')">
         <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
           <path d="M6 6h2v12H6zm3.5 6 8.5 6V6z" />
         </svg>
@@ -73,7 +73,7 @@
           <path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z" />
         </svg>
       </button>
-      <button v-show="!isFolded" class="ctrl-btn" @click.stop="player?.skipForward()">
+      <button v-show="!isFolded" class="ctrl-btn" @click.stop="switchSong('forward')">
         <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
           <path d="M6 18 14.5 12 6 6v12zM16 6v12h2V6h-2z" />
         </svg>
@@ -127,6 +127,8 @@ let rotateGeneration = 0;
 let playlistRequestId = 0;
 let lyricRequestId = 0;
 let disposed = false;
+// 切歌窗口期“新直链就绪后继续播放”的意图（不能依赖 APlayer.paused，见下）
+let playWhenResolved = false;
 
 // 随机轮播
 const rotatePhase = ref("");
@@ -218,6 +220,16 @@ const playSong = (idx) => {
   player.value.play();
   currentIdx.value = idx;
   getMusicData();
+};
+
+// 点击上一首/下一首（含媒体键）：切歌即播，直链就绪后由播放意图接续
+const switchSong = (dir) => {
+  if (!player.value) return;
+  hasPlayed.value = true;
+  stopRotate();
+  if (dir === "back") player.value.skipBack();
+  else player.value.skipForward();
+  safePlay();
 };
 
 // 获取播放列表
@@ -359,11 +371,15 @@ const initAPlayer = async (list, requestId) => {
       // type: meting → customAudioType 异步解析出 https 直链后再挂到 audio 上
       audio: playlistData.map((song) => ({ ...song, type: "meting" })),
       customAudioType: {
-        meting: (media, song) => {
+        meting: (media, song, ap) => {
           const targetUrl = song.url;
+          // 切换前是否在播 = 新歌就绪后是否继续播放。两个浏览器行为坑：load() 会同步把
+          // media.paused 置真；无源窗口期的 play() 不会 reject 而是挂起等音源，所以播放
+          // 意图必须同步记录，不能等 promise 回调（否则切歌后要手动点播放才出声）。
+          playWhenResolved = !ap.paused || !media.paused;
           // APlayer setAudio 在本回调返回后会立刻 seek(0) + play()。若此刻还挂着
           // 上一首的 src，旧曲会被从头播出来（切歌必现的串歌/爆音）。这里同步卸掉
-          // 旧曲，让 setAudio 后续的 play() 落在“无源窗口期”（被 play 补丁吞掉拒绝），
+          // 旧曲，让 setAudio 后续的 play() 落在“无源窗口期”（play 补丁同步记录意图），
           // 直链解析完成后再挂新源播放。
           media.removeAttribute("src");
           media.load();
@@ -374,9 +390,8 @@ const initAPlayer = async (list, requestId) => {
               const idx = player.value.list?.index ?? -1;
               const nowUrl = player.value.list?.audios?.[idx]?.url;
               if (nowUrl !== targetUrl) return;
-              const shouldPlay = !player.value.paused;
               media.src = resolved;
-              if (shouldPlay) {
+              if (playWhenResolved) {
                 const p = media.play();
                 if (p && typeof p.catch === "function") p.catch(handlePlayRejection);
               }
@@ -385,20 +400,36 @@ const initAPlayer = async (list, requestId) => {
         },
       },
     });
-    // 切歌窗口期（旧 src 已卸载、新直链未挂上）的 play() 必然失败，吞掉以免
-    // unhandledrejection 刷屏；已有 src 时把拒绝透传给 APlayer，让它在浏览器
-    // 拦截自动播放（NotAllowedError）时把 UI 拨回暂停，避免状态卡在“播放中”。
+    // 切歌窗口期（旧 src 已卸载、新直链未挂上）的 play() 在 Chrome 不会 reject 而是
+    // 挂起等音源，播放意图必须在调用时同步记录；无论是否拒绝都吞掉，避免
+    // unhandledrejection 刷屏。已有 src 时把拒绝透传给 APlayer，让它在浏览器拦截自动
+    // 播放（NotAllowedError）时把 UI 拨回暂停，避免状态卡在“播放中”。
     if (player.value?.audio?.play) {
       const media = player.value.audio;
       const rawPlay = media.play.bind(media);
       media.play = () => {
         const p = rawPlay();
         if (!p || typeof p.catch !== "function") return p;
+        if (!media.getAttribute("src")) {
+          // 无源窗口期收到播放请求：同步记住意图，新直链挂上后接着播
+          playWhenResolved = true;
+          p.catch(() => undefined);
+          return p;
+        }
         return p.catch((error) => {
-          if (!media.getAttribute("src")) return;
           handlePlayRejection(error);
           throw error;
         });
+      };
+    }
+    if (player.value?.audio?.pause) {
+      const media = player.value.audio;
+      const rawPause = media.pause.bind(media);
+      media.pause = () => {
+        // 显式暂停（用户点击、熔断、列表播完）要撤销“就绪后继续播放”的意图
+        playWhenResolved = false;
+        playState.value = false;
+        return rawPause();
       };
     }
     // 同步单曲循环到底层 audio 元素
@@ -434,6 +465,8 @@ const initAPlayer = async (list, requestId) => {
       currentIdx.value = player.value.list.index;
     });
     player.value?.on("pause", () => {
+      // 切歌窗口期 load() 会触发一次假 pause 事件，不能把状态拨回暂停
+      if (playWhenResolved) return;
       playState.value = false;
     });
     // 切歌瞬间同步索引：播放中切歌（audio 已在播）不会再触发 play 事件，暂停态
@@ -511,10 +544,10 @@ const initMediaSession = (title, artist) => {
       player.value?.pause();
     });
     navigator.mediaSession.setActionHandler("previoustrack", () => {
-      player.value?.skipBack();
+      switchSong("back");
     });
     navigator.mediaSession.setActionHandler("nexttrack", () => {
-      player.value?.skipForward();
+      switchSong("forward");
     });
   }
 };
