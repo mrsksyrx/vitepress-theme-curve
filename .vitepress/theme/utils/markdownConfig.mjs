@@ -3,7 +3,15 @@ import markdownItAttrs from "markdown-it-attrs";
 import container from "markdown-it-container";
 import { encryptPostHtml } from "./mdEncrypt.mjs";
 
-const IMAGE_CLASS_NAMES = new Set(["avatar", "avatar-sm", "avatar-lg"]);
+const IMAGE_CLASS_NAMES = new Set([
+  "avatar",
+  "avatar-sm",
+  "avatar-lg",
+  "image",
+  "image-sm",
+  "image-lg",
+  "no-crop",
+]);
 const IMAGE_ALIGNMENT_CLASS_NAMES = new Set(["align-left", "align-center", "align-right"]);
 const IMAGE_ROW_MODIFIERS = new Set([...IMAGE_ALIGNMENT_CLASS_NAMES, "nowrap"]);
 

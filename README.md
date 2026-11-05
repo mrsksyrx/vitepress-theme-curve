@@ -271,9 +271,18 @@ _斜体文字_
 ![大头像](/images/avatar.png){.avatar-lg}
 ```
 
-三个尺寸分别为 `96px`、`128px` 和 `160px`，统一使用正方形裁剪和圆角矩形边框。
+三个尺寸分别为 `96px`、`128px` 和 `160px`，统一使用正方形裁剪和圆角矩形边框。头像类默认保留正方形裁剪；如果要让头像类图片按原始宽高比显示，可以追加 `.no-crop`。
 
-图片还可以通过 `align-left`、`align-center`、`align-right` 自定义左、中、右对齐；对齐类可以与头像尺寸组合，也可以用于普通图片：
+普通图片也可以复用这三档尺寸，使用 `.image-sm`、`.image`、`.image-lg`。这些类只约束宽度，高度按原始宽高比自动计算，不会正方形裁切：
+
+```markdown
+![小图片](/images/example.png){.image-sm}
+![中图片](/images/example.png){.image}
+![大图片](/images/example.png){.image-lg}
+![保留比例的头像](/images/avatar.png){.avatar-lg .no-crop}
+```
+
+图片还可以通过 `align-left`、`align-center`、`align-right` 自定义左、中、右对齐；对齐类可以与头像尺寸或普通图片尺寸组合：
 
 ```markdown
 ![左对齐头像](/images/avatar.png){.avatar-sm .align-left}
