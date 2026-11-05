@@ -217,6 +217,35 @@
         width: 160px;
         height: 160px;
       }
+
+      // 普通图片复用头像的三档宽度，但保留原始宽高比，不做正方形裁切。
+      &.image,
+      &.image-sm,
+      &.image-lg {
+        max-height: none;
+        height: auto;
+        object-fit: contain;
+      }
+
+      &.image {
+        width: 128px;
+      }
+
+      &.image-sm {
+        width: 96px;
+      }
+
+      &.image-lg {
+        width: 160px;
+      }
+
+      // 头像类默认保持正方形裁切；需要保留比例时追加 .no-crop。
+      &.avatar.no-crop,
+      &.avatar-sm.no-crop,
+      &.avatar-lg.no-crop {
+        height: auto;
+        object-fit: contain;
+      }
     }
     .post-img-tip {
       display: inline-flex;
