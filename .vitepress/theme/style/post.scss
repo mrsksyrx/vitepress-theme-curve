@@ -829,6 +829,116 @@
       }
     }
   }
+  // 可展开/收起卡片
+  .collapse-card {
+    --collapse-duration: 280ms;
+    margin: 1.2rem 0;
+    overflow: hidden;
+    border: 1px solid var(--main-card-border);
+    border-radius: 8px;
+    background-color: var(--main-card-second-background);
+    box-shadow: 0 8px 16px -4px var(--main-border-shadow);
+
+    .collapse-card-title {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 1rem 1.2rem;
+      color: var(--main-font-color);
+      font-weight: 600;
+      cursor: pointer;
+      list-style: none;
+      user-select: none;
+
+      &::-webkit-details-marker {
+        display: none;
+      }
+
+      &:focus-visible {
+        outline: 2px solid var(--main-color);
+        outline-offset: -2px;
+      }
+    }
+
+    .collapse-card-summary {
+      min-width: 0;
+      overflow-wrap: anywhere;
+
+      > :last-child {
+        margin-bottom: 0;
+      }
+    }
+
+    .collapse-card-arrow {
+      flex: 0 0 auto;
+      width: 8px;
+      height: 8px;
+      border-right: 2px solid var(--main-color);
+      border-bottom: 2px solid var(--main-color);
+      transform: rotate(45deg);
+      transition: transform 0.2s;
+    }
+
+    // Grid 轨道只做 0fr <-> 1fr 过渡，不逐帧改写 height，避免点击时整页回流。
+    .collapse-card-content {
+      display: grid;
+      grid-template-rows: 0fr;
+      opacity: 0;
+      transform: translateY(-8px);
+      transition:
+        grid-template-rows var(--collapse-duration) cubic-bezier(0.4, 0, 0.2, 1),
+        opacity var(--collapse-duration) ease,
+        transform var(--collapse-duration) ease;
+    }
+
+    .collapse-card-body {
+      min-height: 0;
+      overflow: hidden;
+    }
+
+    .collapse-card-inner {
+      margin: 0 1.2rem;
+      padding: 0.85rem 0 1rem;
+      border-top: 1px dashed var(--main-card-border);
+
+      > :first-child {
+        margin-top: 0;
+      }
+
+      > :last-child {
+        margin-bottom: 0;
+      }
+    }
+
+    &[open]:not([data-collapse-state]) .collapse-card-content,
+    &[data-collapse-state="opening"] .collapse-card-content {
+      grid-template-rows: 1fr;
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    &[data-collapse-state="closing"] .collapse-card-content {
+      grid-template-rows: 0fr;
+      opacity: 0;
+      transform: translateY(-8px);
+    }
+
+    &[open]:not([data-collapse-state]) .collapse-card-arrow,
+    &[data-collapse-state="opening"] .collapse-card-arrow {
+      transform: rotate(225deg);
+    }
+
+    &[data-collapse-state="closing"] .collapse-card-arrow {
+      transform: rotate(45deg);
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .collapse-card-content {
+        transition-duration: 0.01ms;
+      }
+    }
+  }
   // button
   .button {
     outline: none;

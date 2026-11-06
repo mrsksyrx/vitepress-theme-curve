@@ -98,6 +98,48 @@ const markdownConfig = (md, themeConfig) => {
       }
     },
   });
+  // 可展开/收起卡片：`::: collapse open 标题` 可默认展开
+  const parseCollapseInfo = (info) => {
+    let params = info
+      .trim()
+      .replace(/^collapse\b/i, "")
+      .trim();
+    const openAtStart = /^open(?:\s+|$)/i.test(params);
+    const openAtEnd = /\s+open$/i.test(params);
+    if (openAtStart) {
+      params = params.replace(/^open(?:\s+|$)/i, "");
+    } else if (openAtEnd) {
+      params = params.replace(/\s+open$/i, "");
+    }
+    return {
+      open: openAtStart || openAtEnd,
+      title: params.trim(),
+    };
+  };
+
+  md.use(container, "collapse", {
+    validate: (params) => /^\s*collapse(?:\s|$)/i.test(params),
+    render: (tokens, idx, _options, env) => {
+      const token = tokens[idx];
+      if (token.nesting !== 1) {
+        return "</div></div></div></details>\n";
+      }
+
+      const { open, title } = parseCollapseInfo(token.info);
+      const renderedTitle = md.renderInline(title || "展开内容", {
+        references: env.references,
+      });
+
+      return `<details class="collapse-card"${open ? " open" : ""}>
+        <summary class="collapse-card-title">
+          <span class="collapse-card-summary">${renderedTitle}</span>
+          <span class="collapse-card-arrow" aria-hidden="true"></span>
+        </summary>
+        <div class="collapse-card-content">
+          <div class="collapse-card-body">
+            <div class="collapse-card-inner">`;
+    },
+  });
   // 横向图片组
   md.use(container, "image-row", {
     render: (tokens, idx) => {
