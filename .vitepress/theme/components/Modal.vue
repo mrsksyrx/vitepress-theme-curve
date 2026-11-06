@@ -145,12 +145,15 @@ watch(
 );
 
 const onTouchStart = (e) => {
+  // 把手、标题栏等滚动区以外的 chrome 始终可拖拽；内容区滚过之后才交给内部滚动
   const modalContent = modalContentEl.value;
-  if (modalContent && modalContent.scrollTop > 0) {
+  const startedInContent = Boolean(modalContent && modalContent.contains(e.target));
+  if (startedInContent && modalContent.scrollTop > 0) {
     isDragging = false;
     return;
   }
   touchStartY = e.touches[0].clientY;
+  touchCurrentY = touchStartY;
   startTime = Date.now();
   isDragging = true;
 };
@@ -343,6 +346,7 @@ onUnmounted(() => {
     .title {
       position: relative;
       justify-content: center;
+      touch-action: none;
       .title-left {
         text-align: center;
       }

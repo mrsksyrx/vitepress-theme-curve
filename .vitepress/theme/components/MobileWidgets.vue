@@ -131,14 +131,19 @@ let isDragging = false;
 let startTime = 0;
 
 const onTouchStart = (e) => {
-  // 列表已滚动时不接管手势，交给内部滚动
+  // 把手、标题栏等滚动区以外的 chrome 始终可拖拽；内容区滚过之后才交给内部滚动
   const body = widgetsBodyEl.value;
+  const startedInContent = Boolean(body && body.contains(e.target));
   const innerScroller = e.target.closest(".toc-list");
-  if ((body && body.scrollTop > 0) || (innerScroller && innerScroller.scrollTop > 0)) {
+  if (
+    startedInContent &&
+    ((body && body.scrollTop > 0) || (innerScroller && innerScroller.scrollTop > 0))
+  ) {
     isDragging = false;
     return;
   }
   touchStartY = e.touches[0].clientY;
+  touchCurrentY = touchStartY;
   startTime = Date.now();
   isDragging = true;
 };
@@ -259,6 +264,7 @@ const onTouchEnd = () => {
       justify-content: space-between;
       margin-bottom: 12px;
       flex-shrink: 0;
+      touch-action: none;
 
       .panel-title {
         display: flex;
