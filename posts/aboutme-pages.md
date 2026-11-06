@@ -11,7 +11,7 @@ hideHome: true
 
 ::: tip Tips
 
-来自扩列卡二维码或NFC的访问会指向本页面（即 <a href="https://i.sgexilq.com" target="_blank" rel="noopener noreferrer" style="color: var(--main-color)"><strong>card.sgexilq.top</strong></a> ）  
+来自扩列卡二维码或NFC的访问会指向本页面（即 <a href="https://i.sgexilq.com" target="_blank" rel="noopener noreferrer" style="color: var(--main-color)"><strong>i.sgexilq.com</strong></a> ）  
 如果泥是通过卡片进入，可以使用 <a href="https://nfc.software/zh" target="_blank" rel="noopener noreferrer" style="color: var(--main-color)"><strong>NFC Tools</strong></a> 工具将其修改为泥想要的功能哦
 
 :::
@@ -24,8 +24,11 @@ hideHome: true
 ### 称呼
 
 我的名字/cn是
-**泠诗尘**  
+**泠诗尘**
+（líng）  
 可以叫我诗尘、泠泠、泠酱…怎么样都可以啦
+
+但是请不要使用男性代称，谢谢qwq
 
 ### 标识
 
@@ -71,7 +74,6 @@ DECO / 小绵羊
 ### 诞生日
 
 **2009.10.10**  
-2026.10.5开始HRT
 
 ### 坐标
 
@@ -82,15 +84,45 @@ DECO / 小绵羊
 跨女（生男心女）  
 双性恋
 
+### MtF相关
+
+**高一休学｜175cm / 63kg**
+
+2026.10.5 开始HRT（持证含糖）  
+小证日期 2026.6.19  
+DIY HRT 2026.5.10-2026.6.22
+
+### 雷点
+
+**绝对底线**  
+开盒 / 辱华 / 柜子 / 触及国家利益
+
+::: danger 解释
+开盒：非法获取并公开他人真实身份、住址等隐私信息的网暴行为  
+辱华：触碰民族历史底线的行为  
+柜子：“鬼子”谐音，特指《我的英雄学院》等涉及辱华争议、伤害民族感情的日漫作品  
+触及国家利益：违反国家法律法规、危害国家安全或涉及分裂等政治红线  
+**对于以上触碰底线的行为，将一律拉黑屏蔽，并保留相关证据向执法部门举报**
+:::
+
+**大众雷**  
+辱女 / 虾龟毛 / 骨科
+
+::: tip 解释
+辱女：严重物化女性、男性凝视、使用针对女性蔑称或相关低俗烂梗  
+虾龟毛：饭圈 / 原耽圈 肖战粉 / 博君一肖CP粉 / 墨香铜臭粉  
+骨科：“乱伦”题材（通常指亲兄妹/姐弟等）  
+:::
+
 ### 猜你会雷
 
-生心不一/Trans.MtF/adhd/精神问题微负  
+生心不一 / LGBT(Trans跨性别) / ADHD / 精神问题微负  
 **其他见上吧**
 
 ### 头像
 
 ::: image-row align-left
-![是自家小女孩泠潆](/images/logo/favicon-256.png){.avatar-lg}
+![是自家小女孩泠潆（yíng）](/images/logo/favicon-256.png){.avatar-lg}
 ![请不要盗用哦qwq](/images/logo/lsc2.jpg){.avatar-lg}
 :::
 
@@ -98,14 +130,14 @@ DECO / 小绵羊
 
 ### 二次元扩列卡
 
-<div class="card">
+::: collapse 点击展开
 
 cn泠诗尘，称呼随意，标识SGeXiLQ  
 INFP-T，生男心女，性取向双，高一休学  
 希望能被作为女孩子对待，而不是生理性别  
 生日2009.10.10，坐标重庆合川/江苏苏州  
 术力口/番剧/漫画，喜爱百合向作品  
-游戏PJSK/Minecraft/EndField/maimai等，STEAM独立游戏，也会接触一些乙游（？  
+游戏PJSK/Minecraft/EndField/maimai等，STEAM，也会接触一些乙游（？  
 推Miku/天依/mzk，喜欢烤25团，磕糖画/南北组  
 自家OC小女孩一只～  
 喜欢甜甜的、软软的、可爱的、亮晶晶的东西  
@@ -116,12 +148,11 @@ INFP-T，生男心女，性取向双，高一休学
 猜你会雷：空间多转发&碎碎念/生心不一/Trans.MtF/adhd/微负(yyz)/女性主义(非极端)
 
 <p style="font-size: 12px; opacity: 0.5; margin-top: 12px; margin-bottom: 0">最后更新于 2026.10.9</p>
+:::
 
-</div>
+### 𝕏
 
-### 𝕏（🏳️‍⚧️）
-
-<div class="card">
+::: collapse 点击展开
 
 MtF｜小证2026.6｜家长党｜持证含糖 2026.10.5  
 DIY HRT 26.5.10-6.22｜诞生日2009.10.10  
@@ -131,7 +162,7 @@ INFP-T｜双｜二次元｜音游｜百合｜术力口
 
 <p style="font-size: 12px; opacity: 0.5; margin-top: 12px; margin-bottom: 0">最后更新于 2026.10.1</p>
 
-</div>
+:::
 
 <br>
 
@@ -140,7 +171,7 @@ INFP-T｜双｜二次元｜音游｜百合｜术力口
 ### 建议
 
 泠の花园（QQ群）：<a href="https://myat-qm.20091010.xyz" target="_blank" rel="noopener noreferrer" style="color: var(--main-color)"><strong>1124267326</strong></a>  
-QQ：<a href="https://myat-qq.20091010.xyz" target="_blank" rel="noopener noreferrer" style="color: var(--main-color)"><strong>泠诗尘</strong></a>  
+QQ：<a href="https://myat-qq.20091010.xyz" target="_blank" rel="noopener noreferrer" style="color: var(--main-color)"><strong>泠诗尘（2898259755）</strong></a>  
 Email：<a href="mailto:hi@sgexilq.com" target="_blank" rel="noopener noreferrer" style="color: var(--main-color)"><strong>hi@sgexilq.com</strong></a>
 /
 <a href="mailto:sgexilq@qq.com" target="_blank" rel="noopener noreferrer" style="color: var(--main-color)"><strong>sgexilq@qq.com</strong></a>  
@@ -150,9 +181,11 @@ Telegram：<a href="https://myat-telegram.20091010.xyz" target="_blank" rel="noo
 ### 更多
 
 Github：<a href="https://myat-github.20091010.xyz" target="_blank" rel="noopener noreferrer" style="color: var(--main-color)"><strong>@mrsksyrx</strong></a>  
+STEAM：<a href="https://myat-steam.20091010.xyz" target="_blank" rel="noopener noreferrer" style="color: var(--main-color)"><strong>泠酱</strong></a>  
 Bilibili：<a href="https://myat-bilibili.20091010.xyz" target="_blank" rel="noopener noreferrer" style="color: var(--main-color)"><strong>泠诗尘</strong></a>  
 网易云音乐：<a href="https://myat-neteasecloudmusic.20091010.xyz" target="_blank" rel="noopener noreferrer" style="color: var(--main-color)"><strong>泠诗尘</strong></a>  
-STEAM：<a href="https://myat-steam.20091010.xyz" target="_blank" rel="noopener noreferrer" style="color: var(--main-color)"><strong>泠酱</strong></a>
+小黑盒：<a href="https://myat-heybox.20091010.xyz" target="_blank" rel="noopener noreferrer" style="color: var(--main-color)"><strong>泠诗尘</strong></a>  
+小红书：<a href="https://myat-rednote.20091010.xyz" target="_blank" rel="noopener noreferrer" style="color: var(--main-color)"><strong>泠诗尘</strong></a>  
 
 ### 标识
 
