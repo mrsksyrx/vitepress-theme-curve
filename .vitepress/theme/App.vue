@@ -187,6 +187,14 @@ const openRightMenu = (e) => {
   rightMenuRef.value?.openRightMenu(e);
 };
 
+// 路由切换后收起所有全局浮层，避免 SPA 复用页面时面板常驻
+const closeGlobalPanels = () => {
+  ["searchShow", "showSettings", "mobileMenuShow", "mobileWidgetsShow"].forEach((key) => {
+    if (store[key]) store.changeShowStatus(key);
+  });
+};
+watch(() => route.path, closeGlobalPanels);
+
 // 复制时触发
 const copyTip = () => {
   const copiedText = window.getSelection().toString();

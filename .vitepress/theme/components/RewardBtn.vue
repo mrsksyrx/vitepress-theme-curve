@@ -68,6 +68,15 @@ defineProps({
 });
 // 赞赏显示
 const rewardShow = ref(false);
+
+// 路由切换时自动收起赞赏面板
+const route = useRoute();
+watch(
+  () => route.path,
+  () => {
+    rewardShow.value = false;
+  },
+);
 </script>
 
 <style lang="scss" scoped>

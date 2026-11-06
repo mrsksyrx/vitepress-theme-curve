@@ -91,6 +91,15 @@ const close = () => {
   show.value = false;
 };
 
+// 路由切换时自动收起安全中心弹窗
+const route = useRoute();
+watch(
+  () => route.path,
+  () => {
+    if (show.value) close();
+  },
+);
+
 // 目标页在新标签打开（保持原 target="_blank" 语义），opener 置空防反向劫持
 const doJump = () => {
   if (status.value === "danger" || !targetUrl.value) return;

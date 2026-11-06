@@ -551,6 +551,15 @@ const commentCopyClose = () => {
   if (typeof $comment !== "undefined") $comment.reload();
 };
 
+// 路由切换时收起右键菜单与快速评论
+watch(
+  () => router.route.path,
+  () => {
+    if (rightMenuShow.value) closeRightMenu();
+    if (commentCopyShow.value) commentCopyShow.value = false;
+  },
+);
+
 defineExpose({ openRightMenu });
 </script>
 

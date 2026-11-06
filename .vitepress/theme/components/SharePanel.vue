@@ -144,6 +144,14 @@ watch(show, (visible) => {
   }
 });
 
+// 路由切换时自动收起分享面板
+watch(
+  () => router.route.path,
+  () => {
+    show.value = false;
+  },
+);
+
 // 路由变化时二维码失效：面板开着按前进/后退，shareUrl 变了但面板还开着
 watch(shareUrl, () => {
   qrSvg.value = "";
