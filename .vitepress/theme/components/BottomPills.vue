@@ -497,6 +497,9 @@ onBeforeUnmount(() => {
   align-items: center;
   gap: 10px;
   z-index: var(--z-player);
+  // 外层占满视口但不拦截点击，只有实际胶囊/控制条接收事件，
+  // 否则透明 pill-layer 会盖住左下角等固定按钮
+  pointer-events: none;
   opacity: 1;
   transform: translateX(-50%) translateY(0);
   transition:
@@ -508,7 +511,7 @@ onBeforeUnmount(() => {
     pointer-events: none;
   }
   @media (max-width: 768px) {
-    bottom: 16px;
+    bottom: calc(var(--player-pill-bottom) + env(safe-area-inset-bottom, 0px));
     width: calc(100vw - 32px);
   }
 }
@@ -518,12 +521,19 @@ onBeforeUnmount(() => {
   width: 100%;
 }
 
+// 可交互的播放器实体恢复点击；空白层继续保持 pointer-events: none
+.pill-card,
+.pill-ctrl-bar,
+.pill-lyric {
+  pointer-events: auto;
+}
+
 // ---- 第一层：封面 + 歌词 ----
 .pill-lyric {
   display: flex;
   align-items: center;
   gap: 10px;
-  height: 44px;
+  height: var(--player-pill-height);
   padding: 0 16px 0 6px;
   border-radius: 50px;
   background-color: var(--main-card-background);

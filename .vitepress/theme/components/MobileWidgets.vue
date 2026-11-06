@@ -10,6 +10,9 @@
         <div
           ref="widgetsPanelEl"
           class="widgets-panel s-card"
+          role="dialog"
+          aria-modal="true"
+          aria-label="小组件"
           @click.stop
           @touchstart.passive="onTouchStart"
           @touchmove.passive="onTouchMove"
@@ -31,6 +34,13 @@
           </div>
           <!-- 小组件列表：数据类在上，时间类沉底 -->
           <div ref="widgetsBodyEl" class="widgets-body">
+            <!-- 文章页目录固定排在首位，点击条目后滚动正文并收起面板 -->
+            <Toc
+              v-if="showToc"
+              class="panel-widget panel-toc"
+              @navigate="closePanel"
+              @has-items="tocHasItems = $event"
+            />
             <Weather
               v-if="theme.aside?.weather?.enable && store.weatherWidgetEnabled"
               class="panel-widget"
@@ -62,6 +72,7 @@
 
 <script setup>
 import { mainStore } from "@/store";
+import Toc from "@/components/Aside/Widgets/Toc.vue";
 import Weather from "@/components/Aside/Widgets/Weather.vue";
 import Countdown from "@/components/Aside/Widgets/Countdown.vue";
 import Timing from "@/components/Aside/Widgets/Timing.vue";
@@ -69,10 +80,20 @@ import HelloGithubHot from "@/components/Aside/Widgets/HelloGithubHot.vue";
 import Tags from "@/components/Aside/Widgets/Tags.vue";
 import SiteData from "@/components/Aside/Widgets/SiteData.vue";
 
+const route = useRoute();
 const store = mainStore();
-const { theme } = useData();
+const { theme, frontmatter, page } = useData();
 
 const closePanel = () => store.changeShowStatus("mobileWidgetsShow");
+
+// 与 App.vue 的文章判定保持一致：posts/ 下，或 frontmatter 显式声明 layout: post
+const isPostPage = computed(
+  () =>
+    !page.value.isNotFound &&
+    (route.path.includes("/posts/") || frontmatter.value.layout === "post"),
+);
+const showToc = computed(() => isPostPage.value && theme.value.aside?.toc?.enable === true);
+const tocHasItems = ref(null);
 
 // 手势关闭中：跳过 Transition 的 leave 动画（面板已被手动滑出）
 const gestureClosing = ref(false);
@@ -88,6 +109,8 @@ watch(
 const hasAnyWidget = computed(() => {
   const aside = theme.value.aside || {};
   return Boolean(
+    // 目录组件完成 DOM 扫描前先占位，避免面板打开瞬间闪出“暂无小组件”
+    (showToc.value && tocHasItems.value !== false) ||
     (aside.weather?.enable && store.weatherWidgetEnabled) ||
     aside.countDown?.enable ||
     aside.timing?.enable ||
@@ -110,7 +133,8 @@ let startTime = 0;
 const onTouchStart = (e) => {
   // 列表已滚动时不接管手势，交给内部滚动
   const body = widgetsBodyEl.value;
-  if (body && body.scrollTop > 0) {
+  const innerScroller = e.target.closest(".toc-list");
+  if ((body && body.scrollTop > 0) || (innerScroller && innerScroller.scrollTop > 0)) {
     isDragging = false;
     return;
   }
@@ -192,7 +216,7 @@ const onTouchEnd = () => {
 .mobile-widgets {
   position: fixed;
   inset: 0;
-  z-index: 2000;
+  z-index: var(--z-elevated);
 
   .widgets-mask {
     position: absolute;
@@ -280,6 +304,13 @@ const onTouchEnd = () => {
 
       .panel-widget {
         margin-bottom: 12px;
+        &.panel-toc {
+          :deep(.toc-list) {
+            // 移动面板中目录完整展开，由面板整体滚动，不在目录内部截断
+            max-height: none !important;
+            overflow: visible !important;
+          }
+        }
         padding: 14px;
         // 热榜组件自带 margin-bottom: 1rem，浮层里压回统一节奏
         :deep(.site-data) {

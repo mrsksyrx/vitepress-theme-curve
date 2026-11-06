@@ -966,7 +966,7 @@ onBeforeUnmount(() => {
   display: flex;
   align-items: center;
   gap: 8px;
-  height: 44px;
+  height: var(--player-pill-height);
   transition: transform 0.3s;
   &:active {
     transform: scale(0.98);
@@ -977,7 +977,7 @@ onBeforeUnmount(() => {
 // 胶囊（展开/折叠）
 .player-capsule {
   position: relative;
-  height: 44px;
+  height: var(--player-pill-height);
   cursor: pointer;
   transition: transform var(--press-out) var(--press-ease);
   &:active {
@@ -1210,8 +1210,8 @@ onBeforeUnmount(() => {
 
 // 控制按钮
 .ctrl-btn {
-  width: 44px;
-  height: 44px;
+  width: var(--player-pill-height);
+  height: var(--player-pill-height);
   border-radius: 50%;
   border: 1px solid var(--main-card-border);
   background-color: var(--main-card-background);
