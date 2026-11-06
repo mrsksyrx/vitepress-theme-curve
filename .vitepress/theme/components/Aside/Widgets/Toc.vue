@@ -5,11 +5,11 @@
       <i class="iconfont icon-toc" />
       <span class="name">目录</span>
     </div>
-    <div id="toc-all" class="toc-list" :style="{ '--height': activeTocHeight + 'px' }">
+    <div ref="tocListEl" class="toc-list" :style="{ '--height': activeTocHeight + 'px' }">
       <span
         v-for="(item, index) in tocData"
         :key="index"
-        :id="'toc-' + item.id"
+        :data-toc-index="index"
         :class="[
           'toc-item',
           item.type,
@@ -29,8 +29,10 @@ import { throttle } from "lodash-es";
 
 const route = useRoute();
 const store = mainStore();
+const emit = defineEmits(["navigate", "has-items"]);
 
 const tocData = ref(null);
+const tocListEl = ref(null);
 const postDom = ref(null);
 const activeHeader = ref(null);
 const activeTocHeight = ref(0);
@@ -67,6 +69,7 @@ const generateDirData = () => {
     nestedData.push(headerObj);
   });
   tocData.value = nestedData;
+  emit("has-items", nestedData.length > 0);
 };
 
 // 高亮对应目录项
@@ -98,6 +101,7 @@ const scrollToHeader = (id) => {
   try {
     const headerDom = document.getElementById(id);
     if (!headerDom || !postDom.value) return false;
+    emit("navigate", id);
     // getBoundingClientRect + scrollY 得到文档绝对坐标，不受 offsetParent 影响
     const scrollHeight = headerDom.getBoundingClientRect().top + window.scrollY - 80;
     window.scroll({ top: scrollHeight, behavior: "smooth" });
@@ -124,11 +128,12 @@ watch(
 watch(
   () => activeHeader.value,
   (val) => {
-    const tocAllDom = document.getElementById("toc-all");
-    const activeTocItem = document.getElementById("toc-" + val);
-    if (!tocAllDom || !activeTocItem) return false;
-    activeTocHeight.value = activeTocItem?.offsetTop - 2 || 0;
-    tocAllDom?.scrollTo({ top: activeTocHeight.value - 80, behavior: "smooth" });
+    const tocAllDom = tocListEl.value;
+    const activeIndex = tocData.value?.findIndex((item) => item.id === val) ?? -1;
+    const activeTocItem = tocAllDom?.querySelector(`[data-toc-index="${activeIndex}"]`);
+    if (!tocAllDom || activeIndex < 0 || !activeTocItem) return false;
+    activeTocHeight.value = activeTocItem.offsetTop - 2 || 0;
+    tocAllDom.scrollTo({ top: activeTocHeight.value - 80, behavior: "smooth" });
   },
 );
 

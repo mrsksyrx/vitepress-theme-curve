@@ -90,6 +90,7 @@ import { ensureGlobalFontsLoaded } from "@/utils/fontLoader.mjs";
 import { safeStorage } from "@/utils/safeStorage.mjs";
 import { finishStorageReset, isStorageWriteBlocked } from "@/utils/storageReset.mjs";
 import { applyTraditionalChinese } from "@/utils/traditionalChinese.mjs";
+import initCollapseCards from "@/utils/collapseCards.mjs";
 
 // const screenWidth = ref(0);
 const route = useRoute();
@@ -120,6 +121,7 @@ const importCheckCountdown = ref(10);
 let importCheckTimer = null;
 // 保留同一 MediaQueryList 实例，卸载时才能移除 change 监听
 let colorSchemeMql = null;
+let cleanupCollapseCards = null;
 
 //2025.06.12更新：在 Next.js 的服务端渲染过程中，应用会在服务器端先进行渲染
 //而在服务器端的 JavaScript 环境中，并没有浏览器提供的 window 对象。
@@ -342,6 +344,8 @@ onMounted(() => {
   if (removeAnimations.value) {
     document.documentElement.classList.add("remove-animations");
   }
+  // 折叠卡片动画
+  cleanupCollapseCards = initCollapseCards();
   // 滚动监听
   window.addEventListener("scroll", calculateScroll);
   // 右键监听
@@ -364,6 +368,8 @@ onMounted(() => {
 });
 
 onBeforeUnmount(() => {
+  cleanupCollapseCards?.();
+  cleanupCollapseCards = null;
   window.removeEventListener("scroll", calculateScroll);
   window.removeEventListener("contextmenu", openRightMenu);
   window.removeEventListener("copy", copyTip);

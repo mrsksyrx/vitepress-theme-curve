@@ -173,10 +173,26 @@
       <Aside v-if="isDesktopAsideVisible" showToc />
     </div>
   </div>
+  <!-- 移动端文章阅读入口：打开小组件面板，目录固定排在首位 -->
+  <Teleport to="body">
+    <button
+      v-show="showMobileTocEntry"
+      :class="['mobile-toc-entry', { hidden: store.footerIsShow }]"
+      type="button"
+      aria-label="打开目录与小组件"
+      :aria-expanded="store.mobileWidgetsShow"
+      aria-haspopup="dialog"
+      @click.prevent.stop="store.changeShowStatus('mobileWidgetsShow')"
+    >
+      <i class="iconfont icon-toc" />
+    </button>
+  </Teleport>
 </template>
 
 <script setup>
+import { mainStore } from "@/store";
 import { daysPassedAt, formatTimestampAt, useClientNow } from "@/utils/useClientNow.mjs";
+import { useIsMobileLayout } from "@/utils/layout.js";
 import initFancybox from "@/utils/initFancybox";
 import { ensureCodeFontLoaded } from "@/utils/fontLoader.mjs";
 import { useDesktopAside } from "@/utils/useDesktopAside.mjs";
@@ -194,6 +210,8 @@ import {
 import { normalizeList } from "@/utils/normalizeList.mjs";
 import PasswordProtect from "@/components/PasswordProtect.vue";
 import DOMPurify from "dompurify";
+const store = mainStore();
+const isMobileLayout = useIsMobileLayout();
 const { page, theme, frontmatter } = useData();
 const { isDesktopAsideVisible } = useDesktopAside();
 const { postData, loadPostData } = usePostData();
@@ -252,6 +270,15 @@ const isUnlocked = ref(false);
 // 加密文章解密后的正文 HTML
 const decryptedHtml = ref(null);
 
+// 移动端目录入口遵循小组件面板开关，密码文章解锁后才提供目录
+const showMobileTocEntry = computed(
+  () =>
+    isMobileLayout.value &&
+    store.mobileWidgetsEnabled &&
+    theme.value.aside?.toc?.enable === true &&
+    (!hasPassword.value || isUnlocked.value),
+);
+
 // post→post SPA 路由复用同一实例，切换文章时清空解密态，
 // 否则上一篇已解锁的正文会串到下一篇，密码框也不再出现
 watch(
@@ -300,6 +327,53 @@ onMounted(() => {
 
 <style lang="scss" scoped>
 @use "../style/post.scss";
+
+.mobile-toc-entry {
+  position: fixed;
+  left: 20px;
+  bottom: calc(var(--player-pill-bottom) + env(safe-area-inset-bottom, 0px));
+  z-index: var(--z-player);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--player-pill-height);
+  height: var(--player-pill-height);
+  min-height: var(--player-pill-height);
+  padding: 0;
+  pointer-events: auto;
+  touch-action: manipulation;
+  border: 1px solid var(--main-card-border);
+  border-radius: 999px;
+  color: var(--main-font-color);
+  background-color: color-mix(in srgb, var(--main-card-background) 88%, transparent);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.14);
+  backdrop-filter: blur(12px);
+  cursor: pointer;
+  transition:
+    opacity 0.3s,
+    transform 0.3s,
+    color 0.3s,
+    border-color 0.3s,
+    background-color 0.3s;
+  .iconfont {
+    font-size: 18px;
+    opacity: 0.75;
+  }
+  &:hover {
+    color: var(--main-color);
+    border-color: var(--main-color);
+    background-color: var(--main-color-bg);
+  }
+  &:active {
+    transform: scale(0.95);
+    transition-duration: var(--press-in);
+  }
+  &.hidden {
+    opacity: 0;
+    transform: translateY(100px);
+    pointer-events: none;
+  }
+}
 
 .password-protect-wrapper {
   width: 100%;

@@ -197,7 +197,7 @@ export const mainStore = defineStore("main", {
       helloGithubWidgetEnabled: true,
       // 标签列表开关
       tagsWidgetEnabled: true,
-      // 移动端小组件面板入口开关（关闭后隐藏首页左上角入口）
+      // 移动端小组件面板入口开关（关闭后隐藏首页和文章页入口）
       mobileWidgetsEnabled: true,
       // 文章末尾「相关推荐」组件开关（默认开启）
       relatedPostEnabled: true,

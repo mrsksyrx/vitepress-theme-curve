@@ -39,6 +39,9 @@
   --press-in: 80ms;
   --press-out: 160ms;
   --press-ease: cubic-bezier(0.4, 0, 0.2, 1);
+  // 底部播放器与同排浮动控制按钮共用的统一高度和底部间距
+  --player-pill-height: 44px;
+  --player-pill-bottom: 16px;
   // 全局浮层层级（低 → 高）：nav 1000 → … → player/普通弹窗 → elevated（分享/侧边栏）→ message
   --z-player: 10000;
   --z-elevated: 11000;
