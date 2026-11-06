@@ -495,7 +495,7 @@ onBeforeUnmount(() => {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 10px;
+  gap: var(--player-pill-gap);
   z-index: var(--z-player);
   // 外层占满视口但不拦截点击，只有实际胶囊/控制条接收事件，
   // 否则透明 pill-layer 会盖住左下角等固定按钮

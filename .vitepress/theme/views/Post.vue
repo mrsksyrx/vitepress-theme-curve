@@ -176,6 +176,7 @@
   <!-- 移动端文章阅读入口：打开小组件面板，目录固定排在首位 -->
   <Teleport to="body">
     <button
+      ref="tocEntryRef"
       v-show="showMobileTocEntry"
       :class="['mobile-toc-entry', { hidden: store.footerIsShow }]"
       type="button"
@@ -279,6 +280,113 @@ const showMobileTocEntry = computed(
     (!hasPassword.value || isUnlocked.value),
 );
 
+// 移动端播放器胶囊可见时，目录按钮需要向上避让，避免与歌词胶囊重叠
+const isPlayerPillVisible = computed(
+  () =>
+    isMobileLayout.value &&
+    store.islandStyle === "extended" &&
+    store.playerShow &&
+    theme.value.music?.enable === true,
+);
+
+const tocEntryRef = ref(null);
+// 播放器胶囊宽度会随歌词长度变化：只有真实压到左下角时才抬高按钮
+let playerResizeObserver = null;
+let playerMutationObserver = null;
+let playerStackEl = null;
+let tocEntryFrame = null;
+let tocEntryAlive = false;
+
+const measureTocEntryPosition = () => {
+  const button = tocEntryRef.value;
+  if (!button) return;
+  const stack = document.querySelector(".pill-stack");
+  if (!isPlayerPillVisible.value || !stack) {
+    button.style.setProperty("--mobile-toc-raise", "0px");
+    return;
+  }
+  const buttonRect = button.getBoundingClientRect();
+  if (!buttonRect.width) {
+    button.style.setProperty("--mobile-toc-raise", "0px");
+    return;
+  }
+  // 按钮基准位置与播放器共用同一条底部基线，不受当前抬高影响
+  const baseBottom = parseFloat(getComputedStyle(stack).bottom) || 0;
+  const baseButtonBottom = window.innerHeight - baseBottom;
+  const gap = 8;
+  const obstacles = Array.from(
+    stack.querySelectorAll(".pill-card, .pill-ctrl-bar, .pill-lyric"),
+  ).filter((el) => {
+    const rect = el.getBoundingClientRect();
+    if (!rect.width || !rect.height) return false;
+    // 只要实体横向进入按钮所在列，就整体避让，避免抬高后撞上控制条
+    return rect.left < buttonRect.right + gap && rect.right > buttonRect.left - gap;
+  });
+  if (!obstacles.length) {
+    button.style.setProperty("--mobile-toc-raise", "0px");
+    return;
+  }
+  // 抬高到最上方障碍物之上，展开播放器面板时也不会被遮住
+  const obstacleTop = Math.min(...obstacles.map((el) => el.getBoundingClientRect().top));
+  const raise = Math.max(0, baseButtonBottom - obstacleTop + gap);
+  button.style.setProperty("--mobile-toc-raise", `${Math.round(raise)}px`);
+};
+
+const scheduleTocEntryMeasure = () => {
+  if (typeof window === "undefined") return;
+  if (tocEntryFrame) cancelAnimationFrame(tocEntryFrame);
+  tocEntryFrame = requestAnimationFrame(() => {
+    tocEntryFrame = null;
+    measureTocEntryPosition();
+  });
+};
+
+const disconnectPlayerObservers = () => {
+  playerResizeObserver?.disconnect();
+  playerMutationObserver?.disconnect();
+  playerResizeObserver = null;
+  playerMutationObserver = null;
+  if (playerStackEl) {
+    playerStackEl.removeEventListener("transitionend", scheduleTocEntryMeasure);
+    playerStackEl = null;
+  }
+};
+
+const observePlayerStack = () => {
+  disconnectPlayerObservers();
+  if (!isPlayerPillVisible.value) {
+    tocEntryRef.value?.style.setProperty("--mobile-toc-raise", "0px");
+    return;
+  }
+  nextTick(() => {
+    if (!tocEntryAlive) return;
+    const stack = document.querySelector(".pill-stack");
+    if (!stack || typeof ResizeObserver === "undefined") return;
+    playerStackEl = stack;
+    // 展开/收起使用 transform 过渡，尺寸不变但位置会变，过渡结束后补测一次
+    stack.addEventListener("transitionend", scheduleTocEntryMeasure);
+    playerResizeObserver = new ResizeObserver(scheduleTocEntryMeasure);
+    const observeStackChildren = () => {
+      playerResizeObserver.disconnect();
+      playerResizeObserver.observe(stack);
+      stack.querySelectorAll(".pill-card, .pill-ctrl-bar, .pill-lyric").forEach((el) => {
+        playerResizeObserver.observe(el);
+      });
+      scheduleTocEntryMeasure();
+    };
+    playerMutationObserver = new MutationObserver(observeStackChildren);
+    playerMutationObserver.observe(stack, { childList: true, subtree: true });
+    observeStackChildren();
+  });
+};
+
+watch(isPlayerPillVisible, () => observePlayerStack());
+watch(showMobileTocEntry, () => scheduleTocEntryMeasure());
+watch(
+  () => store.footerIsShow,
+  () => scheduleTocEntryMeasure(),
+);
+
 // post→post SPA 路由复用同一实例，切换文章时清空解密态，
 // 否则上一篇已解锁的正文会串到下一篇，密码框也不再出现
 watch(
@@ -318,10 +426,20 @@ const loadCodeFontIfNeeded = async () => {
 };
 
 onMounted(() => {
+  tocEntryAlive = true;
   loadPostData();
   initFancybox(theme.value);
   loadCodeFontIfNeeded();
+  observePlayerStack();
+  window.addEventListener("resize", scheduleTocEntryMeasure, { passive: true });
   // 解锁状态由 PasswordProtect 自行检查（加密文章需先解密出内容）
+});
+
+onBeforeUnmount(() => {
+  tocEntryAlive = false;
+  disconnectPlayerObservers();
+  if (tocEntryFrame) cancelAnimationFrame(tocEntryFrame);
+  window.removeEventListener("resize", scheduleTocEntryMeasure);
 });
 </script>
 
@@ -331,7 +449,9 @@ onMounted(() => {
 .mobile-toc-entry {
   position: fixed;
   left: 20px;
-  bottom: calc(var(--player-pill-bottom) + env(safe-area-inset-bottom, 0px));
+  bottom: calc(
+    var(--player-pill-bottom) + env(safe-area-inset-bottom, 0px) + var(--mobile-toc-raise, 0px)
+  );
   z-index: var(--z-player);
   display: flex;
   align-items: center;
@@ -352,6 +472,7 @@ onMounted(() => {
   transition:
     opacity 0.3s,
     transform 0.3s,
+    bottom 0.3s ease,
     color 0.3s,
     border-color 0.3s,
     background-color 0.3s;
