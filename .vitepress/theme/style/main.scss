@@ -43,6 +43,9 @@
   --player-pill-height: 44px;
   --player-pill-bottom: 16px;
   --player-pill-gap: 10px;
+  // 目录按钮与播放器的磨砂效果，受“背景模糊”开关控制
+  --frosted-blur: 12px;
+  --frosted-card-background: color-mix(in srgb, var(--main-card-background) 88%, transparent);
   // 全局浮层层级（低 → 高）：nav 1000 → … → player/普通弹窗 → elevated（分享/侧边栏）→ message
   --z-player: 10000;
   --z-elevated: 11000;

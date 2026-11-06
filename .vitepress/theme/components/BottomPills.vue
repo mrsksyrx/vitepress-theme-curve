@@ -1,7 +1,13 @@
 <!-- 底部播放器（拓展样式）：三层堆叠 -->
 <template>
   <Teleport to="body">
-    <div v-if="visible" :class="['pill-stack', { 'pill-hidden': pillStackHidden }]">
+    <div
+      v-if="visible"
+      :class="[
+        'pill-stack',
+        { 'pill-hidden': pillStackHidden, 'is-blurred': store.backgroundBlur },
+      ]"
+    >
       <!-- 第三层（最上）：列表/歌词卡片 -->
       <div class="pill-layer pill-layer-card">
         <Transition name="pill-expand">
@@ -526,6 +532,20 @@ onBeforeUnmount(() => {
 .pill-ctrl-bar,
 .pill-lyric {
   pointer-events: auto;
+}
+
+// 背景模糊开关开启时，播放器各层改用与目录按钮一致的磨砂背景
+.pill-stack.is-blurred {
+  .pill-card,
+  .pill-ctrl-bar,
+  .pill-lyric {
+    background-color: var(--frosted-card-background);
+    -webkit-backdrop-filter: blur(var(--frosted-blur));
+    backdrop-filter: blur(var(--frosted-blur));
+  }
+  .pill-lyric.island-theme-color {
+    background-color: color-mix(in srgb, var(--main-color) 88%, transparent);
+  }
 }
 
 // ---- 第一层：封面 + 歌词 ----

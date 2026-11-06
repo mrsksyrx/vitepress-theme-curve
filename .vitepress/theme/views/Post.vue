@@ -178,7 +178,10 @@
     <button
       ref="tocEntryRef"
       v-show="showMobileTocEntry"
-      :class="['mobile-toc-entry', { hidden: store.footerIsShow }]"
+      :class="[
+        'mobile-toc-entry',
+        { hidden: store.footerIsShow, 'is-blurred': store.backgroundBlur },
+      ]"
       type="button"
       aria-label="打开目录与小组件"
       :aria-expanded="store.mobileWidgetsShow"
@@ -465,9 +468,8 @@ onBeforeUnmount(() => {
   border: 1px solid var(--main-card-border);
   border-radius: 999px;
   color: var(--main-font-color);
-  background-color: color-mix(in srgb, var(--main-card-background) 88%, transparent);
+  background-color: var(--main-card-background);
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.14);
-  backdrop-filter: blur(12px);
   cursor: pointer;
   transition:
     opacity 0.3s,
@@ -493,6 +495,11 @@ onBeforeUnmount(() => {
     opacity: 0;
     transform: translateY(100px);
     pointer-events: none;
+  }
+  &.is-blurred {
+    background-color: var(--frosted-card-background);
+    -webkit-backdrop-filter: blur(var(--frosted-blur));
+    backdrop-filter: blur(var(--frosted-blur));
   }
 }
 
