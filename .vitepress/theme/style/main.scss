@@ -46,7 +46,10 @@
   // 目录按钮与播放器的磨砂效果，受“背景模糊”开关控制
   --frosted-blur: 12px;
   --frosted-card-background: color-mix(in srgb, var(--main-card-background) 88%, transparent);
-  // 全局浮层层级（低 → 高）：nav 1000 → … → player/普通弹窗 → elevated（分享/侧边栏）→ message
+  // 全局浮层层级（低 → 高）：nav 1000 → loading 9000 → player/普通弹窗 →
+  // elevated（分享/侧边栏）→ message
+  // 加载遮罩低于播放器：切页时音乐播放器保持可见
+  --z-loading: 9000;
   --z-player: 10000;
   --z-elevated: 11000;
   --z-message: 12000;

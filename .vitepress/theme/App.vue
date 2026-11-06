@@ -44,7 +44,12 @@
   <!-- 悬浮菜单 -->
   <Teleport to="body">
     <!-- 左侧菜单 -->
-    <div :class="['left-menu', { hidden: footerIsShow }]">
+    <div
+      :class="[
+        'left-menu',
+        { hidden: footerIsShow, 'is-loading': loadingStatus && store.islandStyle !== 'extended' },
+      ]"
+    >
       <!-- 全局播放器（拓展模式下隐藏但保留挂载） -->
       <ClientOnly>
         <div v-show="store.islandStyle !== 'extended'">
@@ -438,6 +443,10 @@ onBeforeUnmount(() => {
     opacity: 0;
     transform: translateY(100px);
     pointer-events: none;
+  }
+  // 标准播放器在左侧菜单内，加载时抬高到 Loading 之上
+  &.is-loading {
+    z-index: calc(var(--z-loading) + 1);
   }
 }
 .import-check-overlay {

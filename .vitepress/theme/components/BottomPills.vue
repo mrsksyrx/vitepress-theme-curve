@@ -145,6 +145,7 @@
 import { mainStore } from "@/store";
 
 const store = mainStore();
+const route = useRoute();
 const { theme } = useData();
 
 const visible = computed(
@@ -404,12 +405,23 @@ let resizeHandler = null;
 let scrollHandler = null;
 let modalScrollHandler = null;
 let lastScrollY = 0;
+
+// 路由切换后恢复播放器：上一页滚到底部时 pillStackHidden 会残留
+watch(
+  () => route.path,
+  () => {
+    pillStackHidden.value = false;
+    lastScrollY = 0;
+  },
+);
+
 onMounted(() => {
   scrollHandler = () => {
     const st = window.scrollY;
     const maxScroll = document.documentElement.scrollHeight - window.innerHeight;
     if (!store.playerFolded) store.playerFolded = true;
-    if (st >= maxScroll - 50) {
+    // 内容不足一屏（含切页加载阶段）时 maxScroll 为 0，不能当成“到底部”
+    if (maxScroll > 0 && st >= maxScroll - 50) {
       pillStackHidden.value = true;
     } else if (st < lastScrollY) {
       pillStackHidden.value = false;

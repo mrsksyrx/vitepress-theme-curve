@@ -56,7 +56,8 @@ onBeforeUnmount(() => {
   width: 100vw;
   height: 100vh;
   background-color: var(--main-card-background);
-  z-index: var(--z-message);
+  // 低于播放器，避免切页加载时把播放器盖住
+  z-index: var(--z-loading);
   .logo {
     width: 100px;
     height: 100px;
