@@ -1,7 +1,13 @@
 <!-- 底部播放器（拓展样式）：三层堆叠 -->
 <template>
   <Teleport to="body">
-    <div v-if="visible" :class="['pill-stack', { 'pill-hidden': pillStackHidden }]">
+    <div
+      v-if="visible"
+      :class="[
+        'pill-stack',
+        { 'pill-hidden': pillStackHidden, 'is-blurred': store.backgroundBlur },
+      ]"
+    >
       <!-- 第三层（最上）：列表/歌词卡片 -->
       <div class="pill-layer pill-layer-card">
         <Transition name="pill-expand">
@@ -139,6 +145,7 @@
 import { mainStore } from "@/store";
 
 const store = mainStore();
+const route = useRoute();
 const { theme } = useData();
 
 const visible = computed(
@@ -398,12 +405,23 @@ let resizeHandler = null;
 let scrollHandler = null;
 let modalScrollHandler = null;
 let lastScrollY = 0;
+
+// 路由切换后恢复播放器：上一页滚到底部时 pillStackHidden 会残留
+watch(
+  () => route.path,
+  () => {
+    pillStackHidden.value = false;
+    lastScrollY = 0;
+  },
+);
+
 onMounted(() => {
   scrollHandler = () => {
     const st = window.scrollY;
     const maxScroll = document.documentElement.scrollHeight - window.innerHeight;
     if (!store.playerFolded) store.playerFolded = true;
-    if (st >= maxScroll - 50) {
+    // 内容不足一屏（含切页加载阶段）时 maxScroll 为 0，不能当成“到底部”
+    if (maxScroll > 0 && st >= maxScroll - 50) {
       pillStackHidden.value = true;
     } else if (st < lastScrollY) {
       pillStackHidden.value = false;
@@ -495,7 +513,7 @@ onBeforeUnmount(() => {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 10px;
+  gap: var(--player-pill-gap);
   z-index: var(--z-player);
   // 外层占满视口但不拦截点击，只有实际胶囊/控制条接收事件，
   // 否则透明 pill-layer 会盖住左下角等固定按钮
@@ -526,6 +544,20 @@ onBeforeUnmount(() => {
 .pill-ctrl-bar,
 .pill-lyric {
   pointer-events: auto;
+}
+
+// 背景模糊开关开启时，播放器各层改用与目录按钮一致的磨砂背景
+.pill-stack.is-blurred {
+  .pill-card,
+  .pill-ctrl-bar,
+  .pill-lyric {
+    background-color: var(--frosted-card-background);
+    -webkit-backdrop-filter: blur(var(--frosted-blur));
+    backdrop-filter: blur(var(--frosted-blur));
+  }
+  .pill-lyric.island-theme-color {
+    background-color: color-mix(in srgb, var(--main-color) 88%, transparent);
+  }
 }
 
 // ---- 第一层：封面 + 歌词 ----
