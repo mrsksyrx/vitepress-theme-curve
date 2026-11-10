@@ -9,13 +9,6 @@ layout: post
 hideHome: true
 ---
 
-::: tip Tips
-
-来自扩列卡二维码或NFC的访问会指向本页面（即 <a href="https://i.sgexilq.com" target="_blank" rel="noopener noreferrer" style="color: var(--main-color)"><strong>i.sgexilq.com</strong></a> ）  
-如果泥是通过卡片进入，可以使用 <a href="https://nfc.software/zh" target="_blank" rel="noopener noreferrer" style="color: var(--main-color)"><strong>NFC Tools</strong></a> 工具将其修改为泥想要的功能哦
-
-:::
-
 初次见面，还请多指教~  
 这里是泠诗尘，下面是我的自介哦w
 
@@ -25,15 +18,15 @@ hideHome: true
 
 我的名字/cn是
 **泠诗尘**
-（líng）  
+（líng'shī'chén）  
 可以叫我诗尘、泠泠、泠酱…怎么样都可以啦
 
 但是请不要使用男性代称，谢谢qwq
 
 ### 标识
 
-**SGeXiLQ**  
-Zukicy / SereinCycle / mrsksyrx
+**SGeXiLQ**
+/ mrsksyrx
 
 ### 性格
 
@@ -57,7 +50,13 @@ PJSK / EndField / **maimaiDX** / Minecraft / STEAM
 
 ### 喜欢的P主
 
-**牙姐 / 存娘 / 霾大 / 雷子**  
+<a href="https://space.bilibili.com/157056" target="_blank" rel="noopener noreferrer" style="color: var(--main-color)"><strong>牙姐</strong></a>
+/
+<a href="https://space.bilibili.com/341368" target="_blank" rel="noopener noreferrer" style="color: var(--main-color)"><strong>存娘</strong></a>
+/
+<a href="https://space.bilibili.com/605473" target="_blank" rel="noopener noreferrer" style="color: var(--main-color)"><strong>霾大</strong></a>
+/
+<a href="https://space.bilibili.com/393416910" target="_blank" rel="noopener noreferrer" style="color: var(--main-color)"><strong>雷子</strong></a>  
 DECO / 小绵羊  
 奥利安多幻想曲 / Mara_然 / 彼岸的栗子 / MaxXSoft
 
@@ -65,6 +64,10 @@ DECO / 小绵羊
 
 **洛天依** / 初音未来 / 晓山瑞希  
 糖画 / 南北组
+
+自家OC小女孩
+<a href="/posts/aboutme-pages#%E5%A4%B4%E5%83%8F" rel="noopener noreferrer" style="color: var(--main-color)"><strong>泠潆</strong></a>
+（líng'yíng）
 
 ### 喜好
 
@@ -86,7 +89,7 @@ DECO / 小绵羊
 
 ### MtF相关
 
-**高一休学｜175cm / 63kg**
+**高一休学｜175cm / 64kg**
 
 2026.10.5 开始HRT（持证含糖）  
 小证日期 2026.6.19  
@@ -97,33 +100,32 @@ DIY HRT 2026.5.10-2026.6.22
 **绝对底线**  
 开盒 / 辱华 / 柜子 / 触及国家利益
 
-::: danger 解释
+**大众雷**  
+辱女 / 虾龟毛 / 骨科
+
+::: collapse 解释
+
 开盒：非法获取并公开他人真实身份、住址等隐私信息的网暴行为  
 辱华：触碰民族历史底线的行为  
 柜子：“鬼子”谐音，特指《我的英雄学院》等涉及辱华争议、伤害民族感情的日漫作品  
 触及国家利益：违反国家法律法规、危害国家安全或涉及分裂等政治红线  
 **对于以上触碰底线的行为，将一律拉黑屏蔽，并保留相关证据向执法部门举报**
-:::
 
-**大众雷**  
-辱女 / 虾龟毛 / 骨科
-
-::: tip 解释
 辱女：严重物化女性、男性凝视、使用针对女性蔑称或相关低俗烂梗  
 虾龟毛：饭圈 / 原耽圈 肖战粉 / 博君一肖CP粉 / 墨香铜臭粉  
 骨科：“乱伦”题材（通常指亲兄妹/姐弟等）  
+
 :::
 
 ### 猜你会雷
 
-生心不一 / LGBT(Trans跨性别) / ADHD / 精神问题微负  
-**其他见上吧**
+LGBT(Trans跨性别) / ADHD / 精神问题微负  
 
 ### 头像
 
 ::: image-row align-left
-![是自家小女孩泠潆（yíng）](/images/logo/favicon-256.png){.avatar-lg}
-![请不要盗用哦qwq](/images/logo/lsc2.jpg){.avatar-lg}
+![](/images/logo/favicon-256.png){.avatar}
+![](/images/logo/lsc2.jpg){.avatar}
 :::
 
 ## <span style="color: var(--main-color)">自介原稿</span>
@@ -168,7 +170,6 @@ INFP-T/双｜二次元/音游/百合/术力口
 
 ### 建议
 
-泠の花园（QQ群）：<a href="https://myat-qm.20091010.xyz" target="_blank" rel="noopener noreferrer" style="color: var(--main-color)"><strong>1124267326</strong></a>  
 QQ：<a href="https://myat-qq.20091010.xyz" target="_blank" rel="noopener noreferrer" style="color: var(--main-color)"><strong>泠诗尘（2898259755）</strong></a>  
 Email：<a href="mailto:hi@sgexilq.com" target="_blank" rel="noopener noreferrer" style="color: var(--main-color)"><strong>hi@sgexilq.com</strong></a>
 /
@@ -192,9 +193,9 @@ Bilibili：<a href="https://myat-bilibili.20091010.xyz" target="_blank" rel="noo
 
 <hr style="border: none; border-bottom: 1px dashed var(--main-color-bg); height: 0; background: none; margin: 1.5rem 0" />
 
-继续探索小站：<a href="/" style="color: var(--main-color)"><strong>回到主页 - sgexilq.com</strong></a>
+继续探索小站：<a href="/" style="color: var(--main-color)"><strong>sgexilq.com</strong></a>
 
-向我匿名提问！：<a href="https://ngl.sgexilq.com" target="_blank" rel="noopener noreferrer" style="color: var(--main-color)"><strong>NGL.Link</strong></a>（会在Twitter回复） / <a href="/pages/hide/message" style="color: var(--main-color)"><strong>留言板 - sgexilq.com</strong></a>
+向我匿名提问！：<a href="https://ngl.sgexilq.com" target="_blank" rel="noopener noreferrer" style="color: var(--main-color)"><strong>NGL.Link</strong></a> / <a href="/pages/hide/message" style="color: var(--main-color)"><strong>留言板 - sgexilq.com</strong></a>
 
 ## <span style="color: var(--main-color)">P.S.</span>
 
@@ -241,3 +242,12 @@ Bilibili：<a href="https://myat-bilibili.20091010.xyz" target="_blank" rel="noo
 **我们的存在，就是对恶意最大的反抗。**  
 <span style="color: var(--main-accent); opacity: 0.8"><b>Our existence is resistance.</b></span>  
 <a href="https://project-trans.org/" target="_blank" rel="noopener noreferrer" style="color: var(--main-color)"><strong>by PROJECT TRANS</strong></a>
+
+<hr style="border: none; border-bottom: 1px dashed var(--main-color-bg); height: 0; background: none; margin: 1.5rem 0" />
+
+::: tip Tips
+
+来自扩列卡二维码或NFC的访问会指向本页面（即 <a href="https://i.sgexilq.com" target="_blank" rel="noopener noreferrer" style="color: var(--main-color)"><strong>i.sgexilq.com</strong></a> ）  
+如果泥是通过卡片进入，可以使用 <a href="https://nfc.software/zh" target="_blank" rel="noopener noreferrer" style="color: var(--main-color)"><strong>NFC Tools</strong></a> 工具将其修改为泥想要的功能哦
+
+:::
