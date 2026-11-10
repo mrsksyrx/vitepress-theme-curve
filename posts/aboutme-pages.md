@@ -1,8 +1,8 @@
 ---
 title: 关于我
 date: 2026-09-19
-categories: [归档]
-tags: [关于我]
+categories: [关于我]
+tags: [MtF]
 description: 二次元扩列卡
 top: false
 layout: post
