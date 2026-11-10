@@ -107,10 +107,10 @@
               >双</span
             >，高一休学
           </p>
-          <p>希望能被作为女孩子对待，而不是生理性别</p>
+          <p>希望能被作为女孩子对待</p>
           <p>生日2009.10.10，坐标重庆合川/江苏苏州</p>
           <p>术力口/番剧/漫画，喜爱<span style="color: #f472b6">百合</span>向作品</p>
-          <p>游戏PJSK/Minecraft/EndField/maimai等，STEAM独立游戏，也会接触一些乙游（？</p>
+          <p>坑PJSK/Minecraft/EndField/maimai/STEAM等，也会接触一些乙游（？</p>
           <p>
             推<span style="color: #39c5bb">Miku</span>/<span style="color: #66ccff">天依</span
             >/<span style="color: #ffaad5">mzk</span>，喜欢<span style="color: #586294">烤25团</span
@@ -119,31 +119,29 @@
               >南</span
             ><span style="color: #ee0000">北</span>组
           </p>
-          <p>自家OC小女孩一只～</p>
+          <p>自家OC小女孩泠潆一只～</p>
           <p>喜欢甜甜的、软软的、可爱的、亮晶晶的东西</p>
           <p>有些社恐…但是熟了会非常非常黏人（x</p>
           <p>喜欢疯狂分享一堆没什么意义但自己觉得很可爱的东西</p>
-          <p>回复速度与态度取决于你和当时的精神状态（偶尔会消失去自己的小世界贴贴</p>
+          <p>回复速度与态度取决于你和当时的精神状态</p>
           <p>不是男娘，讨厌刻板印象，雷大众雷</p>
-          <p>猜你会雷：空间多转发&碎碎念/生心不一/Trans.MtF/adhd/微负(yyz)/女性主义(非极端)</p>
         </div>
         <p style="font-size: 12px; opacity: 0.5; margin-top: 12px; margin-bottom: 0">
-          最后更新于 2026.10.9
+          最后更新于 2026.11.10
         </p>
       </div>
 
       <!-- Row 6 -->
       <div class="about-item" style="grid-column: 1 / 4; grid-row: 6">
-        <span class="title2">𝕏 简介</span>
+        <span class="title2">𝕏</span>
         <div class="intro-content">
-          <p>MtF｜小证2026.6｜家长党｜持证含糖 2026.10.5</p>
-          <p>DIY HRT 26.5.10-6.22｜诞生日2009.10.10</p>
-          <p>高一休学｜175cm/63kg｜重庆&苏州</p>
-          <p>想要变可爱｜友所有人｜同类贴贴｜缺爱</p>
-          <p>INFP-T｜双｜二次元｜音游｜百合｜术力口</p>
+          <p>跨女MtF🏳️‍⚧️｜小证家长党｜持证含糖 HRT2026.10.5</p>
+          <p>诞生日2009.10.10｜高一休学｜175/64｜重庆&苏州</p>
+          <p>INFP-T/双｜二次元/音游/百合/术力口</p>
+          <p>想要变可爱呜呜｜有人能陪陪咱嘛喵qwq</p>
         </div>
         <p style="font-size: 12px; opacity: 0.5; margin-top: 12px; margin-bottom: 0">
-          最后更新于 2026.10.1
+          最后更新于 2026.11.10
         </p>
       </div>
     </div>
