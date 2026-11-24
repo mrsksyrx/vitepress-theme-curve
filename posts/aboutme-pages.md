@@ -196,7 +196,7 @@ Bilibili：<a href="https://myat-bilibili.20091010.xyz" target="_blank" rel="noo
 
 继续探索小站：<a href="/" style="color: var(--main-color)"><strong>sgexilq.com</strong></a>
 
-向我匿名提问！：<a href="https://ngl.sgexilq.com" target="_blank" rel="noopener noreferrer" style="color: var(--main-color)"><strong>NGL.Link</strong></a> / <a href="/pages/hide/message" style="color: var(--main-color)"><strong>留言板 - sgexilq.com</strong></a>
+向我匿名提问！：<a href="https://ngl.sgexilq.com" target="_blank" rel="noopener noreferrer" style="color: var(--main-color)"><strong>NGL.Link</strong></a>
 
 ## <span style="color: var(--main-color)">P.S.</span>
 
